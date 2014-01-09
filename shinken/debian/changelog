@@ -1,0 +1,5 @@
+shinken (1.4.1-1) unstable; urgency=low
+
+  * Initial release.
+
+ -- François Lafont <francois.lafont@crdp.ac-versailles.fr>  Thu, 09 Jan 2014 06:14:36 +0100

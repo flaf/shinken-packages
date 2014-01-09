@@ -1,0 +1,31 @@
+Put $all value for Required-(Start|Stop) in the LSB header.
+Fix: "invoke-rc.d shinken status" returned 0 sometimes even when there was a problem.
+--- a/bin/init.d/shinken
++++ b/bin/init.d/shinken
+@@ -23,8 +23,8 @@
+ 
+ ### BEGIN INIT INFO
+ # Provides:          shinken
+-# Required-Start:    $local_fs
+-# Required-Stop:     $local_fs
++# Required-Start:    $all
++# Required-Stop:     $all
+ # Default-Start:     2 3 4 5
+ # Default-Stop:      S 0 1 6
+ # Short-Description: Shinken monitoring daemon
+@@ -517,10 +517,14 @@
+ do_cmd_on() {
+     action=$1
+     mods=$2
++    local return_value
++    return_value=0
+     for mod in $mods
+     do
+-        do_${action}_ "$mod"
++        # If at least one action fails, the return value is 1.
++        do_${action}_ "$mod" || return_value=1
+     done
++    return $return_value
+ }
+ 
+ 

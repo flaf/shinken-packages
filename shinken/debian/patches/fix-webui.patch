@@ -1,0 +1,12 @@
+return statement out of function body.
+--- a/shinken/webui/plugins/eue/test.py
++++ b/shinken/webui/plugins/eue/test.py
+@@ -6,7 +6,7 @@
+ db = con.shinken
+ if not db:
+     message = "Error : Unable to connect to mongo database"
+-    return {'app': app, 'eue_data': {}, 'message': message }
++    #return {'app': app, 'eue_data': {}, 'message': message }
+ 
+ parts = eueid.split(".")
+ parts.pop(0)

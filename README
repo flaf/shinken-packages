@@ -1,0 +1,9 @@
+To build the package on Debian Wheezy:
+
+    git clone https://github.com/flaf/shinken-package.git
+    cd shinken-package
+    apt-get update
+    apt-get install --no-install-recommends -y python quilt python-setuptools debhelper build-essential
+    dpkg-buildpackage -us -uc
+
+
