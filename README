@@ -4,7 +4,8 @@ To build the package on Debian Wheezy:
     cd shinken-package/shinken
     tar --strip-components=1 -zxvf ../shinken_1.4.1.orig.tar.gz
     apt-get update
-    apt-get install --no-install-recommends -y python quilt python-setuptools debhelper build-essential
+    apt-get install --no-install-recommends -y python quilt \
+        python-setuptools debhelper build-essential
     dpkg-buildpackage -us -uc
 
 
