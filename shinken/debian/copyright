@@ -1,18 +1,20 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: shinken
 Source: http://www.shinken-monitoring.org
+Upstream-Name: Pyro4
+Source: http://pythonhosted.org/Pyro4
 
 Files: *
 Copyright: 2010-2011 Jean Gabès
 License: GNU-AGPL
 
+Files: Pyro4/*
+Copyright: 2013 Irmen de Jong <irmen@razorvine.net>
+License: MIT
+
 Files: debian/*
 Copyright: 2014 François Lafont <francois.lafont@crdp.ac-versailles.fr>
 License: GPL-3.0+
-
-Files: debian/pyro4/*
-Copyright: 2013 Irmen de Jong <irmen@razorvine.net>
-License: MIT
 
 License: GPL-3.0+
  This program is free software: you can redistribute it and/or modify
