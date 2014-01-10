@@ -24,7 +24,7 @@ override_dh_auto_install:
 	rm -rf "debian/$(PYBUILD_NAME)/etc/shinken/"
 	mkdir "debian/$(PYBUILD_NAME)/etc/shinken/"
 	cp -r "debian/etc_shinken/"* "debian/$(PYBUILD_NAME)/etc/shinken/"
-	cp -r "debian/pyro4/"* "debian/$(PYBUILD_NAME)/usr/lib/python2.7/dist-packages/"
+	cp -r "Pyro4/"* "debian/$(PYBUILD_NAME)/usr/lib/python2.7/dist-packages/"
 
 override_dh_python2:
 	dh_python2
