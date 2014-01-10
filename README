@@ -8,6 +8,6 @@ To build the package on Debian Wheezy:
     apt-get update
     apt-get install --no-install-recommends -y python quilt \
         python-setuptools debhelper build-essential
-    dpkg-buildpackage -us -uc
+    dpkg-buildpackage -us -uc && echo 'All is OK!'
 
 
