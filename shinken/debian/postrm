@@ -22,11 +22,10 @@ set -e
 case "$1" in
     purge|remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
 
-    # Remove the symlinks.
-    update-rc.d -f shinken remove >/dev/null 2>&1
-
     if [ "$1" = purge ]
     then
+        # Remove the symlinks only when there is a purge.
+        update-rc.d -f shinken remove >/dev/null 2>&1
         rm -rf /etc/shinken
         rm -f /etc/default/shinken
         rm -rf /var/log/shinken
