@@ -1,13 +1,14 @@
 To build the package on Debian Wheezy:
 
-    git clone https://github.com/flaf/shinken-package.git
-    cd shinken-package/shinken
-    tar --strip-components=1 -zxvf ../shinken_1.4.1.orig.tar.gz -C .
-    mkdir Pyro4
-    tar --strip-components=1 -zxvf ../shinken_1.4.1.orig-Pyro4.tar.gz -C Pyro4
-    apt-get update
-    apt-get install --no-install-recommends -y python quilt \
-        python-setuptools debhelper build-essential
-    dpkg-buildpackage -us -uc && echo 'All is OK!'
+  build_dependencies='build-essential debhelper quilt python python-setuptools'
+  apt-get install --no-install-recommends --yes git $build_dependencies
 
+  git clone https://github.com/flaf/shinken-package.git
+  cd shinken-package/shinken
+
+  tar --strip-components=1 -zxvf ../shinken_1.4.1.orig.tar.gz -C .
+  mkdir Pyro4
+  tar --strip-components=1 -zxvf ../shinken_1.4.1.orig-Pyro4.tar.gz -C Pyro4
+
+  dpkg-buildpackage -us -uc && echo 'All is OK!'
 
