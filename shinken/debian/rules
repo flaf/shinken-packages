@@ -10,23 +10,27 @@
 #export DH_VERBOSE=1
 export PYBUILD_NAME=shinken
 
+RULESDIR := $(realpath $(firstword $(MAKEFILE_LIST)))
+WORKINGDIR := $(realpath $(RULESDIR:/debian/rules=))
+FILES_TO_CLEAN := $(shell cd $(WORKINGDIR) && \ls | grep -v debian)
+
 %:
 	dh $@ --with python2
 
 override_dh_clean:
-	rm -rf build/
-	rm -rf Shinken.egg-info/
+	rm -rf "$(WORKINGDIR)/build/"
+	rm -rf "$(WORKINGDIR)/Shinken.egg-info/"
 	dh_clean
 
 # Replace all the configuration after install.
 override_dh_auto_install:
 	dh_auto_install
-	rm -rf "debian/$(PYBUILD_NAME)/etc/shinken/"
-	mkdir "debian/$(PYBUILD_NAME)/etc/shinken/"
-	cp -r "debian/etc_shinken/"* "debian/$(PYBUILD_NAME)/etc/shinken/"
-	cp -r "Pyro4/"* "debian/$(PYBUILD_NAME)/usr/lib/python2.7/dist-packages/"
+	rm -rf "$(WORKINGDIR)/debian/$(PYBUILD_NAME)/etc/shinken"
+	mkdir "$(WORKINGDIR)/debian/$(PYBUILD_NAME)/etc/shinken"
+	cp -r "$(WORKINGDIR)/debian/etc_shinken/"* "$(WORKINGDIR)/debian/$(PYBUILD_NAME)/etc/shinken/"
+	cp -r "$(WORKINGDIR)/Pyro4/"* "$(WORKINGDIR)/debian/$(PYBUILD_NAME)/usr/lib/python2.7/dist-packages/"
 
-override_dh_python2:
-	dh_python2
+clean_for_git:
+	cd "$(WORKINGDIR)" && rm -rf $(FILES_TO_CLEAN)
 
 
