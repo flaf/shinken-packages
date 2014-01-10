@@ -1,5 +1,6 @@
 Put $all value for Required-(Start|Stop) in the LSB header.
 Fix: "invoke-rc.d shinken status" returned 0 sometimes even when there was a problem.
+Now the script init return 0 with a start when a module is not installed.
 --- a/bin/init.d/shinken
 +++ b/bin/init.d/shinken
 @@ -23,8 +23,8 @@
@@ -13,6 +14,17 @@ Fix: "invoke-rc.d shinken status" returned 0 sometimes even when there was a pro
  # Default-Start:     2 3 4 5
  # Default-Stop:      S 0 1 6
  # Short-Description: Shinken monitoring daemon
+@@ -281,8 +281,8 @@
+     mod=$1
+     modfilepath="$BIN/shinken-${mod}"
+     [ -e "$modfilepath" ] || {
+-        log_failure_msg "FAILED: did not found $mod file ($modfilepath) ; are you sure shinken-$mod is installed?"
+-        return 5
++        log_failure_msg "Did not found $mod file. shinken-$mod is probably not installed."
++        return 0
+     }
+     [ "$DEBUG" = 1 ] && DEBUGCMD="--debug "$(getdebugfile "$mod")
+     # Skonf need skonf.cfg, arbiter nagios.cfg, and the other OTHERd.ini
 @@ -517,10 +517,14 @@
  do_cmd_on() {
      action=$1
