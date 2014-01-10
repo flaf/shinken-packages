@@ -9,6 +9,8 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 export PYBUILD_NAME=shinken
+export QUILT_PATCHES=debian/patches
+export QUILT_REFRESH_ARGS='-p ab --no-timestamps --no-index'
 
 RULESDIR := $(realpath $(firstword $(MAKEFILE_LIST)))
 WORKINGDIR := $(realpath $(RULESDIR:/debian/rules=))
@@ -31,6 +33,19 @@ override_dh_auto_install:
 	cp -r "$(WORKINGDIR)/Pyro4/"* "$(WORKINGDIR)/debian/$(PYBUILD_NAME)/usr/lib/python2.7/dist-packages/"
 
 clean_for_git:
-	cd "$(WORKINGDIR)" && rm -rf $(FILES_TO_CLEAN)
+	dh_clean
+	{ cd "$(WORKINGDIR)" && [ ! -z "$(FILES_TO_CLEAN)" ] && rm -rf $(FILES_TO_CLEAN); } || true
+	cd "$(WORKINGDIR)" && rm -rf ".pc"
+	cd "$(WORKINGDIR)" && rm -f ../shinken*.deb
+	cd "$(WORKINGDIR)" && rm -f ../shinken*.dsc
+	cd "$(WORKINGDIR)" && rm -f ../shinken*.changes
+	cd "$(WORKINGDIR)" && rm -f ../shinken*.debian.tar.gz
+
+populate_workingdir:
+	cd "$(WORKINGDIR)" && rm -rf ".pc"
+	cd "$(WORKINGDIR)" && tar --strip-components=1 -zxf ../shinken_*.orig.tar.gz -C .
+	{ cd "$(WORKINGDIR)" && [ ! -e ./Pyro4 ] && mkdir Pyro4; } || true
+	cd "$(WORKINGDIR)" && tar --strip-components=1 -zxf ../shinken_*.orig-Pyro4.tar.gz -C Pyro4
+	{ cd "$(WORKINGDIR)" && quilt push -a; } || true
 
 
