@@ -29,13 +29,13 @@ To build the package on Debian Wheezy, you can run these commands in a shell:
 
 ::
 
-  build_dependencies='build-essential debhelper quilt python python-setuptools'
+  build_dependencies='build-essential devscripts fakeroot debhelper quilt python-setuptools'
   apt-get install --no-install-recommends --yes git $build_dependencies
   
   git clone https://github.com/flaf/shinken-package.git
   cd shinken-package/shinken
   
   ./debian/rules populate_workingdir
-  dpkg-buildpackage -us -uc && echo 'All is OK!'
+  debuild -us -uc && echo 'All is OK!'
 
 
