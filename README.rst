@@ -20,6 +20,7 @@ Warning
 
 This package doesn't support the upgrade from the official
 shinken package on Debian Wheezy (which embeds Shinken version 0.6.5).
+To be honest, I have not even tested.
 
 Build the package on Debian Wheezy
 ==================================
