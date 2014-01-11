@@ -1,2 +1,3 @@
 fix-webui.patch
 fix-init-shinken.patch
+init-default-shinken.patch
