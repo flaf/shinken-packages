@@ -1,8 +1,9 @@
 * Put $all value for Required-(Start|Stop) in the LSB header.
+* Change the "Default-Stop" field.
 * "invoke-rc.d shinken status" returns 1 if at least one daemon has a problem.
 --- a/bin/init.d/shinken
 +++ b/bin/init.d/shinken
-@@ -23,8 +23,8 @@
+@@ -23,10 +23,10 @@
  
  ### BEGIN INIT INFO
  # Provides:          shinken
@@ -11,8 +12,11 @@
 +# Required-Start:    $all
 +# Required-Stop:     $all
  # Default-Start:     2 3 4 5
- # Default-Stop:      S 0 1 6
+-# Default-Stop:      S 0 1 6
++# Default-Stop:      0 1 6
  # Short-Description: Shinken monitoring daemon
+ # Description:       Shinken is a monitoring tool composed of many separated modules:
+ #     - arbiter     : the main one : control everything else.
 @@ -517,10 +517,14 @@
  do_cmd_on() {
      action=$1
