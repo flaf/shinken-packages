@@ -15,6 +15,12 @@ The default configuration of this package is dummy.
 The whole shinken configuration must be create by the
 administrator after installation.
 
+Warning
+=======
+
+This package doesn't support the upgrade from the official
+shinken package on Debian Wheezy (which embeds Shinken version 0.6.5).
+
 Build the package on Debian Wheezy
 ==================================
 
