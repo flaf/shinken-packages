@@ -1,8 +1,8 @@
 Package of Shinken 1.4.1 for Debian Wheezy
-------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Description
-^^^^^^^^^^^
+"""""""""""
 
 This is a single and **minimalist** package for Debian Wheezy which embeds:
 
@@ -15,7 +15,7 @@ The whole shinken configuration must be create by the
 administrator after installation.
 
 To build the package on Debian Wheezy
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+"""""""""""""""""""""""""""""""""""""
 
 You can run these commands in a shell:
 
