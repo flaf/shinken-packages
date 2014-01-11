@@ -11,9 +11,12 @@ This is a single and **minimalist** package for Debian Wheezy which embeds:
 - Pyro4 version 4.18
 - and that's all!
 
-The default configuration of this package is dummy.
+The default configuration of this package is completely dummy.
 The whole shinken configuration must be created by the
 administrator after installation.
+
+Make your own kind of config, even if nobody else sings along... :)
+
 
 Warning
 =======
