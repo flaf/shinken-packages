@@ -50,4 +50,20 @@ To build the package on Debian Wheezy, you can run these commands in a shell:
   # Building of the Shinken package.
   debuild -us -uc && echo 'All is OK!'
 
+And the package is in the parent directory:
+
+.. code:: sh
+
+  ls -l ../*.deb
+
+If you want to install the package now because you haven't a personnal Debian
+repository, you can run:
+
+.. code:: sh
+
+  # Installation of the dependencies.
+  apt-get install python-ldap
+
+  # Installation of the package directly with dpkg.
+  dpkg -i ../*.deb
 
