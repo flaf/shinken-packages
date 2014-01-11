@@ -24,7 +24,7 @@
      elif [ "$mod" != "arbiter" ]; then
 -        output=$("$modfilepath" -d -c "$ETC/${mod}d.ini" $DEBUGCMD 2>&1)
 +        modinifile_varname=$(echo ${mod}CFG | tr '[:lower:]' '[:upper:]')
-+        modinitfile=$(eval echo '$'$modinifile_varname)
++        modinifile=$(eval echo '$'$modinifile_varname)
 +        output=$("$modfilepath" -d -c "${modinifile}" $DEBUGCMD 2>&1)
          rc=$?
      else
