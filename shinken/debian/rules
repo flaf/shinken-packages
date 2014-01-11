@@ -40,6 +40,7 @@ clean_for_git:
 	cd "$(WORKINGDIR)" && rm -f ../shinken*.dsc
 	cd "$(WORKINGDIR)" && rm -f ../shinken*.changes
 	cd "$(WORKINGDIR)" && rm -f ../shinken*.debian.tar.gz
+	cd "$(WORKINGDIR)" && rm -f ../shinken*.build
 
 populate_workingdir:
 	cd "$(WORKINGDIR)" && rm -rf ".pc"
@@ -47,5 +48,8 @@ populate_workingdir:
 	{ cd "$(WORKINGDIR)" && [ ! -e ./Pyro4 ] && mkdir Pyro4; } || true
 	cd "$(WORKINGDIR)" && tar --strip-components=1 -zxf ../shinken_*.orig-Pyro4.tar.gz -C Pyro4
 	{ cd "$(WORKINGDIR)" && quilt push -a; } || true
+
+clean_populate: clean_for_git populate_workingdir
+	true
 
 
