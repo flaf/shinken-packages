@@ -12,7 +12,7 @@ This is a single and **minimalist** package for Debian Wheezy which embeds:
 - and that's all!
 
 The default configuration of this package is dummy.
-The whole shinken configuration must be create by the
+The whole shinken configuration must be created by the
 administrator after installation.
 
 Warning
