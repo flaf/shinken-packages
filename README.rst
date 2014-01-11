@@ -1,4 +1,3 @@
-==========================================
 Package of Shinken 1.4.1 for Debian Wheezy
 ==========================================
 
@@ -20,13 +19,13 @@ To build the package on Debian Wheezy
 
 You can run these commands in a shell:
 
-  build_dependencies='build-essential debhelper quilt python python-setuptools'
-  apt-get install --no-install-recommends --yes git $build_dependencies
+ build_dependencies='build-essential debhelper quilt python python-setuptools'
+ apt-get install --no-install-recommends --yes git $build_dependencies
  
-  git clone https://github.com/flaf/shinken-package.git
-  cd shinken-package/shinken
+ git clone https://github.com/flaf/shinken-package.git
+ cd shinken-package/shinken
  
-  ./debian/rules populate_workingdir
-  dpkg-buildpackage -us -uc && echo 'All is OK!'
+ ./debian/rules populate_workingdir
+ dpkg-buildpackage -us -uc && echo 'All is OK!'
 
 
