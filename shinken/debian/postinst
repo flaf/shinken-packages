@@ -26,13 +26,10 @@ case "$1" in
     chown -R shinken:shinken /etc/shinken
     update-rc.d shinken defaults >/dev/null 2>&1
 
-    # Restart of shinken only if it should be started
-    # in the current runlevel.
-    current_runlevel=$(runlevel | cut -d' ' -f2)
-    if [ -h /etc/rc${current_runlevel}.d/S??shinken ]
-    then
-        invoke-rc.d shinken start
-    fi
+    # invoke-rc.d restarts the daemon only if there is a
+    # "S??shinken" symlink in the /etc/rc<current-runlevel>.d/
+    # directory.
+    invoke-rc.d shinken start || true
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
