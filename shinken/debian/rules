@@ -22,18 +22,18 @@ FILES_TO_CLEAN := $(shell cd $(WORKINGDIR) && \ls | grep -v debian)
 override_dh_clean:
 	rm -rf "$(WORKINGDIR)/build/"
 	rm -rf "$(WORKINGDIR)/Shinken.egg-info/"
-	dh_clean
+	dh_clean --
 
 # Replace all the configuration after install.
 override_dh_auto_install:
-	dh_auto_install
+	dh_auto_install --
 	rm -rf "$(WORKINGDIR)/debian/$(PYBUILD_NAME)/etc/shinken"
 	mkdir "$(WORKINGDIR)/debian/$(PYBUILD_NAME)/etc/shinken"
 	cp -r "$(WORKINGDIR)/debian/etc_shinken/"* "$(WORKINGDIR)/debian/$(PYBUILD_NAME)/etc/shinken/"
 	cp -r "$(WORKINGDIR)/Pyro4/"* "$(WORKINGDIR)/debian/$(PYBUILD_NAME)/usr/lib/python2.7/dist-packages/"
 
 clean_for_git:
-	dh_clean
+	dh_clean --
 	{ cd "$(WORKINGDIR)" && [ ! -z "$(FILES_TO_CLEAN)" ] && rm -rf $(FILES_TO_CLEAN); } || true
 	cd "$(WORKINGDIR)" && rm -rf ".pc"
 	cd "$(WORKINGDIR)" && rm -f ../shinken*.deb
