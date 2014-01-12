@@ -11,7 +11,7 @@ X-Python-Version: >= 2.7, << 3.0
 Package: shinken
 Architecture: all
 Depends: ${misc:Depends}, ${python:Depends}, python-ldap
-Conflicts: shinken-core, pyro 
+Conflicts: shinken-core, pyro
 Description: Monitoring tool.
  Shinken is a monitoring tool written in Python.
 

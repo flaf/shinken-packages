@@ -1,1 +1,7 @@
-pyro 
+# During the building, dh_python tries to translate Python dependencies
+# from requires.txt file to Debian dependencies. Here, we don't want to
+# have pyro as dependency. So we translate pyro to... nothing (empty
+# string).
+pyro
+
+

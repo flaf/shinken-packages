@@ -15,10 +15,10 @@ export QUILT_REFRESH_ARGS='-p ab --no-timestamps --no-index'
 # The absolute path of the rules file.
 # The realpath function returns the canonical absolute name.
 # A canonical name does not contain any . or .. components,
-# nor any repeated path separators (/) or symlinks. 
+# nor any repeated path separators (/) or symlinks.
 RULES_PATH := $(realpath $(firstword $(MAKEFILE_LIST)))
 
-# The working directory is obtained by removing the 
+# The working directory is obtained by removing the
 # "/debian/rules" string at the end of RULES_PATH.
 WORKING_DIR := $(realpath $(RULES_PATH:/debian/rules=))
 
