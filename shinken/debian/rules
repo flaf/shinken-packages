@@ -12,44 +12,66 @@ export PYBUILD_NAME=shinken
 export QUILT_PATCHES=debian/patches
 export QUILT_REFRESH_ARGS='-p ab --no-timestamps --no-index'
 
-RULESDIR := $(realpath $(firstword $(MAKEFILE_LIST)))
-WORKINGDIR := $(realpath $(RULESDIR:/debian/rules=))
-FILES_TO_CLEAN := $(shell cd $(WORKINGDIR) && \ls | grep -v debian)
+# The absolute path of the rules file.
+# The realpath function returns the canonical absolute name.
+# A canonical name does not contain any . or .. components,
+# nor any repeated path separators (/) or symlinks. 
+RULES_PATH := $(realpath $(firstword $(MAKEFILE_LIST)))
+
+# The working directory is obtained by removing the 
+# "/debian/rules" string at the end of RULES_PATH.
+WORKING_DIR := $(realpath $(RULES_PATH:/debian/rules=))
+
+# List of files in the working directory which do not belong
+# to the git repository (all files except the debian/ directory)
+FILES_TO_CLEAN := $(shell cd $(WORKING_DIR) && \ls | grep -v debian)
+
+# Version of Python.
+PYTHON_VERSION := 2.7
+
 
 %:
 	dh $@ --with python2
 
 override_dh_clean:
-	rm -rf "$(WORKINGDIR)/build/"
-	rm -rf "$(WORKINGDIR)/Shinken.egg-info/"
+	# Directories which are created during a build and
+	# which are not removed by dh_clean.
+	rm -rf "$(WORKING_DIR)/build/"
+	rm -rf "$(WORKING_DIR)/Shinken.egg-info/"
 	dh_clean --
 
-# Replace all the configuration after install.
 override_dh_auto_install:
 	dh_auto_install --
-	rm -rf "$(WORKINGDIR)/debian/$(PYBUILD_NAME)/etc/shinken"
-	mkdir "$(WORKINGDIR)/debian/$(PYBUILD_NAME)/etc/shinken"
-	cp -r "$(WORKINGDIR)/debian/etc_shinken/"* "$(WORKINGDIR)/debian/$(PYBUILD_NAME)/etc/shinken/"
-	cp -r "$(WORKINGDIR)/Pyro4/"* "$(WORKINGDIR)/debian/$(PYBUILD_NAME)/usr/lib/python2.7/dist-packages/"
+	# Replace all the configuration after install.
+	rm -rf "$(WORKING_DIR)/debian/$(PYBUILD_NAME)/etc/shinken"
+	mkdir "$(WORKING_DIR)/debian/$(PYBUILD_NAME)/etc/shinken"
+	cp -r "$(WORKING_DIR)/debian/etc_shinken/"* "$(WORKING_DIR)/debian/$(PYBUILD_NAME)/etc/shinken/"
+	# Put Pyro4 in the build directory.
+	cp -r "$(WORKING_DIR)/Pyro4/"* "$(WORKING_DIR)/debian/$(PYBUILD_NAME)/usr/lib/python$(PYTHON_VERSION)/dist-packages/"
 
-clean_for_git:
+git_clean:
+	# Remove all files which mustn't belong to the git repository.
 	dh_clean --
-	{ cd "$(WORKINGDIR)" && [ ! -z "$(FILES_TO_CLEAN)" ] && rm -rf $(FILES_TO_CLEAN); } || true
-	cd "$(WORKINGDIR)" && rm -rf ".pc"
-	cd "$(WORKINGDIR)" && rm -f ../shinken*.deb
-	cd "$(WORKINGDIR)" && rm -f ../shinken*.dsc
-	cd "$(WORKINGDIR)" && rm -f ../shinken*.changes
-	cd "$(WORKINGDIR)" && rm -f ../shinken*.debian.tar.gz
-	cd "$(WORKINGDIR)" && rm -f ../shinken*.build
+	# All files in the working directory are removed except the debian/ directory.
+	{ cd "$(WORKING_DIR)" && [ ! -z "$(FILES_TO_CLEAN)" ] && rm -rf $(FILES_TO_CLEAN); } || true
+	cd "$(WORKING_DIR)" && rm -rf ".pc"
+	# All files in the parent directory created by the building.
+	cd "$(WORKING_DIR)" && rm -f ../shinken*.deb
+	cd "$(WORKING_DIR)" && rm -f ../shinken*.dsc
+	cd "$(WORKING_DIR)" && rm -f ../shinken*.changes
+	cd "$(WORKING_DIR)" && rm -f ../shinken*.debian.tar.gz
+	cd "$(WORKING_DIR)" && rm -f ../shinken*.build
 
-populate_workingdir:
-	cd "$(WORKINGDIR)" && rm -rf ".pc"
-	cd "$(WORKINGDIR)" && tar --strip-components=1 -zxf ../shinken_*.orig.tar.gz -C .
-	{ cd "$(WORKINGDIR)" && [ ! -e ./Pyro4 ] && mkdir Pyro4; } || true
-	cd "$(WORKINGDIR)" && tar --strip-components=1 -zxf ../shinken_*.orig-Pyro4.tar.gz -C Pyro4
-	{ cd "$(WORKINGDIR)" && quilt push -a; } || true
+populate_working_dir: git_clean
+	# Extract the Shinken source.
+	cd "$(WORKING_DIR)" && tar --strip-components=1 -zxf ../shinken_*.orig.tar.gz -C .
+	# Extract the Pyro4 source.
+	cd "$(WORKING_DIR)" && mkdir Pyro4
+	cd "$(WORKING_DIR)" && tar --strip-components=1 -zxf ../shinken_*.orig-Pyro4.tar.gz -C Pyro4
+	# Apply all the patches to the source.
+	cd "$(WORKING_DIR)" && quilt push -a
 
-clean_populate: clean_for_git populate_workingdir
-	true
+create_deb: populate_working_dir
+	cd "$(WORKING_DIR)" && debuild -us -uc && echo 'building is OK!'
 
 
