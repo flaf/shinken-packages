@@ -26,9 +26,9 @@ Make your own kind of config, even if nobody else sings along... :)
 Warning
 =======
 
-This package doesn't support the upgrade from the official
+This package doesn't manage the upgrade from the official
 shinken package on Debian Wheezy (which embeds Shinken version 0.6.5).
-To be honest, I have not even tested.
+To be honest, I have not even tried to test it.
 
 Build the package on Debian Wheezy
 ==================================
