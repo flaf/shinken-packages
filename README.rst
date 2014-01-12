@@ -46,10 +46,9 @@ To build the .deb package on Debian Wheezy, you can run these commands in a shel
   # Creation of the working directory.
   git clone https://github.com/flaf/shinken-package.git
   cd shinken-package/shinken
-  ./debian/rules populate_workingdir
 
   # Building of the Shinken package.
-  debuild -us -uc && echo 'All is OK!'
+  ./debian/rules create_deb
 
 And the package is in the parent directory:
 
@@ -63,7 +62,7 @@ repository, you can run:
 .. code:: sh
 
   # Installation of the dependencies.
-  apt-get install python-ldap
+  apt-get install --no-install-recommends --yes python-ldap
 
   # Installation of the package directly with dpkg.
   dpkg -i ../*.deb
