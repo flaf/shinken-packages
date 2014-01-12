@@ -38,10 +38,10 @@ override_dh_clean:
 	# which are not removed by dh_clean.
 	rm -rf "$(WORKING_DIR)/build/"
 	rm -rf "$(WORKING_DIR)/Shinken.egg-info/"
-	dh_clean --
+	dh_clean
 
 override_dh_auto_install:
-	dh_auto_install --
+	dh_auto_install
 	# Replace all the configuration after install.
 	rm -rf "$(WORKING_DIR)/debian/$(PYBUILD_NAME)/etc/shinken"
 	mkdir "$(WORKING_DIR)/debian/$(PYBUILD_NAME)/etc/shinken"
@@ -49,9 +49,21 @@ override_dh_auto_install:
 	# Put Pyro4 in the build directory.
 	cp -r "$(WORKING_DIR)/Pyro4/"* "$(WORKING_DIR)/debian/$(PYBUILD_NAME)/usr/lib/python$(PYTHON_VERSION)/dist-packages/"
 
+override_dh_installinit:
+	#    --onlyscripts
+	# Only modify postinst/postrm/prerm scripts, do not actually install any init script,
+	# default files, or upstart job. May be useful if the init script or upstart job is
+	# shipped and/or installed by upstream in a way that doesn't make it easy to let 
+	# dh_installinit find it.
+	dh_installinit --onlyscripts --error-handler=true
+
+########################
+### Personal targets ###
+########################
+
 git_clean:
 	# Remove all files which mustn't belong to the git repository.
-	dh_clean --
+	dh_clean
 	# All files in the working directory are removed except the debian/ directory.
 	{ cd "$(WORKING_DIR)" && [ ! -z "$(FILES_TO_CLEAN)" ] && rm -rf $(FILES_TO_CLEAN); } || true
 	cd "$(WORKING_DIR)" && rm -rf ".pc"
