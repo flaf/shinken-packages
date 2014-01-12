@@ -21,23 +21,22 @@ set -e
 
 case "$1" in
     purge|remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
-
-    if [ "$1" = purge ]
-    then
-        rm -rf /etc/shinken
-        rm -f /etc/default/shinken
-        rm -rf /var/log/shinken
-        rm -rf /var/lib/shinken
-        rm -rf /var/run/shinken
-        if getent passwd shinken >/dev/null
+        if [ "$1" = purge ]
         then
-            userdel --force shinken || true
+            rm -rf /etc/shinken
+            rm -f /etc/default/shinken
+            rm -rf /var/log/shinken
+            rm -rf /var/lib/shinken
+            rm -rf /var/run/shinken
+            if getent passwd shinken >/dev/null
+            then
+                userdel --force shinken || true
+            fi
+            if getent group shinken >/dev/nnull
+            then
+                groupdel shinken || true
+            fi
         fi
-        if getent group shinken >/dev/nnull
-        then
-            groupdel shinken || true
-        fi
-    fi
     ;;
 
     *)
