@@ -16,35 +16,27 @@ set -e
 
 case "$1" in
     install|upgrade)
-
-    # Creation of the shinken user/group.
-    if getent passwd shinken >/dev/null 2>&1
-    then
-        if getent group shinken >/dev/null 2>&1
+        # Creation of the shinken user/group.
+        if getent passwd shinken >/dev/null 2>&1
         then
-            # The shinken user and the shinken group exist.
-            usermod -g shinken shinken 2>/dev/null || true
+            if getent group shinken >/dev/null 2>&1
+            then
+                # The shinken user and the shinken group exist.
+                usermod -g shinken shinken 2>/dev/null || true
+            else
+                # The shinken user exists but the shinken group doesn't exist.
+                groupadd --system shinken || true
+                usermod -g shinken shinken || true
+            fi
         else
-            # The shinken user exists but the shinken group doesn't exist.
-            groupadd --system shinken || true
-            usermod -g shinken shinken || true
+            # The shinken user doesn't exist.
+            if ! getent group shinken >/dev/null 2>&1
+            then
+                # If the shinken group doesn't exist, we create it.
+                groupadd --system shinken || true
+            fi
+            useradd --gid shinken --system --home /var/lib/shinken shinken || true
         fi
-    else
-        # The shinken user doesn't exist.
-        if ! getent group shinken >/dev/null 2>&1
-        then
-            # If the shinken group doesn't exist, we create it.
-            groupadd --system shinken || true
-        fi
-        useradd --gid shinken --system --home /var/lib/shinken shinken || true
-    fi
-
-    # If the init script exists etc., we stop the shinken daemon.
-    if [ -x /etc/init.d/shinken ]
-    then
-        echo "Stopping the shinken daemon..."
-        invoke-rc.d shinken stop >/dev/null 2>&1 || true
-    fi
     ;;
 
     abort-upgrade)

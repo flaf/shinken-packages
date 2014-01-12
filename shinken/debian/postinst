@@ -24,12 +24,6 @@ case "$1" in
     chown -R shinken:shinken /var/log/shinken
     chown -R shinken:shinken /var/run/shinken
     chown -R shinken:shinken /etc/shinken
-    update-rc.d shinken defaults >/dev/null 2>&1
-
-    # invoke-rc.d restarts the daemon only if there is a
-    # "S??shinken" symlink in the /etc/rc<current-runlevel>.d/
-    # directory.
-    invoke-rc.d shinken start || true
 
     # Update the key used by the WebUI for cookies construction.
     shinken_specific='/etc/shinken/shinken-specific.cfg'

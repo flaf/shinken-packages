@@ -19,8 +19,6 @@ set -e
 
 case "$1" in
     remove|upgrade|deconfigure)
-    echo "Stopping the shinken daemon..."
-    invoke-rc.d shinken stop >/dev/null 2>&1 || true
     ;;
 
     failed-upgrade)

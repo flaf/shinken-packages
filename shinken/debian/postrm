@@ -24,8 +24,6 @@ case "$1" in
 
     if [ "$1" = purge ]
     then
-        # Remove the symlinks only when there is a purge.
-        update-rc.d -f shinken remove >/dev/null 2>&1
         rm -rf /etc/shinken
         rm -f /etc/default/shinken
         rm -rf /var/log/shinken
