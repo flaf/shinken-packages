@@ -30,6 +30,16 @@ case "$1" in
     # "S??shinken" symlink in the /etc/rc<current-runlevel>.d/
     # directory.
     invoke-rc.d shinken start || true
+
+    # Update the key used by the WebUI for cookies construction.
+    shinken_specific='/etc/shinken/shinken-specific.cfg'
+    old_key='CHANGE_ME_NOW_jKgCyVPSFmmTRkjfNP76'
+    if grep -q "$old_key" "$shinken_specific" >/dev/null 2>&1
+    then
+        # The old key is present in the configuration.
+        new_key=$(tr -dc "[:alnum:]" < /dev/urandom | head -c 25)
+        sed -i "s/$old_key/$new_key/" "$shinken_specific"
+    fi
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
