@@ -14,7 +14,7 @@ This is a single and **minimalist** package for Debian Wheezy which embeds:
 The default configuration of this package is completely dummy.
 The whole shinken configuration must be created by the
 administrator after installation. If you want to check that
-all is fine just after the installation, you can log in
+everything is fine just after the installation, you can log in
 the WebUI (http://address:7767) with the **admin** username
 and **admin** password.
 
