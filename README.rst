@@ -62,7 +62,7 @@ repository, you can run:
 .. code:: sh
 
   # Installation of the dependencies.
-  apt-get install python-ldap
+  apt-get install --no-install-recommends --yes python-ldap
 
   # Installation of the package directly with dpkg.
   dpkg -i ../*.deb
