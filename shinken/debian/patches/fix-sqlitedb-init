@@ -1,12 +1,14 @@
---- a/shinken/modules/sqlite_generic.py
-+++ b/shinken/modules/sqlite_generic.py
+Index: shinken/shinken/modules/sqlite_generic.py
+===================================================================
+--- shinken.orig/shinken/modules/sqlite_generic.py	2014-01-06 03:18:11.000000000 +0100
++++ shinken/shinken/modules/sqlite_generic.py	2014-01-13 02:29:35.913661501 +0100
 @@ -83,6 +83,9 @@
              user TEXT, key TEXT, value TEXT, 
              PRIMARY KEY (user, key)
          )""")
 +        # Create an entry for shinken-global in DB to avoid repetitive warnings
 +        # in brokerd.log while there is no common bookmak in the WebUI.
-+        self.db.execute("""INSERT INTO "ui_preferences" VALUES('shinken-global','bookmarks','[]')""")
++        self.db.execute("""INSERT OR IGNORE INTO ui_preferences VALUES('shinken-global','bookmarks','[]')""")
          self.db.commit()
  
  #################################### WebUI parts ############################
