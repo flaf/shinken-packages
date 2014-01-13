@@ -19,7 +19,6 @@ the WebUI (http://address:7767) with the **admin** username
 and **admin** password.
 
 Remenber: change the configuration after installation!
-
 Make your own kind of config, even if nobody else sings along... :)
 
 
