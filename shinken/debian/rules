@@ -45,9 +45,9 @@ override_dh_clean:
 override_dh_auto_install:
 	dh_auto_install
 	# Replace all the configuration after install.
-	rm -rf "$(BUILD_DIR)/etc/shinken"
-	mkdir "$(BUILD_DIR)/etc/shinken"
-	cp -r "$(DEBIAN_DIR)/etc_shinken/"* "$(BUILD_DIR)/etc/shinken/"
+	rm -rf "$(BUILD_DIR)/etc/$(PYBUILD_NAME)"
+	mkdir "$(BUILD_DIR)/etc/$(PYBUILD_NAME)"
+	cp -r "$(DEBIAN_DIR)/etc_$(PYBUILD_NAME)/"* "$(BUILD_DIR)/etc/$(PYBUILD_NAME)/"
 	# Put Pyro4 in the build directory.
 	cp -r "$(WORKING_DIR)/Pyro4/"* "$(BUILD_DIR)/usr/lib/python$(PYTHON_VERSION)/dist-packages/"
 
@@ -70,18 +70,14 @@ git_clean:
 	{ cd "$(WORKING_DIR)" && [ ! -z "$(FILES_TO_CLEAN)" ] && rm -rf $(FILES_TO_CLEAN); } || true
 	cd "$(WORKING_DIR)" && rm -rf ".pc"
 	# All files in the parent directory created by the building.
-	cd "$(WORKING_DIR)" && rm -f ../shinken*.deb
-	cd "$(WORKING_DIR)" && rm -f ../shinken*.dsc
-	cd "$(WORKING_DIR)" && rm -f ../shinken*.changes
-	cd "$(WORKING_DIR)" && rm -f ../shinken*.debian.tar.gz
-	cd "$(WORKING_DIR)" && rm -f ../shinken*.build
+	cd "$(WORKING_DIR)" && rm -f ../$(PYBUILD_NAME)*.{deb,dsc,changes,debian.tar.gz,build}
 
 populate_working_dir: git_clean
 	# Extract the Shinken source.
-	cd "$(WORKING_DIR)" && tar --strip-components=1 -zxf ../shinken_*.orig.tar.gz -C .
+	cd "$(WORKING_DIR)" && tar --strip-components=1 -zxf ../$(PYBUILD_NAME)_*.orig.tar.gz -C .
 	# Extract the Pyro4 source.
 	cd "$(WORKING_DIR)" && mkdir Pyro4
-	cd "$(WORKING_DIR)" && tar --strip-components=1 -zxf ../shinken_*.orig-Pyro4.tar.gz -C Pyro4
+	cd "$(WORKING_DIR)" && tar --strip-components=1 -zxf ../$(PYBUILD_NAME)_*.orig-Pyro4.tar.gz -C Pyro4
 	# Apply all the patches to the source.
 	cd "$(WORKING_DIR)" && quilt push -a
 
