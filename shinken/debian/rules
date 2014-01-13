@@ -21,6 +21,8 @@ RULES_PATH := $(realpath $(firstword $(MAKEFILE_LIST)))
 # The working directory is obtained by removing the
 # "/debian/rules" string at the end of RULES_PATH.
 WORKING_DIR := $(realpath $(RULES_PATH:/debian/rules=))
+DEBIAN_DIR := $(WORKING_DIR)/debian
+BUILD_DIR := $(DEBIAN_DIR)/$(PYBUILD_NAME)
 
 # List of files in the working directory which do not belong
 # to the git repository (all files except the debian/ directory)
@@ -43,11 +45,11 @@ override_dh_clean:
 override_dh_auto_install:
 	dh_auto_install
 	# Replace all the configuration after install.
-	rm -rf "$(WORKING_DIR)/debian/$(PYBUILD_NAME)/etc/shinken"
-	mkdir "$(WORKING_DIR)/debian/$(PYBUILD_NAME)/etc/shinken"
-	cp -r "$(WORKING_DIR)/debian/etc_shinken/"* "$(WORKING_DIR)/debian/$(PYBUILD_NAME)/etc/shinken/"
+	rm -rf "$(BUILD_DIR)/etc/shinken"
+	mkdir "$(BUILD_DIR)/etc/shinken"
+	cp -r "$(DEBIAN_DIR)/etc_shinken/"* "$(BUILD_DIR)/etc/shinken/"
 	# Put Pyro4 in the build directory.
-	cp -r "$(WORKING_DIR)/Pyro4/"* "$(WORKING_DIR)/debian/$(PYBUILD_NAME)/usr/lib/python$(PYTHON_VERSION)/dist-packages/"
+	cp -r "$(WORKING_DIR)/Pyro4/"* "$(BUILD_DIR)/usr/lib/python$(PYTHON_VERSION)/dist-packages/"
 
 override_dh_installinit:
 	#    --onlyscripts
