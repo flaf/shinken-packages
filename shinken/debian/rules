@@ -86,6 +86,6 @@ populate_working_dir: git_clean
 	cd "$(WORKING_DIR)" && quilt push -a
 
 create_deb: populate_working_dir
-	cd "$(WORKING_DIR)" && debuild -us -uc && echo 'building is OK!'
+	cd "$(WORKING_DIR)" && debuild -us -uc && echo 'Building is OK!'
 
 
