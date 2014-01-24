@@ -35,17 +35,15 @@ Build the .deb package on Debian Wheezy
 
 To build the .deb package on Debian Wheezy, you can run these commands in a shell:
 
-
 .. code:: sh
-
-  # Installation of the build-dependencies (and git of course).
-  GIT_DEPENDS='git openssl ca-certificates'
-  BUILD_DEPENDS='build-essential devscripts fakeroot debhelper quilt python-setuptools'
-  apt-get install --no-install-recommends --yes $GIT_DEPENDS $BUILD_DEPENDS
 
   # Creation of the working directory.
   git clone https://github.com/flaf/shinken-package.git
   cd shinken-package/shinken
+
+  # Installation of the build-dependencies
+  BUILD_DEPENDS='<see the debian/control file>'
+  apt-get install --no-install-recommends --yes $BUILD_DEPENDS
 
   # Building of the Shinken package.
   ./debian/rules create_deb
@@ -54,16 +52,5 @@ And the package is in the parent directory:
 
 .. code:: sh
 
-  ls -l ../*.deb
-
-If you want to install the package now because you haven't a personnal Debian
-repository, you can run:
-
-.. code:: sh
-
-  # Installation of the dependencies.
-  apt-get install --no-install-recommends --yes python-ldap
-
-  # Installation of the package directly with dpkg.
-  dpkg -i ../*.deb
+  ls -l ..
 
