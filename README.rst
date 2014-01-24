@@ -46,7 +46,7 @@ To build the .deb package on Debian Wheezy, you can run these commands in a shel
   apt-get install --no-install-recommends --yes $BUILD_DEPENDS
 
   # Building of the Shinken package.
-  ./debian/rules create_deb && echo 'Building is OK!'
+  ./debian/rules create_deb
 
 And the package is in the parent directory:
 
