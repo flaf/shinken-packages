@@ -43,7 +43,7 @@ To build the .deb package on Debian Wheezy, you can run these commands in a shel
 
   # Installation of the build-dependencies
   BUILD_DEPENDS='<see the debian/control file>'
-  apt-get install --no-install-recommends --yes $BUILD_DEPENDS
+  apt-get install --no-install-recommends --yes build-essential $BUILD_DEPENDS
 
   # Building of the Shinken package.
   ./debian/rules create_deb

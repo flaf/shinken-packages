@@ -2,7 +2,7 @@ Source: shinken
 Section: net
 Priority: extra
 Maintainer: François Lafont <francois.lafont@crdp.ac-versailles.fr>
-Build-Depends: build-essential, devscripts, fakeroot, debhelper (>= 8.0.0), quilt, python-setuptools
+Build-Depends: devscripts, fakeroot, debhelper (>= 8.0.0), quilt, python-setuptools
 Standards-Version: 3.9.3
 Homepage: http://www.shinken-monitoring.org
 Vcs-Browser: https://github.com/naparuba/shinken/tree/branch-1.4
@@ -14,5 +14,3 @@ Depends: ${misc:Depends}, ${python:Depends}, python-ldap
 Conflicts: shinken-core, pyro
 Description: Monitoring tool.
  Shinken is a monitoring tool written in Python.
-
-
