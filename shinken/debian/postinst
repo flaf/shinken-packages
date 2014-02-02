@@ -24,7 +24,7 @@ case "$1" in
         chown -R shinken:shinken /var/log/shinken
         chown -R shinken:shinken /var/run/shinken
         chown -R shinken:shinken /etc/shinken
-    
+
         # Update the key used by the WebUI for cookies construction.
         shinken_specific='/etc/shinken/shinken-specific.cfg'
         old_key='CHANGE_ME_NOW_jKgCyVPSFmmTRkjfNP76'
