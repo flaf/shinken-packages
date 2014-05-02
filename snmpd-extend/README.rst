@@ -27,8 +27,8 @@ To build the .deb package on Debian Wheezy, you can run these commands in a shel
 .. code:: sh
 
   # Creation of the working directory.
-  git clone https://github.com/flaf/snmpd-extend.git
-  cd snmpd-extend/snmpd-extend/
+  git clone https://github.com/flaf/shinken-packages.git
+  cd shinken-packages/snmpd-extend/snmpd-extend/
 
   # Installation of the build-dependencies
   BUILD_DEPENDS='<see the debian/control file>'
