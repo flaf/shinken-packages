@@ -31,7 +31,7 @@ This package depends on 2 unofficial packages :
 1. the `wmi-cli`__ package;
 2. and the `shinken`__ package.
 
-__ https://github.com/flaf/shinken-packages/tree/master/wmic
+__ https://github.com/flaf/shinken-packages/tree/master/wmic-cli
 __ https://github.com/flaf/shinken-packages/tree/master/shinken
 
 
