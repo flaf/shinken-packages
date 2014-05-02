@@ -38,8 +38,8 @@ To build the .deb package on Debian Wheezy, you can run these commands in a shel
 .. code:: sh
 
   # Creation of the working directory.
-  git clone https://github.com/flaf/shinken-package.git
-  cd shinken-package/shinken
+  git clone https://github.com/flaf/shinken-packages.git
+  cd shinken-packages/shinken/shinken/
 
   # Installation of the build-dependencies
   BUILD_DEPENDS='<see the debian/control file>'
