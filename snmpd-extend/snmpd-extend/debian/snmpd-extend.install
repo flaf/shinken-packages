@@ -1,0 +1,4 @@
+bin usr/share/snmpd-extend/
+conf usr/share/snmpd-extend/
+
+

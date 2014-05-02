@@ -1,0 +1,52 @@
+#!/bin/sh
+
+# Copyright: 2013 Francois Lafont <francois.lafont@crdp.ac-versailles.fr>
+#
+# License: GPL-3.0+
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# output ~ /^Zimbra OK/ <=> OK
+# output !~ /^Zimbra OK/ <=> Problem
+
+export LC_ALL=C
+export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
+
+# After talking with Michael Nourry on IRC, the line 6 of the
+# output is irrelevant (this line 'Running: zmstat-proc').
+# We skip it.
+output=$(/opt/zimbra/bin/zmstatctl status 2>&1 | sed -n '6!p')
+
+output_ok="Running: zmstat-mysql
+Running: zmstat-cpu
+Running: zmstat-io
+Running: zmstat-fd
+Running: zmstat-df
+Running: zmstat-allprocs
+Running: zmstat-io-x
+Running: zmstat-vm"
+
+if [ "$output" = "$output_ok" ]; then
+    echo "Zimbra OK."
+else
+    # Replace '\n' by '; ', remove ':' and strip the output.
+    cleaned_output=$(echo "$output" | sed -n '1h;1!H;${x;s/\n/; /g;s/://g;p}')
+    cleaned_output=$(echo $cleaned_output)
+    if [ -z "$cleaned_output" ]
+    then
+        cleaned_output="the output of [zmstatctl status] is empty"
+    fi
+    echo "Zimbra problem: $cleaned_output."
+fi
+
+

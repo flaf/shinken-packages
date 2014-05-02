@@ -1,0 +1,147 @@
+#!/bin/sh
+
+# Copyright: 2013 Francois Lafont <francois.lafont@crdp.ac-versailles.fr>
+#
+# License: GPL-3.0+
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+export LC_ALL=C
+export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
+
+# output ~ /^RAID OK/                     <=> RAID is OK
+# output ~ /^RAID" and !~ /^RAID OK/      <=> RAID has a problem.
+# output !~ /^RAID/                       <=> RAID state is unknown.
+
+final_message () {
+    echo "$1"
+    exit 0
+}
+
+# At first, there is no RAID found.
+# By default, this variable MUST BE EMPTY !
+RAID_FOUND=''
+
+
+
+
+if which 3ware-status >/dev/null
+then
+    RAID_FOUND="$RAID_FOUND 3ware"
+    if 3ware-status 2>&1 | grep -iq 'NOT OPTIMAL'
+    then
+        final_message "RAID problem (for further information try the 3ware-status command)."
+    fi
+fi
+
+if which aacraid-status >/dev/null
+then
+    RAID_FOUND="$RAID_FOUND aacraid"
+    if aacraid-status 2>&1 | grep -iq 'NOT OPTIMAL'
+    then
+        final_message "RAID problem (for further information try the aacraid-status command)."
+    fi
+fi
+
+# The command name could be different depending on the distribution.
+for cciss_cmd in cciss_vol_status cciss-vol-status
+do
+    if which "$cciss_cmd" >/dev/null
+    then
+        RAID_FOUND="$RAID_FOUND cciss"
+        if [ -e "/etc/init.d/cciss-vol-statusd" ]
+        then
+            device=$(sed -n -r 's:^ID=(/dev.*)$:\1:p' "/etc/init.d/cciss-vol-statusd")
+            if [ -z "$device" ]
+            then
+                final_message "Problem: device not found in /etc/init.d/cciss-vol-statusd."
+            fi
+        else
+            final_message "Problem: /etc/init.d/cciss-vol-statusd doesn't exist."
+        fi
+        if "$cciss_cmd" "$device" >/dev/null 2>&1
+        then
+            true
+        else
+            final_message "RAID problem (for further information try the $cciss_cmd command)."
+        fi
+    fi
+done
+
+if which mpt-status >/dev/null
+then
+    RAID_FOUND="$RAID_FOUND mpt"
+    if mpt-status 2>&1 | grep -qi 'state OPTIMAL'
+    then
+        true
+    else
+        final_message "RAID problem (for further information try the mpt-status command)."
+    fi
+fi
+
+for megaraid_cmd in megaraid-status megaraidsas-status
+do
+    if which "$megaraid_cmd" > /dev/null
+    then
+        RAID_FOUND="$RAID_FOUND megaraid"
+        if "$megaraid_cmd" 2>&1 | grep -qi 'NOT OPTIMAL'
+        then
+            final_message "RAID problem (for further information try the $megaraid_cmd command)."
+        fi
+    fi
+done
+
+if which mdadm > /dev/null
+then
+    RAID_FOUND="$RAID_FOUND software"
+    # It's better to use the --test option (see manpage of mdadm).
+    #arrays=$(mdadm --detail --scan | grep -i '^ARRAY' | awk '{print $2}')
+    #for a in $arrays
+    #do
+    #    state=$(mdadm --detail "$a" | grep -i 'state[[:space:]]*:' | cut -d':' -f2 | tr -d ' ')
+    #    if [ "$state" != 'clean' ]
+    #    then
+    #        final_message 'RAID problem (for further information try the mdadm command).'
+    #    fi
+    #done
+    if ! mdadm --detail --test /dev/md/* >/dev/null 2>&1
+    then
+        final_message 'RAID problem (for further information try the mdadm command).'
+    fi
+fi
+
+if which areca-cli > /dev/null
+then
+    RAID_FOUND="$RAID_FOUND areca"
+    output=$(areca-cli vsf info | sed -n '/^====/,/^====/p' | grep -v '^====')
+    l=$(echo $output | wc -l)
+    n=$(echo $output | grep -ci 'normal$')
+    if [ "$l" = 0 ] || [ "$l" != "$n" ]
+    then
+        final_message 'RAID problem (for further information try the areca-cli command).'
+    fi
+fi
+
+
+
+
+if [ -n "$RAID_FOUND" ] # "$RAID_FOUND" non empty.
+then
+    RAID_FOUND=$(echo $RAID_FOUND | tr ' ' '\n' | sort | uniq | tr '\n' ' ') # remove duplicates
+    RAID_FOUND=$(echo $RAID_FOUND) # strip because the \n at the end became a space
+    final_message "RAID OK ($RAID_FOUND)."
+else
+    final_message "Problem: no RAID monitor tool installed or tool not supported by the check (yet)."
+fi
+
+

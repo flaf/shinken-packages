@@ -1,0 +1,73 @@
+#!/bin/sh
+
+# Copyright: 2013 Francois Lafont <francois.lafont@crdp.ac-versailles.fr>
+#
+# License: GPL-3.0+
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# Output :=  <timestamp>;<changed>;<failed>
+#   * <timestamp> := the timestamp of the last run.
+#   * <changed>   := the number of changed resources.
+#   * <failed>    := the number of errors during the run.
+# A field can be empty if not found.
+
+set -e
+export LC_ALL=C
+export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
+
+SUMMARY="/var/lib/puppet/state/last_run_summary.yaml"
+
+# The first file is updated even if the run failed, but the second
+# file is updated only if the run comes to an end.
+#STATE="/var/lib/puppet/state/state.yaml"
+STATE="/var/lib/puppet/client_yaml/catalog/$(hostname --fqdn).yaml"
+
+
+if [ -f "$SUMMARY" ]
+then
+
+    # With puppet 2.7 a summary file is available.
+    summary=$(cat "$SUMMARY")
+    timestamp=$(echo "$summary" | sed -n 's/^[[:space:]]*last_run:[[:space:]]*//p')
+    changed=$(echo "$summary" | sed -n 's/^[[:space:]]*changed:[[:space:]]*//p')
+    failed=$(echo "$summary" | sed -n 's/^[[:space:]]*failed:[[:space:]]*//p')
+
+    # If the puppet run doesn't come to an end (compilation error on the master),
+    # the "changed:" and "failed:" fields don't exist. In this case, we decide
+    # to have failed=1 and changed=0.
+    [ -z "$failed" ] && failed="1"
+    [ -z "$changed" ] && changed="0"
+
+    echo "$timestamp;$changed;$failed"
+    exit 0
+
+elif [ -f "$STATE" ]
+then
+
+    # With puppet n < 2.7, there is no summmary file.
+    # the $STATE file give the timestamp of the 
+    timestamp=$(stat --format='%Y' "$STATE")
+
+    echo "$timestamp;;"
+    exit 0
+
+else
+
+    # No information.
+    echo ";;"
+    exit 0
+
+fi
+
+

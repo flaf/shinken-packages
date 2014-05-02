@@ -1,0 +1,58 @@
+#!/bin/sh
+
+# Copyright: 2014 Francois Lafont <francois.lafont@crdp.ac-versailles.fr>
+#
+# License: GPL-3.0+
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+export LC_ALL=C
+export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
+TIMEOUT=7
+SCRIPT_DIRECTORY=${0%/*}
+CODENAME=$(lsb_release --codename --short)
+
+is_old_distribution () {
+    if [ "$CODENAME" = "etch" ] || [ "$CODENAME" = "lenny" ]
+    then
+        true
+    else
+        false
+    fi
+}
+
+# With Lenny, the "timeout" command is buggy
+# (http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=639197).
+# So, in this case, we use "timeout" command of the present package.
+if is_old_distribution
+then
+    if echo "$(uname -r)" | grep -q "amd64"
+    then
+        TIMEOUT_CMD="$SCRIPT_DIRECTORY/timeout_amd64"
+    else
+        TIMEOUT_CMD="$SCRIPT_DIRECTORY/timeout_i386"
+    fi
+else
+    TIMEOUT_CMD="timeout"
+fi
+
+echo 'SHOW SLAVE STATUS\G;' | "$TIMEOUT_CMD" --signal="SIGKILL" "$TIMEOUT" mysql | tr '[:upper:]' '[:lower:]' \
+    | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*:[[:space:]]*/:/' \
+    | grep -iE '(slave_io_state|slave_io_running|slave_sql_running|last_error|seconds_behind_master):'
+
+echo "SHOW GLOBAL STATUS LIKE 'slave_running';" | "$TIMEOUT_CMD" --signal="SIGKILL" "$TIMEOUT" mysql \
+    | tr '[:upper:]' '[:lower:]' \
+    | sed -e 's/^[[:space:]]*//' -e 's/slave_running[[:space:]]*/:/' \
+    | grep -i 'slave_running'
+
+

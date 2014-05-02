@@ -1,0 +1,8 @@
+* Add an extend which triggers an update of the package:
+    apt-get update && apt-get install snmpd-extend &
+    echo "Update of the snmpd-extend package started, bye..."
+
+* Add an extend to check the cron tasks. Ask in mailing list
+  to have idea.
+
+

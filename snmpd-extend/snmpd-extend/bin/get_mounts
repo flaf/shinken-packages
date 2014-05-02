@@ -1,0 +1,71 @@
+#!/bin/sh
+
+# Copyright: 2013 Francois Lafont <francois.lafont@crdp.ac-versailles.fr>
+#
+# License: GPL-3.0+
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+export LC_ALL=C
+export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
+TIMEOUT=2
+SCRIPT_DIRECTORY=${0%/*}
+CODENAME=$(lsb_release --codename --short)
+
+is_old_distribution () {
+    if [ "$CODENAME" = "etch" ] || [ "$CODENAME" = "lenny" ]
+    then
+        true
+    else
+        false
+    fi
+}
+
+# With Lenny, the "timeout" command is buggy
+# (http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=639197).
+# So, in this case, we use "timeout" command of the present package.
+if is_old_distribution
+then
+    if echo "$(uname -r)" | grep -q "amd64"
+    then
+        COMMAND="$SCRIPT_DIRECTORY/timeout_amd64"
+    else
+        COMMAND="$SCRIPT_DIRECTORY/timeout_i386"
+    fi
+else
+    COMMAND="timeout"
+fi
+
+mount_dirs=$(grep -v '^[[:space:]]*#' /etc/fstab | awk '{print $2}' \
+    | grep '^/' | grep -vE '(^/$|^/media/cdrom0$|^/media/floppy0$|^/proc$|^/dev/)')
+
+for dir in $mount_dirs
+do
+
+    if "$COMMAND" --signal="SIGKILL" "$TIMEOUT" mountpoint "$dir" >/dev/null 2>&1 && \
+       "$COMMAND" --signal="SIGKILL" "$TIMEOUT" \ls -f "$dir" >/dev/null 2>&1
+       # With "| head..." the ls command doesn't list all the directory (it's good),
+       # but if the ls command fails with no timeout, the exit value of
+       # this instruction will be the exit value of the head command which
+       # could be 0, even if the ls command fails.
+       #timeout --signal=SIGKILL "$TIMEOUT" \ls -f "$dir" | head -n 5 >/dev/null 2>&1
+    then
+        echo "$dir:ok"
+    else
+        echo "$dir:problem"
+    fi
+
+done
+
+
+

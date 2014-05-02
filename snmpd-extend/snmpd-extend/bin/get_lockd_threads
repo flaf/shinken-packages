@@ -1,0 +1,33 @@
+#!/bin/sh
+
+# Copyright: 2014 Francois Lafont <francois.lafont@crdp.ac-versailles.fr>
+#
+# License: GPL-3.0+
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+export LC_ALL=C
+export PATH="/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin"
+
+#if ! which prstat >/dev/null 2>&1
+#then
+#    echo "Sorry, no prstat command."
+#    exit 1
+#fi
+#
+#prstat -c -p "$(pgrep '^lockd$' | head -1)" 0 1 | sed -nr 's:^.*lockd/(.*)$:\1:p'
+
+# Use "ps" command instead of "prstat" because ps is more portable.
+ps -p $(pgrep '^lockd$' | head -1) -o 'nlwp' | sed -n '2p' | tr -d ' '
+
+
