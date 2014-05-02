@@ -1,0 +1,14 @@
+Source: wmi-cli
+Section: net
+Priority: extra
+Maintainer: François Lafont <francois.lafont@crdp.ac-versailles.fr>
+Build-Depends: devscripts, fakeroot, quilt, debhelper (>= 8.0.0), autoconf
+Standards-Version: 3.9.3
+Homepage: http://www.zenoss.com/oss/
+Vcs-Browser: http://dev.zenoss.org/trac/browser/trunk/wmi
+
+Package: wmi-cli
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: WMI client for Windows
+ A simple binary which is a WMI client for Windows.
