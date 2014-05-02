@@ -1,0 +1,63 @@
+#!/bin/sh
+
+# Copyright: 2013 Francois Lafont <francois.lafont@crdp.ac-versailles.fr>
+#
+# License: GPL-3.0+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+#set -x
+SCRIPT_NAME=${0##*/}
+SCRIPT_DIRECTORY=${0%/*}
+
+. "$SCRIPT_DIRECTORY/share/check_snmp_header"
+
+# Equivalent to 'HOST-RESOURCES-MIB::hrSWRunTable'.
+OID='.1.3.6.1.2.1.25.4.2'
+
+# Getting of the processes table.
+# The "-m" option is essential.
+if output=$(snmptable -CH -Cf ";" -r "$retry" -t "$timeout" $AUTH_OPTIONS -m HOST-RESOURCES-MIB "$host" $OID 2>&1); then
+
+    # The "snmptable" command has succeeded.
+
+    # It's difficult to check the output.
+    processes=$(echo "$output" | wc -l)
+    running_processes=$(echo "$output" | grep -ic ";running")
+
+    processes_warn=$(echo "$warning" | cut -d',' -f1)
+    running_processes_warn=$(echo "$warning" | cut -d',' -f2)
+    processes_crit=$(echo "$critical" | cut -d',' -f1)
+    running_processes_crit=$(echo "$critical" | cut -d',' -f2)
+
+    if [ "$processes" -lt "$processes_warn" ] && [ "$running_processes" -lt "$running_processes_warn" ]; then
+        echo "Number of processes OK: processes=$processes, running_processes=$running_processes."
+        exit "$OK"
+    elif [ "$processes" -lt "$processes_crit" ] && [ "$running_processes" -lt "$running_processes_crit" ]; then
+        echo "Number of processes WARNING: processes=$processes, running_processes=$running_processes (warning thresholds $processes_warn,$running_processes_warn)."
+        exit "$WARNING"
+    else
+        echo "Number of processes CRITICAL: processes=$processes, running_processes=$running_processes (critical thresholds $processes_crit,$running_processes_crit)."
+        exit "$CRITICAL"
+    fi
+
+else
+
+    # The "snmptable" command hasn't succeeded.
+    echo "$output"
+    exit "$UNKNOWN"
+
+fi
+
+
+

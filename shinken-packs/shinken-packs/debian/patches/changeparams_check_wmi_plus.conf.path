@@ -1,0 +1,20 @@
+--- a/check_wmi_plus/check_wmi_plus.conf.sample
++++ b/check_wmi_plus/check_wmi_plus.conf.sample
+@@ -21,7 +21,7 @@
+ 
+ # This is the full path location of the wmic command
+ # - standard value "$base_dir/wmic"
+-$wmic_command="/bin/wmic"; # CHANGE THIS IF NEEDED
++$wmic_command="/usr/bin/wmic"; # CHANGE THIS IF NEEDED
+ 
+ # you do not need to use this if you are using $wmi_ini_dir
+ # normally you would only use this if you had a single specific ini file you wanted to use
+@@ -48,7 +48,7 @@
+ 
+ # PRO only: set the location of where the check_wmi_plus will store some persistent data
+ # - standard value "$base_dir/check_wmi_plus.data"
+-$wmi_data_dir="$base_dir/check_wmi_plus.data";
++$wmi_data_dir="/var/lib/shinken/check_wmi_plus.data";
+ 
+ # PRO only: this is the file where the usage stats are stored (if using it via $collect_usage_info or --icollectusage)
+ $usage_db_file="$wmi_data_dir/check_wmi_plus.usagedb";

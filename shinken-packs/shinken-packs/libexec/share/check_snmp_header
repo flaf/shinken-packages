@@ -1,0 +1,153 @@
+# Copyright: 2013 Francois Lafont <francois.lafont@crdp.ac-versailles.fr>
+#
+# License: GPL-3.0+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+# This the header for some home-made SNMP plugins, in addition
+# to the SNMP plugins provided by Shinken.
+
+export LC_ALL=C
+export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
+
+# The return values of a plugin.
+OK=0
+WARNING=1
+CRITICAL=2
+UNKNOWN=3
+
+# Options for the SNMP authentification, the same as the SNMP plugins
+# provided by Shinken. This options are used by all the home-made SNMP plugins.
+OPTIONS_LIST="v2c,community:,login:,passwd:,privpass:,protocols:"
+SHORT_OPTIONS_LIST="C:,l:,x:,X:,L:"
+
+# This options are used by all the home-made SNMP plugins too, but
+# unrelated to the authentification.
+OPTIONS_LIST="$OPTIONS_LIST,timeout:,host:"
+
+# This options are used by some home-made SNMP plugins but not all of them.
+OPTIONS_LIST="$OPTIONS_LIST,perfdata:,warning:,critical:,hostname:,puppet-history:,seconds-behind-master:"
+
+if ! TEMP=$(getopt -o "$SHORT_OPTIONS_LIST" -l "$OPTIONS_LIST" -n "$SCRIPT_NAME" -- "$@"); then
+    echo "Syntax error with $SCRIPT_NAME command." >&2
+    exit $UNKNOWN
+fi
+
+eval set -- "$TEMP"
+unset TEMP
+
+while true; do
+
+    case "$1" in
+
+        --v2c)
+            version="2c"
+            shift 1
+        ;;
+
+         --community|-C)
+            community="$2"
+            shift 2
+        ;;
+
+        --login|-l)
+            login="$2"
+            shift 2
+        ;;
+
+        --passwd|-x)
+            passwd="$2"
+            shift 2
+        ;;
+
+        --privpass|-X)
+            privpass="$2"
+            shift 2
+        ;;
+
+        --protocols|-L)
+            authproto=$(echo "$2" | cut -d"," -f1)
+            privproto=$(echo "$2" | cut -d"," -f2)
+            shift 2
+        ;;
+
+        --timeout)
+            timeout="$2"
+            shift 2
+        ;;
+
+        --host)
+            host="$2"
+            shift 2
+        ;;
+
+        --security-level)
+            security_level="$2"
+            shift 2
+        ;;
+
+        --perfdata)
+            perfdata="$2"
+            shift 2
+        ;;
+
+        --warning)
+            warning="$2"
+            shift 2
+        ;;
+
+        --critical)
+            critical="$2"
+            shift 2
+        ;;
+
+        --hostname)
+            hostname="$2"
+            shift 2
+        ;;
+
+        --puppet-history)
+            puppet_history="$2"
+            shift 2
+        ;;
+
+        --seconds-behind-master)
+            seconds_behind_master="$2"
+            shift 2
+        ;;
+
+        --)
+            shift 1
+            break
+        ;;
+
+    esac
+done
+
+
+
+if [ "$version" = "2c" ]; then
+    AUTH_OPTIONS="-v 2c -c $community"
+else
+    AUTH_OPTIONS="-v 3 -u $login -l authPriv -A $passwd -a $authproto -X $privpass -x $privproto"
+fi
+
+# We change the timeout because with snmpcmd there are
+# often timeouts. So the timeout is divided by 2 but we
+# add 1 retry to the snmpcmd command.
+timeout=$((timeout / 2))
+[ "$timeout" -lt 2 ] && timeout=2 # a minimum is imposed
+
+retry='1'
+
+

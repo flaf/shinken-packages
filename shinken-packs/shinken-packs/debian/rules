@@ -1,0 +1,64 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+# Sample debian/rules that uses debhelper.
+# This file was originally written by Joey Hess and Craig Small.
+# As a special exception, when this file is copied by dh-make into a
+# dh-make output file, you may use that output file without restriction.
+# This special exception was added by Craig Small in version 0.37 of dh-make.
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+export QUILT_PATCHES=debian/patches
+export QUILT_REFRESH_ARGS='-p ab --no-timestamps --no-index'
+
+RULES_PATH := $(realpath $(firstword $(MAKEFILE_LIST)))
+WORKING_DIR := $(realpath $(RULES_PATH:/debian/rules=))
+PKG_NAME := shinken-packs
+BUILD_DIR := $(WORKING_DIR)/debian/$(PKG_NAME)
+WMI_CONF_DIR := /usr/share/$(PKG_NAME)/wmi
+
+# Get the current package version.
+PKG_VERSION := $(shell dpkg-parsechangelog | sed -nr 's/^version:(.*)$$/\1/ip' | tr -d ' ')
+
+
+%:
+	dh $@
+
+override_dh_clean:
+	cd "$(WORKING_DIR)" && rm -f ../$(PKG_NAME)*.deb
+	cd "$(WORKING_DIR)" && rm -f ../$(PKG_NAME)*.dsc
+	cd "$(WORKING_DIR)" && rm -f ../$(PKG_NAME)*.changes
+	cd "$(WORKING_DIR)" && rm -f ../$(PKG_NAME)*.tar.gz
+	cd "$(WORKING_DIR)" && rm -f ../$(PKG_NAME)*.build
+	dh_clean
+
+override_dh_install:
+	dh_install
+	# Rename.
+	mv $(BUILD_DIR)$(WMI_CONF_DIR)/check_wmi_plus.conf.sample "$(BUILD_DIR)$(WMI_CONF_DIR)/check_wmi_plus.conf"
+
+override_dh_installdeb:
+	dh_installdeb
+	sed -i 's/__VERSION__/$(PKG_VERSION)/' "$(BUILD_DIR)/DEBIAN/prerm"
+	sed -i 's/__VERSION__/$(PKG_VERSION)/' "$(BUILD_DIR)/DEBIAN/postinst"
+	patch "$(BUILD_DIR)/usr/share/$(PKG_NAME)/libexec/check_snmp_netint.pl" < "$(WORKING_DIR)/debian/check_snmp_netint.patch"
+
+
+########################
+### Personal targets ###
+########################
+
+git_clean: clean
+	cd "$(WORKING_DIR)" && rm -fr check_wmi_plus/
+	cd "$(WORKING_DIR)" && rm -rf ".pc"
+
+populate_working_dir: git_clean
+	cd "$(WORKING_DIR)" && mkdir check_wmi_plus && tar -xzf ../check_wmi_plus*tar.gz -C check_wmi_plus
+	# Apply all the patches to the source.
+	cd "$(WORKING_DIR)" && quilt push -a
+
+create_deb: populate_working_dir
+	cd "$(WORKING_DIR)" && debuild -us -uc && echo 'Building is OK!'
+
+

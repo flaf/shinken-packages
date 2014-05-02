@@ -1,0 +1,92 @@
+#!/bin/sh
+
+# Copyright: 2013 Francois Lafont <francois.lafont@crdp.ac-versailles.fr>
+#
+# License: GPL-3.0+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+#set -x
+SCRIPT_NAME=${0##*/}
+SCRIPT_DIRECTORY=${0%/*}
+
+. "$SCRIPT_DIRECTORY/share/check_snmp_header"
+
+OID='NET-SNMP-EXTEND-MIB::nsExtendOutputFull."get_mounts"'
+
+# Getting of the output.
+if output=$(snmpget -OvQ -r "$retry" -t "$timeout" $AUTH_OPTIONS "$host" $OID 2>&1)
+then
+
+    if [ -z "$output" ]
+    then
+        echo "Mountpoints OK: no specific mountpoint to check."
+        exit "$OK"
+    fi
+
+    # With Lenny, when the "ls" or "mountpoint" commands take
+    # a timeout, the output is like this:
+    #
+    #   /opt/snmpd-extend/bin/get_mounts: line 36:  3284 Killed        timeout $SIGNAL "$TIMEOUT" mountpoint "$dir" > /dev/null 2>&1
+    #   /test:problem
+    #   /opt/snmpd-extend/bin/get_mounts: line 36:  3286 Killed        timeout $SIGNAL "$TIMEOUT" mountpoint "$dir" > /dev/null 2>&1
+    #   /testbis:problem
+    #
+    # We must remove lines with spaces.
+    output=$(echo "$output" | grep -v ' ')
+
+    if echo "$output" | grep -qE '^/.+:(problem|ok)'
+    then
+
+        # The output is correct.
+        # For the moment, everything's fine.
+        CRIT="false"
+
+        for line in $output
+        do
+            mountpoint=$(echo "$line" | cut -d':' -f1)
+            status=$(echo "$line" | cut -d':' -f2)
+            mounts_list="$mounts_list $mountpoint=$status"
+            if [ "$status" = "problem" ]
+            then
+                CRIT="true"
+            fi
+        done
+
+        if "$CRIT"
+        then
+            echo "Mountpoints CRITICAL:$mounts_list."
+            exit "$CRITICAL"
+        else
+            echo "Mountpoints OK:$mounts_list."
+            exit "$OK"
+        fi
+
+    else
+
+        # Unexpected output.
+        echo "$output"
+        exit "$UNKNOWN"
+
+    fi
+
+else
+
+    # The "snmpget" command hasn't succeeded.
+    echo "$output"
+    exit "$UNKNOWN"
+
+fi
+
+
+

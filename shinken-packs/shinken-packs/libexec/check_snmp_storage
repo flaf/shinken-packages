@@ -1,0 +1,85 @@
+#!/bin/sh
+
+# Copyright: 2013 Francois Lafont <francois.lafont@crdp.ac-versailles.fr>
+#
+# License: GPL-3.0+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+#set -x
+SCRIPT_NAME=${0##*/}
+SCRIPT_DIRECTORY=${0%/*}
+
+. "$SCRIPT_DIRECTORY/share/check_snmp_header"
+
+OID='NET-SNMP-EXTEND-MIB::nsExtendOutputFull."get_storage"'
+
+# Getting of the storage use.
+if output=$(snmpget -OvQ -r "$retry" -t "$timeout" $AUTH_OPTIONS "$host" $OID 2>&1) \
+    && echo "$output" | grep -qE '^/[^:]*:/[^:]*:[0-9]+:[0-9]+:'
+then
+
+    # For the moment, everything's fine.
+    CRIT="false"
+    WARN="false"
+
+    # The "snmpget" command has succeeded and has the good format.
+    for line in $output; do
+        directory=$(echo "$line" | cut -d":" -f2)
+        size_readable=$(echo "$line" | cut -d":" -f5)
+        used_readable=$(echo "$line" | cut -d":" -f6)
+
+        # TODO: add an option (--real-percent) to have the real use percent.
+        #size=$(echo "$line" | cut -d":" -f3)
+        #used=$(echo "$line" | cut -d":" -f4)
+        #percent=$(($used*100/$size))
+
+        # We use the percent give by df command.
+        percent=$(echo "$line" | cut -d":" -f7)
+        percent=$(echo ${percent%\%})
+
+        if [ "$percent" -ge "$critical" ]; then
+            CRIT="true"
+            data_list_pb="$data_list_pb $directory $percent% ($used_readable/$size_readable),"
+        elif [ "$percent" -ge "$warning" ]; then
+            WARN="true"
+            data_list_pb="$data_list_pb $directory $percent% ($used_readable/$size_readable),"
+        else
+            data_list_ok="$data_list_ok $directory $percent% ($used_readable/$size_readable),"
+        fi
+    done
+
+    data_list_ok=$(echo ${data_list_ok%,}) # remove of the "," and the space.
+    data_list_pb=$(echo ${data_list_pb%,}) # remove of the "," and the space.
+
+    if "$CRIT"; then
+        echo "Disk space CRITICAL: $data_list_pb (critical threshold $critical%)."
+        exit "$CRITICAL"
+    elif "$WARN"; then
+        echo "Disk space WARNING: $data_list_pb (warning threshold $warning%)."
+        exit "$WARNING"
+    else
+        echo "Disk space OK: $data_list_ok (warning threshold $warning%)."
+        exit "$OK"
+    fi
+
+else
+
+    # The "snmpget" command hasn't succeeded.
+    echo "$output"
+    exit "$UNKNOWN"
+
+fi
+
+
+

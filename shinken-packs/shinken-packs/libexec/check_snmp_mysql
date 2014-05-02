@@ -1,0 +1,48 @@
+#!/bin/sh
+
+# Copyright: 2013 Francois Lafont <francois.lafont@crdp.ac-versailles.fr>
+#
+# License: GPL-3.0+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+#set -x
+SCRIPT_NAME=${0##*/}
+SCRIPT_DIRECTORY=${0%/*}
+
+. "$SCRIPT_DIRECTORY/share/check_snmp_header"
+
+OID="NET-SNMP-EXTEND-MIB::nsExtendResult.\"check_mysql_$1\" NET-SNMP-EXTEND-MIB::nsExtendOutputFull.\"check_mysql_$1\""
+
+# Getting of the output.
+if output=$(snmpget -OvQ -r "$retry" -t "$timeout" $AUTH_OPTIONS "$host" $OID 2>&1)
+then
+
+    if result=$(echo "$output" | head -n 1 | grep '^[0123]$')
+    then
+        echo "$output" | tail -n +2
+        exit "$result"
+    else
+        echo "$SCRIPT_NAME error, unexpected output: $(echo "$output" | tail -n +2)"
+        exit "$UNKNOWN"
+    fi
+
+else
+
+    # The "snmpget" command hasn't succeeded.
+    echo "$output"
+    exit "$UNKNOWN"
+
+fi
+
+

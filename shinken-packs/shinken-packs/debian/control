@@ -1,0 +1,16 @@
+Source: shinken-packs
+Section: misc
+Priority: extra
+Maintainer: Francois Lafont <francois.lafont@crdp.ac-versailles.fr>
+Build-Depends: devscripts, fakeroot, quilt, debhelper (>= 7.0.50~)
+Standards-Version: 3.8.4
+Vcs-Browser: https://github.com/flaf/shinken-packs.git
+
+Package: shinken-packs
+Architecture: amd64
+Depends: ${misc:Depends}, snmp, sed, python-argparse, snmp-mibs-downloader,
+ libcrypt-des-perl, libdigest-hmac-perl, libcrypt-rijndael-perl, ftp-upload,
+ nagios-plugins-basic, nagios-snmp-plugins, nagios-plugins-common,
+ wmi-cli, libnumber-format-perl, libconfig-inifiles-perl, libdatetime-perl
+Description: Personnal packs for shinken.
+ Personnal packs for shinken.

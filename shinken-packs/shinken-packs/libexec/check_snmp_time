@@ -1,0 +1,68 @@
+#!/bin/sh
+
+# Copyright: 2013 Francois Lafont <francois.lafont@crdp.ac-versailles.fr>
+#
+# License: GPL-3.0+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+#set -x
+SCRIPT_NAME=${0##*/}
+SCRIPT_DIRECTORY=${0%/*}
+
+. "$SCRIPT_DIRECTORY/share/check_snmp_header"
+
+# Equivalent to 'HOST-RESOURCES-MIB::hrSystemDate.0'.
+OID='.1.3.6.1.2.1.25.1.2.0'
+
+# Getting of the host date.
+# The "-m" option is essential.
+if output=$(snmpget -OvQ -r "$retry" -t "$timeout" $AUTH_OPTIONS -m "HOST-RESOURCES-MIB" "$host" $OID 2>&1); then
+
+    # The "snmpget" command has succeeded.
+    output=$(echo "$output" | tr ',' ' ')
+    if host_timestamp=$(date -d "$output" "+%s"); then
+
+        ## The output is correct.
+        local_timestamp=$(date "+%s")
+        delta=$(echo $((host_timestamp-local_timestamp)) | tr -d '-')
+
+        if [ "$delta" -lt "$warning" ]; then
+            echo "Delta time between the host and Shinken OK: delta=${delta}s (< ${warning}s)."
+            exit "$OK"
+        elif [ "$delta" -lt "$critical" ]; then
+            echo "Delta time between the host and Shinken WARNING: delta=${delta}s (>= ${warning}s)."
+            exit "$WARNING"
+        else
+            echo "Delta time between the host and Shinken CRITICAL: delta=${delta}s (>= ${critical}s)."
+            exit "$CRITICAL"
+        fi
+
+    else
+
+        ## The output is incorrect (unlikely when the "snmpget" command has succeeded).
+        echo "Unexpected output in the snmpget request: \"$output\"."
+        exit "$UNKNOWN"
+
+    fi
+
+else
+
+    # The "snmpget" command hasn't succeeded.
+    echo "$output"
+    exit "$UNKNOWN"
+
+fi
+
+
+

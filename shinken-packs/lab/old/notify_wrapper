@@ -1,0 +1,215 @@
+#!/bin/sh
+
+# François Lafont (francois.lafont@crdp.ac-versailles.fr)
+
+export LC_ALL=C
+SCRIPT_NAME=${0##*/}
+OPTIONS_LIST="irc,notification-type:,host-name:,host-address:,state:,output:,contact-email:,pipe-file:"
+OPTIONS_LIST="$OPTIONS_LIST,contact-number:,business-impact:,service-description:,notification-number:"
+SMS_ADDRESS="sms@crdp.ac-versailles.fr"
+
+
+# For the printf command, we must turn '\' into '\\' and '%' into '%%'.
+clean_for_printf () {
+    echo "$1" | sed -r 's/(\\|%)/\1\1/g'
+}
+
+
+# Add line in MESSAGE variable for the printf command.
+add_line () {
+    local append
+    append=$(clean_for_printf "$1")
+    MESSAGE="$MESSAGE${append}"'\n'
+}
+
+
+if ! TEMP=$(getopt -o "" -l "$OPTIONS_LIST" -n "$SCRIPT_NAME" -- "$@"); then
+    echo "Syntax error with $SCRIPT_NAME command." >&2
+    exit 3
+fi
+
+eval set -- "$TEMP"
+unset TEMP
+
+
+while true; do
+
+    case "$1" in
+
+        --irc)
+            irc="true"
+            shift 1
+        ;;
+
+        --notification-type)
+            notification_type="$2"
+            shift 2
+        ;;
+
+        --host-name)
+            host_name="$2"
+            shift 2
+        ;;
+
+        --host-address)
+            host_address="$2"
+            shift 2
+        ;;
+
+        --state)
+            state="$2"
+            shift 2
+        ;;
+
+        --output)
+            output="$2"
+            shift 2
+        ;;
+
+        --contact-email)
+            contact_email="$2"
+            shift 2
+        ;;
+
+        --pipe-file)
+            pipe_file="$2"
+            shift 2
+        ;;
+
+        --contact-number)
+            contact_number="$2"
+            shift 2
+        ;;
+
+        --business-impact)
+            business_impact="$2"
+            shift 2
+        ;;
+
+        --service-description)
+            service_description="$2"
+            shift 2
+        ;;
+
+        --notification-number)
+            notification_number="$2"
+            shift 2
+        ;;
+
+        --)
+            shift 1
+            break
+        ;;
+
+    esac
+
+done
+
+
+# if notification_number >= 7, notification only if notification_number is multiple of 10.
+if [ "$notification_number" -ge 7 ]; then
+    modulo=$(($notification_number % 10))
+    if [ "$modulo" != 0 ]; then
+        exit 0
+    fi
+fi
+
+
+local_server=$(hostname)
+#time=$(date +%c)
+time=$(date '+%A %d %B %Y %H:%M:%S')
+
+
+# This is the --service-description option which determine if it's a
+# host notification or a service notification.
+
+if [ -z "$service_description" ]; then
+
+    # HOST notification.
+
+    if [ "$irc" = true ]; then
+        MESSAGE=""
+
+        add_line " "
+        add_line "$host_name ($host_address) $notification_type: state is $state."
+        add_line "Additionnal info: $output"
+        add_line " "
+        printf "$MESSAGE" >> "$pipe_file"
+        exit 0
+    fi
+
+    SUBJECT="$host_name $notification_type: state is $state"
+    MESSAGE=""
+
+    add_line "This is a shinken notification from $local_server server."
+    add_line ""
+    #add_line "Notification type: $notification_type"
+    add_line "Host: $host_name (IP $host_address)"
+    add_line "State: $state (business impact ${business_impact}/5)"
+    #add_line "Business impact: $business_impact"
+    add_line "Date: $time"
+    add_line ""
+    add_line "Additional info"
+    add_line "$output"
+
+else
+
+    # SERVICE notification.
+
+    if [ "$irc" = true ]; then
+        MESSAGE=""
+
+        add_line " "
+        add_line "$host_name ($host_address) $notification_type: \"$service_description\" in $state state"
+        add_line "Additionnal info: $output"
+        add_line " "
+        printf "$MESSAGE" >> "$pipe_file"
+        exit 0
+    fi
+
+    SUBJECT="$host_name $notification_type: \"$service_description\" in $state state"
+    MESSAGE=""
+
+    add_line "This is a shinken notification from $local_server server."
+    add_line ""
+    #add_line "Notification type: $notification_type"
+    add_line "Service: $service_description"
+    add_line "Host: $host_name (IP $host_address)"
+    add_line "State: $state (business impact ${business_impact}/5)"
+    #add_line "Business impact: $business_impact"
+    add_line "Date: $time"
+    add_line ""
+    add_line "Additional info"
+    add_line "$output"
+
+fi
+
+# Sending of the email.
+printf "$MESSAGE" | /usr/bin/mail -s "$SUBJECT" "$contact_email"
+
+
+# Sending of the SMS, under special conditions...
+if [ -z "$service_description" ]; then
+
+    # HOST notification.
+    if echo "$contact_number" | grep -Eq '^[0-9]{10}$'; then
+        SUBJECT=$(clean_for_printf "$SUBJECT")
+        printf "$SUBJECT ($time)\n" | /usr/bin/mail -s "$contact_number" "$SMS_ADDRESS"
+    fi
+
+else
+
+    # SERVICE notification.
+    if echo "$contact_number" | grep -Eq '^[0-9]{10}$'; then
+        #if [ "$business_impact" -ge 3 ] && [ "$state" = "$CRITICAL" ]; then
+        if [ "$business_impact" -ge 3 ]; then
+            SUBJECT=$(clean_for_printf "$SUBJECT")
+            printf "$SUBJECT ($time)\n" | /usr/bin/mail -s "$contact_number" "$SMS_ADDRESS"
+        fi
+    fi
+
+fi
+
+
+
+

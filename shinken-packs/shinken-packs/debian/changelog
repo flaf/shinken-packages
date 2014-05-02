@@ -1,0 +1,56 @@
+shinken-packs (1.3) unstable; urgency=low
+
+  * New structure of the package in the file tree.
+  * Patch check_snmp_netint.pl to remove ' from the perfdata (put " instead).
+
+ -- francois <francois@dtic-flaf.crdp.local>  Mon, 20 Jan 2014 12:28:40 +0100
+
+shinken-packs (1.2) unstable; urgency=low
+
+  * Add "sensitive http[s]" services in the http[s]_tpl.
+  * Add "state table" check in the pfsense_tpl.
+
+ -- francois <francois@dtic-flaf.crdp.local>  Thu, 17 Oct 2013 19:43:33 +0200
+
+shinken-packs (1.1.3) unstable; urgency=low
+
+  * The "notify" script allows the extended regex in the "black list" file.
+  * The "ping" pack has its own command (check_another_ping).
+  * First release of the "mysql" pack.
+  * New "reboot" check, more secure.
+
+ -- Francois LAFONT <francois@flpc.reseaulocal.chezmoi>  Wed, 09 Oct 2013 21:33:05 +0200
+
+shinken-packs (1.1.2) unstable; urgency=low
+
+  * Addition of the "puppet" pack.
+
+ -- Francois Lafont <francois.lafont@crdp.ac-versailles.fr>  Wed, 04 Sep 2013 21:59:23 +0200
+
+shinken-packs (1.1.1) unstable; urgency=low
+
+  * Addition of packages dependencies.
+    libcrypt-des-perl, libdigest-hmac-perl and libcrypt-rijndael-perl packages
+    for checks in Perl using SNMPv3.
+    snmp-mibs-downloader package for the checks using extend.
+
+ -- Francois Lafont <francois.lafont@crdp.ac-versailles.fr>  Mon, 19 Aug 2013 14:25:22 +0200
+
+shinken-packs (1.1) unstable; urgency=low
+
+  * Addition of the notify python script and its dependency (python-argparse).
+  * Addition of check_snmp_status in linux_tpl and pfsense_tpl (with dependencies).
+
+ -- Francois Lafont <francois.lafont@crdp.ac-versailles.fr>  Wed, 07 Aug 2013 04:17:47 +0200
+
+shinken-packs (1.0.1) unstable; urgency=low
+
+  * Change of service name in linux_tpl: "disk spaces" -> "disk space".
+
+ -- Francois Lafont <francois.lafont@crdp.ac-versailles.fr>  Tue, 30 Jul 2013 06:01:58 +0200
+
+shinken-packs (1.0) unstable; urgency=low
+
+  * Initial Release.
+
+ -- Francois Lafont <francois.lafont@crdp.ac-versailles.fr>  Sun, 21 Jul 2013 00:43:01 +0200

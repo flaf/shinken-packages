@@ -1,0 +1,12 @@
+Change check_wmi_plus.conf directory
+--- a/check_wmi_plus/check_wmi_plus.pl
++++ b/check_wmi_plus/check_wmi_plus.pl
+@@ -29,7 +29,7 @@
+ # eg $0 becomes /usr/sbin/p1.pl no matter where you install this script
+ ## NOTE: If you created a sym link from the setting that comes in the release version to your real conf file, you'd never need to change this script when you get a new version
+ # eg mkdir -p /opt/nagios/bin/plugins;ln -s MYCONF /opt/nagios/bin/plugins/check_wmi_plus.conf
+-my $conf_file='/opt/nagios/bin/plugins/check_wmi_plus.conf';
++my $conf_file='/usr/share/shinken-packs/wmi/check_wmi_plus.conf';
+ 
+ # you shouldn't need to change anything else below this line
+ # change the settings in the $conf_file itself

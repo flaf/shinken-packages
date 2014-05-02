@@ -1,0 +1,47 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sys
+import importlib
+from check_snmp_lib.docopt import docopt
+
+commands_list = [
+    'storage',
+    'reboot',
+]
+
+help_message ="""
+Usage:
+  check_snmp (-h | --help)
+  check_snmp <command> [<args>...]
+
+Options:
+  -h, --help
+        Show this help message and exit.
+
+Available commands:
+  %s
+
+See 'check_snmp <command> -h' for more information on a specific command.
+
+""" % ('\n  '.join(commands_list),)
+
+if __name__ == '__main__':
+
+    args = docopt(help_message, options_first=True)
+    command = args['<command>']
+
+    try:
+        check_module = importlib.import_module('check_snmp_lib.check_' + command)
+    except ImportError:
+        print("Sorry, the %s command doesn't exist. See 'check_snmp -h'.") % (command,)
+        sys.exit(1)
+
+    args = docopt(check_module.help_message, options_first=False)
+    print(args)
+    print
+
+    check_module.run(args)
+
+
+

@@ -1,0 +1,272 @@
+#!/usr/bin/python
+# -*- coding: utf8 -*-
+
+import sys
+import codecs
+
+ENCODING = 'utf-8'
+
+# The script reads files with lines like this:
+#
+#   one_key: one_value
+#
+# A key must be:
+#
+#   hostname, fqdn, address, template, custom
+#
+# and a value must be not empty. Failure to follow these rules
+# will cause an error and the script will be stop. The files
+# can contain comments. Comments are lines that begin with
+# the # character. Empty lines are ignored.
+
+ADDITIVE_ITEMS_LIST = [u'template', u'custom']
+OTHER_ITEMS_LIST = [u'hostname', u'fqdn', u'address']
+ITEMS_LIST = ADDITIVE_ITEMS_LIST + OTHER_ITEMS_LIST
+
+# The goal is to print the repeated template below:
+
+TEMPLATE = u'''
+# Host number %s: %s.
+define host {
+    host_name %s
+    address   %s
+    use       %s
+
+    # Customized properties.
+    %s
+}
+'''
+
+# Be careful:
+#   * Some keys are additive: an additive key can appear
+#     several times in the same file or in different files
+#     and the values are appended in a list.
+#   * In each file, the "hostname" key must be present.
+#     If not, there is an error and the script is stopped.
+#
+# _After_ reading all files, the "hosts_dict" dictionary will be
+# completed. It looks like this :
+#
+#hosts_dict = {
+#    u'server-1': {
+#        u'hostname' : u'server-1',
+#        u'fqdn'     : u'server-1.domain.fr',
+#        u'address'  : u'172.31.234.1',
+#        u'template' : [ u'linux_tpl', u'raid_tpl' ]
+#        u'custom'   : [ u'_CPU_WARN 95', u'_REBOOT_WARN 60' ]
+#    },
+#    u'server-2': {
+#        u'hostname' : u'server-2',
+#        u'fqdn'     : u'server-2.domain.fr',
+#        u'address'  : u'172.31.234.2',
+#        u'template' : [ u'linux_tpl' ]
+#        u'custom'   : [ u'_REBOOT_WARN 30' ]
+#    },
+#
+#    # etc.
+#}
+#
+# The keys of this dictionary are the hostnames (like u'hostname-1',
+# u'hostname-2' etc.) and, once the hosts_dict is completed,
+# each value (for example hosts_dict[u'a-hostname']) must be a
+# dictionary with these keys (= items in the next comments):
+#
+# - hostname
+#       This key will necessarily present and not empty.
+# - fqdn
+#       This key will be necessarily present and can be empty.
+# - address
+#       This key will be necessarily present and must be not empty.
+#       If it's empty, there is an error and the script is stopped.
+#       So, among all files which contain the a given "hostname" value,
+#       the "address" key must be present on at least one of these
+#       files.
+# - template
+#       The value will be a list (ie this item will be additive)
+#       and the list can't be empty. At least one file must
+#       contains the template key (with an no empty value).
+#       If not, there is an error and the script is stopped.
+# - custom
+#       The value will be a list (ie this item will be additive)
+#       and the list can be empty.
+hosts_dict = {}
+
+# Create an empty dictionary where the keys in ADDITIVE_ITEMS_LIST
+# are mapped to an empty list (== []) and where the keys in
+# OTHER_ITEMS_LIST are mapped to an empty string (== u'').
+# Something like that:
+#
+#      { u'hostname' : u'',
+#        u'fqdn'     : u'',
+#        u'address'  : u'',
+#        u'template' : []
+#        u'custom'   : []
+#      }
+#
+def create_empty_dictionary():
+    dictionary = {}
+    for item in ADDITIVE_ITEMS_LIST:
+        dictionary[item] = []
+    for item in OTHER_ITEMS_LIST:
+        dictionary[item] = u''
+    return dictionary
+
+# Function to print a message and exit.
+def stop(message):
+    print(message)
+    print("The program is stopped.")
+    sys.exit(1)
+
+
+
+
+##############################################
+### Building of the hosts_dict dictionary. ###
+##############################################
+
+arguments = sys.argv[1:]
+
+for file_name in arguments:
+
+    exported_file = codecs.open(file_name, 'r', ENCODING)
+
+    # The item/value pairs are registred in dict_temp dictionary.
+    dict_temp = create_empty_dictionary()
+
+    # The line number.
+    ln = 0
+    for line in exported_file:
+        ln += 1
+        line = line.strip()
+
+        # Empty lines or comments are ignored.
+        if line == u'':
+            continue
+        if line[0] == u'#':
+            continue
+
+        # Lines must contain the ':' separator
+        if u':' not in line:
+            ln = unicode(ln).encode(ENCODING)
+            stop("The line number %s in '%s' doesn't contain the ':' item/value separator." %(ln, file_name))
+
+        # Key and value must be not empty.
+        seq = line.split(u':', 1) # split at most 1 time, so len(seq) =< 2.
+        item = seq[0].strip()
+        value = seq[1].strip() # all the string after the first ":"
+
+        # Check if item is in the ITEMS_LIST.
+        if item not in ITEMS_LIST:
+            ln = unicode(ln).encode(ENCODING)
+            items_list = ', '.join(ITEMS_LIST).encode(ENCODING)
+            stop("The line number %s in '%s' contains an item that does not belong to the authorized items list (%s)." %(ln, file_name, items_list))
+
+        # value must be not empty. We add no empty value!
+        if value == u'':
+            ln = unicode(ln).encode(ENCODING)
+            stop("The line number %s in '%s' contains an empty value." %(ln, file_name))
+
+        # Ok, the line is correct, we can update dict_temp.
+        # Some items are additive.
+        if item in ADDITIVE_ITEMS_LIST:
+            if value not in dict_temp[item]:
+                # The value is appended only if not already present.
+                dict_temp[item].append(value)
+        else:
+            dict_temp[item] = value
+
+    if dict_temp[u'hostname'] == u'':
+        # if no value provided for the 'hostname' item, then the file is not correct.
+        stop("'%s' doesn't contain the 'hostname' item which is required." % file_name)
+
+    hostname = dict_temp[u'hostname']
+
+    # If the hostname key is not already in hosts_dict, we create it.
+    if hostname not in hosts_dict:
+        hosts_dict[hostname] = create_empty_dictionary()
+
+    # We take the dictionary of the hostname (maybe a "empty" dictionary)
+    # and we update it with the dict_temp dictionary.
+    hostname_dict = hosts_dict[hostname]
+
+    for item in dict_temp:
+        # Some items are additive.
+        if item in ADDITIVE_ITEMS_LIST:
+            # If dict_temp[item] is an empty list, no problem, there is no update.
+            for value in dict_temp[item]:
+                if value not in hostname_dict[item]:
+                    hostname_dict[item].append(value)
+        else:
+            # Be careful, for this items, dict_temp[item] can be an empty string.
+            # This is default value when dict_temp is created. Of course, no
+            # update in this case.
+            if dict_temp[item] != u'':
+                hostname_dict[item] = dict_temp[item]
+
+
+
+
+##############################
+### Building of the output ###
+##############################
+
+output = "### This file has been created by the '%s' program  ###\n" % sys.argv[0]
+
+# We sort the list of hostnames to have a pretty configuration file.
+hostnames_list = list(hosts_dict.keys())
+hostnames_list.sort()
+
+c = 1
+for hostname in hostnames_list:
+
+    d = hosts_dict[hostname]
+    count = unicode(c).encode(ENCODING)
+
+    # fqdn can be empty.
+    fqdn = d[u'fqdn']
+    if fqdn == u'':
+        fqdn = u'<fqdn not provided>'
+    fqdn = fqdn.encode(ENCODING)
+
+    hostname = hostname.encode(ENCODING)
+
+    # address must be not empty.
+    address = d[u'address']
+    if address == u'':
+        stop("There is no 'address' item provided in the files for '%s' host." % hostname)
+    address = address.encode(ENCODING)
+
+    # templates must be an no empty list.
+    if d[u'template'] == []:
+        stop("There is no 'template' item provided in the files for '%s' host." % hostname)
+    template = u','.join(d[u'template']).encode(ENCODING)
+
+    # custom can be an empty list.
+    if d[u'custom'] == []:
+        custom = u'# None.'.encode(ENCODING)
+    else:
+        custom = u'\n    '.join(d[u'custom']).encode(ENCODING)
+
+    output = output + TEMPLATE.encode(ENCODING) % (count, fqdn, hostname, address, template, custom)
+    c += 1
+
+output = output + '\n'
+print(output)
+
+# When this script is used in a pipe like "... | diff -q file1 -",
+# there is sometimes a little and not serious error message:
+#   close failed in file object destructor:
+#   sys.excepthook is missing
+#   lost sys.stderr
+# These "try" below avoid this message.
+try:
+    sys.stdout.close()
+except:
+    pass
+
+try:
+    sys.stderr.close()
+except:
+    pass
+
+

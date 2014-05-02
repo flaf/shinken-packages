@@ -1,0 +1,62 @@
+#!/bin/sh
+
+# Copyright: 2013 Francois Lafont <francois.lafont@crdp.ac-versailles.fr>
+#
+# License: GPL-3.0+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+#set -x
+SCRIPT_NAME=${0##*/}
+SCRIPT_DIRECTORY=${0%/*}
+
+. "$SCRIPT_DIRECTORY/share/check_snmp_header"
+
+# The oid which will run the "snmp_extend_get_hostname" script on the node.
+OID='NET-SNMP-EXTEND-MIB::nsExtendOutputFull."get_hostname"'
+
+# The regex for a hostnane.
+REGEX_HOSTNAME="[-a-z0-9\.]+"
+
+if [ -z "$hostname" ]; then
+    echo "Syntax error, you must set the --hostname option."
+    exit "$UNKNOWN"
+fi
+
+
+# Getting of the hostname.
+# We must check the output because with the NET-SNMP-EXTEND-MIB, snmpget can
+# return 0 even if the OID doesn't exist.
+if output=$(snmpget -OvQ -r "$retry" -t "$timeout" $AUTH_OPTIONS "$host" "$OID" 2>&1) \
+    && echo "$output" | grep -qE "^$REGEX_HOSTNAME\$"
+then
+
+    # The "snmpget" command has succeeded and the output has the good format.
+    if [ "$hostname" = "$output" ]; then
+        echo "Check of the hostname OK: hostname=\"$output\"."
+        exit "$OK"
+    else
+        echo "Check of the hostname WARNING: hostname=\"$output\" but should be \"$hostname\"."
+        exit "$WARNING"
+    fi
+
+else
+
+    # The "snmpget" command hasn't succeeded.
+    echo "$output"
+    exit "$UNKNOWN"
+
+fi
+
+
+

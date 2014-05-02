@@ -1,0 +1,25 @@
+define service {
+    service_description reboot
+    use generic-service_tpl
+    register 0
+    host_name linux_tpl,pfsense_tpl
+    check_command check_linux_reboot
+
+    # Pour ce check un peu particulier, on redéfinit certains paramètres par
+    # rapport au template generic-service_tpl.
+
+    # On souhaite que l'état HARD (et la notification qui s'en suit) soit
+    # atteint dès le premier check « positif » car quand le reboot est
+    # détecté lors d'un check, au check suivant il ne le sera plus (on aura
+    # last_uptime < uptime).
+    is_volatile 1
+
+    # Pour ce check, on ne souhaite de notification ni lors d'un
+    # RECOVERY, ni lors d'un UNKNOWN.
+    notification_options w,c
+
+    # Le reboot est une information important.
+    business_impact 3
+}
+
+

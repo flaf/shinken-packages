@@ -1,0 +1,219 @@
+#!/usr/bin/python
+
+# Copyright: 2013 Francois Lafont <francois.lafont@crdp.ac-versailles.fr>
+#
+# License: GPL-3.0+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+import sys
+import time
+import datetime
+
+OK = 0
+WARNING = 1
+CRITICAL = 2
+UNKNOWN = 3
+
+# When --puppet-history=0, we don't care about the changed resources,
+# but we must count the errors (=failed). With --puppet-history=0, we
+# keep the 3 (MEM_LENGTH_DEFAULT) last runs in memory to count the
+# consecutive failed.
+MEM_LENGTH_DEFAULT=3
+
+class Data:
+
+    """By example:
+
+d = Data('1349999;1;0')
+d = Data(';;')
+"""
+
+    def __init__(self, s):
+        l = s.split(';')
+        self.timestamp = int(l[0]) if l[0] != '' else ''
+        self.changed = int(l[1]) if l[1] != '' else ''
+        self.failed = int(l[2]) if l[2] != '' else ''
+
+    def is_not_ok(self):
+        if self.changed != '' and self.failed != '':
+            if self.changed > 0 or self.failed > 0:
+                return True
+        return False
+
+    def is_failed(self):
+        if self.failed != '':
+            if self.failed > 0:
+                return True
+        return False
+
+    def __repr__(self):
+        return str(self.timestamp) + ';' + str(self.changed) + ';' + str(self.failed)
+
+
+
+class Perfdata:
+
+    """By example:
+
+pd = Perfdata('run1=111;0;0 run2=222;0;1 run3=333;1;0', 3)
+pd.add('444;1;1')
+assert str(pd) == 'run1=222;0;1 run2=333;1;0 run3=444;1;1'
+
+pd = Perfdata('run1=111;0;0 run2=222;0;1 run3=333;1;0', 4)
+pd.add('444;1;1')
+pd.add('555;5;5')
+assert str(pd) == 'run1=222;0;1 run2=333;1;0 run3=444;1;1 run4=555;5;5'
+
+pd = Perfdata('', 3) # is allowed.
+pd = Perfdata('run1=;; run2=;; run3=;;', 3) # is equivalent
+"""
+
+    def __init__(self, s, size):
+        self.data_list = []
+        self.size = size if size > 0 else MEM_LENGTH_DEFAULT
+        s = s.strip()
+        if s != '':
+            runs = s.split(' ')
+            for run in runs:
+                l = run.split('=')
+                data_str = l[1]
+                self.add(data_str)
+        # Jamming if len(data_list) < self.size.
+        if len(self.data_list) < self.size:
+            for i in xrange(self.size - len(self.data_list)):
+                self.data_list = [Data(';;')] + self.data_list
+
+    def add(self, data_str):
+
+        data = Data(data_str)
+
+        # If data_list is empty.
+        if self.data_list == []:
+            self.data_list.append(data)
+            return None
+
+        last_timestamp = -1 if self.data_list[-1].timestamp == '' else self.data_list[-1].timestamp
+
+        # During the jamming in __init__, we must add data with no timestamp.
+        if data.timestamp == '':
+            if last_timestamp == -1:
+                self.data_list.append(data)
+            return None
+
+        if data.timestamp > last_timestamp:
+            if len(self.data_list) < self.size:
+                self.data_list.append(data)
+            else:
+                self.data_list.pop(0)
+                self.data_list.append(data)
+
+    def last_runs_not_ok(self):
+        n = 0
+        for data in self.data_list:
+            if data.is_not_ok():
+                n += 1
+            else:
+                n = 0
+        return n
+
+    def last_runs_failed(self):
+        n = 0
+        for data in self.data_list:
+            if data.is_failed():
+                n += 1
+            else:
+                n = 0
+        return n
+
+    def __repr__(self):
+        l = []
+        c = 1
+        for data in self.data_list:
+            l.append('run' + str(c) + '=' + str(data))
+            c += 1
+        return ' '.join(l)
+
+
+data_str = sys.argv[1]
+data = Data(data_str)
+mem_length = int(sys.argv[2])
+perfdata = Perfdata(sys.argv[3], mem_length)
+warning = int(sys.argv[4])
+critical = int(sys.argv[5])
+
+if data.timestamp == '':
+    print("Last puppet run UNKNOWN: no date for the last run. | %s" % (perfdata,))
+    sys.exit(UNKNOWN)
+
+# The timestamp isn't empty.
+
+timestamp = data.timestamp
+date = time.ctime(timestamp)
+now = int(time.time())
+delta = now - timestamp
+readable_delta = str(datetime.timedelta(seconds=delta))
+
+if delta > critical:
+    perfdata.add(data_str)
+    print("Last puppet run CRITICAL: last run too old (%s ago). | %s" % (readable_delta, perfdata,))
+    sys.exit(CRITICAL)
+
+# The delta isn't critical.
+
+if delta > warning:
+    perfdata.add(data_str)
+    print("Last puppet run WARNING: last run too old (%s ago). | %s" % (readable_delta, perfdata,))
+    sys.exit(WARNING)
+
+# The delta is ok.
+
+if data.changed == '' or data.failed == '':
+    # No changed or failed parameters are known, we stop the check here.
+    perfdata.add(data_str)
+    print("Date of the last puppet run OK: %s ago. | %s" % (readable_delta, perfdata,))
+    sys.exit(OK)
+
+# "changed" and "failed" parameters aren't empty.
+
+# If no change and no error...
+if data.changed == 0 and data.failed == 0:
+    perfdata.add(data_str)
+    print("Last puppet run OK: %s ago, no change, no error. | %s" % (readable_delta, perfdata,))
+    sys.exit(OK)
+else:
+    # There is at least one change or one error.
+    perfdata.add(data_str)
+    not_ok = perfdata.last_runs_not_ok()
+    if not_ok >= mem_length:
+        if mem_length !=0:
+            print("Last puppet run WARNING: %s ago (good) but change(s) or error(s) since %s runs at least. | %s" % (readable_delta, not_ok, perfdata,))
+            sys.exit(WARNING)
+        else:
+            # mem_length == 0.
+            failed = perfdata.last_runs_failed()
+            if failed >= MEM_LENGTH_DEFAULT:
+                print("Last puppet run WARNING: %s ago (good) but error(s) since %s runs at least. | %s" % (readable_delta, failed, perfdata,))
+                sys.exit(WARNING)
+            else:
+                print("Last puppet run OK: %s ago (good), change(s) or error(s) since %s run(s) at least but the threshold is infinity. | %s" % (readable_delta, not_ok, perfdata,))
+                sys.exit(OK)
+    else:
+        # not_ok < mem_length, then mem_length > 0.
+        print("Last puppet run OK: %s ago (good), change(s) or error(s) since %s run(s) at least but the threshold is %s. | %s" % (readable_delta, not_ok, mem_length, perfdata,))
+        sys.exit(OK)
+
+
+
+
+

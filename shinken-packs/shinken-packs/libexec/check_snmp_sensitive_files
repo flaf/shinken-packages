@@ -1,0 +1,120 @@
+#!/bin/sh
+
+# Copyright: 2013 Francois Lafont <francois.lafont@crdp.ac-versailles.fr>
+#
+# License: GPL-3.0+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+# Be careful, the script assumes that the file names contain no space.
+
+#set -x
+SCRIPT_NAME=${0##*/}
+SCRIPT_DIRECTORY=${0%/*}
+
+. "$SCRIPT_DIRECTORY/share/check_snmp_header"
+
+# The string which represents a "unknown" dataperf.
+UNKNOWN_VALUE="unknown"
+
+# Regex of a file hash.
+REGEX_HASH="[a-z0-9]+"
+
+# The oid which will run the "snmp_extend_get_hashes" script on the node.
+OID='NET-SNMP-EXTEND-MIB::nsExtendOutputFull."get_hashes"'
+
+# The perftada of this plugin always follows this pattern:
+#   /file/one=xxxx, /file/two=xxxx
+# where xxxx is either the correct value or "$UNKNOWN_VALUE".
+
+# The one argument: $1 := "the file name".
+extract_last_hash () {
+    echo "$perfdata" | sed -n -r "s:^.*$1=($REGEX_HASH).*\$:\1:p"
+}
+
+# Print the list of files in "$perfdata".
+extract_last_files () {
+    echo "$perfdata" | sed -n -r "s:=$REGEX_HASH(|,)::gp"
+}
+
+# Getting of the files hashes.
+# We must check the output because with the NET-SNMP-EXTEND-MIB, snmpget can
+# return 0 even if the OID doesn't exist.
+if output=$(snmpget -OvQ -r "$retry" -t "$timeout" $AUTH_OPTIONS "$host" "$OID" 2>&1) \
+    && echo "$output" | grep -Eq ":$REGEX_HASH\$"
+then
+
+    # The "snmpget" command has succeeded.
+
+    # If this is the first check.
+    if [ -z "$perfdata" ]; then
+        for line in $output; do
+            file=$(echo "$line" | cut -d':' -f1)
+            hash=$(echo "$line" | cut -d':' -f2)
+            new_perfdata="$new_perfdata $file=$hash,"
+            files_list="$files_list $file"
+        done
+        new_perfdata=$(echo ${new_perfdata%,}) # remove of the "," and the space
+        files_list=$(echo $files_list) # remove of the left space
+        echo "This is the first check of $files_list. | $new_perfdata"
+        exit "$OK"
+    fi
+
+    # This is not the first check.
+    for line in $output; do
+        file=$(echo "$line" | cut -d':' -f1)
+        hash=$(echo "$line" | cut -d':' -f2)
+
+        new_perfdata="$new_perfdata $file=$hash,"
+        last_hash=$(extract_last_hash "$file")
+
+        if [ -z "$last_hash" ]; then
+            files_list="$files_list $file=NEW"
+        else
+            if [ "$last_hash" = "$hash" ]; then
+                files_list="$files_list $file=OK"
+            else
+                files_list="$files_list $file=CHANGE"
+            fi
+        fi
+    done
+
+    # Checking of missing files in the output by comparison with the perfdata.
+    for file in $(extract_last_files); do
+        if ! echo "$files_list" | grep -q " $file="; then
+            # File in perfdata missing in the checked files.
+            files_list="$files_list $file=MISSING"
+        fi
+    done
+
+    new_perfdata=$(echo ${new_perfdata%,}) # remove of the "," and the space
+    files_list=$(echo $files_list) # remove of the left space
+
+    if echo "$files_list" | grep -Eq '(=CHANGE|=MISSING)'; then
+        echo "Check of files WARNING: $files_list. | $new_perfdata"
+        exit "$WARNING"
+    else
+        echo "Check of files OK: $files_list. | $new_perfdata"
+        exit "$OK"
+    fi
+
+else
+
+    # The "snmpget" command hasn't succeeded.
+    echo "$output | $perfdata"
+    exit "$UNKNOWN"
+
+fi
+
+
+

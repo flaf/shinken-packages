@@ -1,0 +1,43 @@
+* Translate the comments in english.
+
+* In check_snmp_head, put just the common options,
+  the other options must be defined in each check_snmp_foo.
+
+* The output of the checks must respect the standard output format
+  of nagios plugins.
+
+* Why not try to write the plugins in Python. See lab/ directory.
+  But I think there is a performance problem. Try to compile in
+  .pyc before to test.
+
+* Indent like this the *.cfg files:
+    define service {
+        service_description disk space
+        use                 generic-service_tpl
+        register            0
+        host_name           windows_tpl
+        check_command       check_windows_disks
+    }
+
+* Make a nice picture in /usr/share/shinken-packs/sp.example.cfg
+  which represents the templates etc.
+
+* Update the README file.
+
+* Why not a Oriented Object version of sp_merge_conf
+
+* In the https_tpl, rename the "_https_certificates" key
+  to "_https_cert".
+
+* Create the "http-anyhost_tpl" and "https-anyhost_tpl"
+  templates like "http_tpl" and "https_tpl" except that
+  the http[s] requests (and the certificate check) don't
+  use the -I option (the address of the host) and the
+  dns resolution be sent during the execution of the
+  check. Find too a syntax to choice the detination
+  host:
+    - an empty argument -> the dns resolution be sent during the execution of the check
+    - an non empty argument -> use the argument for the address of the destination host
+
+
+
