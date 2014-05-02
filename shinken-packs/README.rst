@@ -31,8 +31,8 @@ This package depends on 2 unofficial packages :
 1. the `wmi-cli`__ package;
 2. and the `shinken`__ package.
 
-__ https://github.com/flaf/wmic
-__ https://github.com/flaf/shinken-package
+__ https://github.com/flaf/shinken-packages/tree/master/wmic
+__ https://github.com/flaf/shinken-packages/tree/master/shinken
 
 
 Build the .deb package on Debian Wheezy
@@ -43,8 +43,8 @@ To build the .deb package on Debian Wheezy, you can run these commands in a shel
 .. code:: sh
 
   # Creation of the working directory.
-  git clone https://github.com/flaf/shinken-packs.git
-  cd shinken-packs/shinken-packs/
+  git clone https://github.com/flaf/shinken-packages.git
+  cd shinken-packages/shinken-packs/shinken-packs/
   
   # Installation of the build-dependencies
   BUILD_DEPENDS='<see the debian/control file>'
