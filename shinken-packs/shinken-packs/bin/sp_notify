@@ -198,8 +198,7 @@ class Notification:
     """
 
     date_now = datetime.datetime.now().replace(microsecond=0)
-    #time_now = date_now.time()
-    time_now = date_now # I prefer to have the date in the message, not just the time.
+    time_now = date_now.time()
     sender = os.uname()[1]
     subject_pattern = u''
     message_pattern = u''
@@ -229,6 +228,7 @@ class Notification:
         self.number = number
         self.service_desc = service_desc
         self.time = time
+        self.date = Notification.date_now
         self.file_name = file_name
         if self.time == None:
             self.time = Notification.time_now
@@ -297,7 +297,7 @@ class HostNotification(Notification):
 
 Host: $hostname (address $address)
 State: $state (business impact $business_impact/5)
-Date: $time
+Date: $date
 
 Additional info
 $additional_info
@@ -317,7 +317,7 @@ class ServiceNotification(Notification):
 Service: $service_desc
 Host: $hostname (address $address)
 State: $state (business impact $business_impact/5)
-Date: $time
+Date: $date
 
 Additional info
 $additional_info
