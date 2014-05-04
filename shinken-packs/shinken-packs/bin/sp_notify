@@ -198,7 +198,8 @@ class Notification:
     """
 
     date_now = datetime.datetime.now().replace(microsecond=0)
-    time_now = date_now.time()
+    #time_now = date_now.time()
+    time_now = date_now # I prefer to have the date in the message, not just the time.
     sender = os.uname()[1]
     subject_pattern = u''
     message_pattern = u''
