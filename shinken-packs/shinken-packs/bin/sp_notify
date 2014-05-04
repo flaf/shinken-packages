@@ -78,7 +78,7 @@ class Rule:
     >>> test()
     False
 
-    >>> name = u'john'
+    >>> name = u'pit' # it's matched (it's host notification)
     >>> service_desc_regex = u''
     >>> service_desc = None
     >>> test()
