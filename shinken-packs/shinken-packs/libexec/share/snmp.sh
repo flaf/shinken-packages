@@ -44,7 +44,7 @@ if ! TEMP=$(getopt -o "$COMMON_SHORT_OPTIONS,$SPECIFIC_SHORT_OPTIONS" \
 then
     echo "Syntax error with $SCRIPT_NAME command." >&2
     print_help
-    exit 1
+    exit "$CODE_UNKNOWN"
 fi
 
 eval set -- "$TEMP"
@@ -106,7 +106,7 @@ do
 
         --help|-h)
             print_help
-            exit 0
+            exit "$CODE_OK"
         ;;
 
         --)
