@@ -51,12 +51,13 @@ override_dh_installdeb:
 
 git_clean: clean
 	cd "$(WORKING_DIR)" && rm -fr check_wmi_plus/
+	cd "$(WORKING_DIR)" && rm -fr SMCIPMITool/
 	cd "$(WORKING_DIR)" && rm -rf ".pc"
 
 populate_working_dir: git_clean
 	cd "$(WORKING_DIR)" && mkdir check_wmi_plus && tar -xzf ../check_wmi_plus*tar.gz -C check_wmi_plus
-	# Apply all the patches to the source.
-	cd "$(WORKING_DIR)" && quilt push -a
+	cd "$(WORKING_DIR)" && tar -xzf ../SMCIPMITool*tar.gz && mv SMCIPMITool* SMCIPMITool && rm -f SMCIPMITool/*.dll
+	cd "$(WORKING_DIR)" && quilt push -a # Apply all the patches to the source.
 
 create_deb: populate_working_dir
 	cd "$(WORKING_DIR)" && debuild -us -uc && echo 'Building is OK!'

@@ -1,0 +1,11 @@
+--- a/SMCIPMITool/SMCIPMITool.properties
++++ b/SMCIPMITool/SMCIPMITool.properties
+@@ -3,7 +3,7 @@
+ prompt_mb_name=on
+ prompt_time=on
+ record=off
+-history=on
++history=off
+ prompt_powerW=on
+ prompt_fwVer=off
+ prompt_acpi=on
