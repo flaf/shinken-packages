@@ -1,0 +1,27 @@
+--- a/libexec/check_snmp_netint.pl
++++ b/libexec/check_snmp_netint.pl
+@@ -1057,7 +1057,7 @@
+ sub perf_name {
+   my ($iname,$vtype) = @_;
+   $iname =~ s/'\/\(\)/_/g; #' get rid of special characters in performance description name
+-  return "'".$iname."_".$vtype."'";
++  return '"'.$iname."_".$vtype.'"';
+ }
+ 
+ # alternative function used by WL
+@@ -1078,7 +1078,7 @@
+  $name = perf_name($name,$vtype) if defined($vtype);
+  return $prev_perf_data{$name} if exists($prev_perf_data{$name});
+  # also lets check in case nagios stripped quotes out of perf
+- if ($name =~ /^'(.*)`$/) {
++ if ($name =~ /^"(.*)`$/) {
+     return $prev_perf_data{$1} if exists($prev_perf_data{$1});
+  }
+  return undef;
+@@ -2728,4 +2728,4 @@
+ 	print $saved_out;
+ }
+ print "\n";
+-exit $ERRORS{$exit_status};
+\ No newline at end of file
++exit $ERRORS{$exit_status};

@@ -42,7 +42,6 @@ override_dh_installdeb:
 	dh_installdeb
 	sed -i 's/__VERSION__/$(PKG_VERSION)/' "$(BUILD_DIR)/DEBIAN/prerm"
 	sed -i 's/__VERSION__/$(PKG_VERSION)/' "$(BUILD_DIR)/DEBIAN/postinst"
-	patch "$(BUILD_DIR)/usr/share/$(PKG_NAME)/libexec/check_snmp_netint.pl" < "$(WORKING_DIR)/debian/check_snmp_netint.patch"
 
 # To avoid the check of lib dependency in SMCIPMITool.
 override_dh_shlibdeps:
@@ -56,6 +55,7 @@ override_dh_shlibdeps:
 git_clean: clean
 	cd "$(WORKING_DIR)" && rm -fr check_wmi_plus/
 	cd "$(WORKING_DIR)" && rm -fr SMCIPMITool/
+	cd "$(WORKING_DIR)" && quilt pop -a # This un-applies all patches.
 	cd "$(WORKING_DIR)" && rm -rf ".pc"
 
 populate_working_dir: git_clean
