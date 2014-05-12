@@ -1,0 +1,156 @@
+#!/bin/sh
+
+SCRIPT_NAME=${0##*/}
+export LC_ALL='C'
+export PATH='/usr/sbin:/usr/bin:/sbin:/bin'
+
+# The return values of a plugin.
+CODE_OK=0
+CODE_WARNING=1
+CODE_CRITICAL=2
+CODE_UNKNOWN=3
+
+# The reture values of the timeout command
+# when there is a timeout.
+CODE_TIMEOUT=124
+
+SYNOPSIS='--host <address> --user <user> --password <pwd> [--timeout <timeout>] [ --exclude <regex>]'
+SHORT_OPTIONS='h,H:,u:,p:,t:,e:'
+LONG_OPTIONS='help,host:,user:,password:,timeout:,exclude:'
+OLD_IFS="$IFS"
+LINE_FEED='
+'
+
+print_help () {
+    cat <<EOF
+The syntax is:
+    $SCRIPT_NAME --help
+    $SCRIPT_NAME $SYNOPSIS
+EOF
+}
+
+if ! TEMP=$(getopt -o "$SHORT_OPTIONS" -l "$LONG_OPTIONS" -n "$SCRIPT_NAME" -- "$@")
+then
+    echo "Syntax error with $SCRIPT_NAME command." >&2
+    print_help
+    exit "$CODE_UNKNOWN"
+fi
+
+eval set -- "$TEMP"
+unset TEMP
+
+# Default value for the options which are not mandatory.
+TIMEOUT=10
+REGEX=''
+
+while true
+do
+    case "$1" in
+
+        --help|-h)
+            print_help
+            exit 0
+        ;;
+
+        --host|-H)
+            HOST="$2"
+            shift 2
+        ;;
+
+        --user|-u)
+            USER="$2"
+            shift 2
+        ;;
+
+        --password|-p)
+            PASSWORD="$2"
+            shift 2
+        ;;
+
+        --timeout|-t)
+            TIMEOUT="$2"
+            shift 2
+        ;;
+
+        --exclude|-e)
+            REGEX="$2"
+            shift 2
+        ;;
+
+        --)
+            shift 1
+            break
+        ;;
+
+    esac
+done
+
+
+if [ -z "$HOST" ] || [ -z "$USER" ] || [ -z "$PASSWORD" ]
+then
+    echo "Sorry bad syntax. Some options are missing."
+    print_help
+    exit "$CODE_UNKNOWN"
+fi
+
+# The "IPMI" request.
+output=$(timeout "$TIMEOUT" SMCIPMITool "$HOST" "$USER" "$PASSWORD" ipmi sensor 2>&1 || echo "$?")
+
+if [ "$(echo "$output" | tail -n 1)" = "$CODE_TIMEOUT" ]
+then
+    echo "WARNING, SMCIMPITool timeout."
+    exit "$CODE_UNKNOWN"
+fi
+
+# With the first sed, we catch only the array in the output.
+# With the second sed, we remove the header of the array.
+# With the cut, we take only the "Status", "Sensor" and "Reading" columns.
+# With the last sed, we remove the spaces at the begin and at the end of the lines,
+# and we remove the spaces before and after the delimiters.
+output=$(echo "$output"                                 | \
+         sed -n '/|/p'                                  | \
+         sed -rn '/[[:space:]]*(Status|---)/!p'         | \
+         cut -d '|' -f'1-3'                             | \
+         sed -r -e 's/(^[[:space:]]*|[[:space:]]*$)//g'   \
+                -e 's/[[:space:]]*\|[[:space:]]*/|/g')
+
+# We remove some lines if REGEX is not empty.
+if [ -n "$REGEX" ]
+then
+    if ! output=$(echo "$output" | grep -vE "$REGEX" 2>/dev/null)
+    then
+        echo "Sorry, bad regex in the --exclude option."
+        exit "$CODE_UNKNOWN"
+    fi
+fi
+
+all_is_ok=true
+info=''
+
+IFS="$LINE_FEED"
+for line in $output
+do
+    status=$(echo $line | cut -d'|' -f1)
+    sensor=$(echo $line | cut -d'|' -f2)
+    value=$(echo $line | cut -d'|' -f3)
+    [ "$value" = 'N/A' ] && continue
+    [ "$status" != 'OK' ] &&  all_is_ok=false
+
+    # Cleaning of sensor name.
+    #sensor=$(echo $sensor | sed -r 's/^\([0-9]+\)[[:space:]]*//')
+
+    info="$info [$sensor = $status]"
+
+done
+IFS="$OLD_IFS"
+
+if "$all_is_ok"
+then
+    echo "OK. Supermicro IPMI, all sensors are fine:$info"
+    exit "$CODE_OK"
+else
+    echo "WARNING. Supermicro IPMI, some sensors are not fine:$info."
+    exit "$CODE_WARNING"
+fi
+
+
