@@ -6,5 +6,6 @@ check_wmi_plus/check_wmi_plus.pl          usr/share/shinken-packs/libexec/
 check_wmi_plus/check_wmi_plus.conf.sample usr/share/shinken-packs/wmi/
 check_wmi_plus/check_wmi_plus.d           usr/share/shinken-packs/wmi/
 check_wmi_plus/check_wmi_plus.README.txt  usr/share/shinken-packs/wmi/
+SMCIPMITool                               opt/
 
 
