@@ -53,14 +53,17 @@ override_dh_shlibdeps:
 ########################
 
 git_clean: clean
-	cd "$(WORKING_DIR)" && quilt pop -a || true # This un-applies all patches.
+	# Useless because all patched files are not in the git repository.
+	#cd "$(WORKING_DIR)" && quilt pop -a || true # This un-applies all patches.
 	cd "$(WORKING_DIR)" && rm -fr check_wmi_plus/
 	cd "$(WORKING_DIR)" && rm -fr SMCIPMITool/
+	cd "$(WORKING_DIR)" && rm -fr libexec/check_snmp_netint.pl
 	cd "$(WORKING_DIR)" && rm -rf ".pc"
 
 populate_working_dir: git_clean
 	cd "$(WORKING_DIR)" && mkdir check_wmi_plus && tar -xzf ../check_wmi_plus*tar.gz -C check_wmi_plus
 	cd "$(WORKING_DIR)" && tar -xzf ../SMCIPMITool*tar.gz && mv SMCIPMITool* SMCIPMITool && rm -f SMCIPMITool/*.dll
+	cd "$(WORKING_DIR)" && tar -xzf ../check_snmp_netint*tar.gz && mv check_snmp_netint.pl ./libexec/
 	cd "$(WORKING_DIR)" && quilt push -a # Apply all the patches to the source.
 
 create_deb: populate_working_dir
