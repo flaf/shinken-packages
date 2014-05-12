@@ -64,7 +64,7 @@ populate_working_dir: git_clean
 	cd "$(WORKING_DIR)" && mkdir check_wmi_plus && tar -xzf ../check_wmi_plus*tar.gz -C check_wmi_plus
 	cd "$(WORKING_DIR)" && find check_wmi_plus/ -type f ! -name '*.pl' -exec chmod a-x {} \+ # to avoid warning during building
 	cd "$(WORKING_DIR)" && tar -xzf ../SMCIPMITool*tar.gz && mv SMCIPMITool* SMCIPMITool && rm -f SMCIPMITool/*.dll
-	cd "$(WORKING_DIR)" && tar -xzf ../check_snmp_netint*tar.gz && mv check_snmp_netint.pl ./libexec/
+	cd "$(WORKING_DIR)" && tar -xzf ../check_snmp_netint*tar.gz && mv check_snmp_netint.pl ./libexec/ && chmod a+x ./libexec/check_snmp_netint.pl
 	cd "$(WORKING_DIR)" && quilt push -a # Apply all the patches to the source.
 
 create_deb: populate_working_dir
