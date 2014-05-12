@@ -53,9 +53,9 @@ override_dh_shlibdeps:
 ########################
 
 git_clean: clean
+	cd "$(WORKING_DIR)" && quilt pop -a || true # This un-applies all patches.
 	cd "$(WORKING_DIR)" && rm -fr check_wmi_plus/
 	cd "$(WORKING_DIR)" && rm -fr SMCIPMITool/
-	cd "$(WORKING_DIR)" && quilt pop -a # This un-applies all patches.
 	cd "$(WORKING_DIR)" && rm -rf ".pc"
 
 populate_working_dir: git_clean
