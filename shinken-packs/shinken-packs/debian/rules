@@ -44,6 +44,10 @@ override_dh_installdeb:
 	sed -i 's/__VERSION__/$(PKG_VERSION)/' "$(BUILD_DIR)/DEBIAN/postinst"
 	patch "$(BUILD_DIR)/usr/share/$(PKG_NAME)/libexec/check_snmp_netint.pl" < "$(WORKING_DIR)/debian/check_snmp_netint.patch"
 
+# To avoid the check of lib dependency in SMCIPMITool.
+override_dh_shlibdeps:
+	dh_shlibdeps --exclude=/opt/SMCIPMITool
+
 
 ########################
 ### Personal targets ###
