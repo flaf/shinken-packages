@@ -39,7 +39,7 @@ esac
 # Keep /opt/.
 if [ ! -d /opt ]
 then
-    mkdir /opt &&  chmod 755 /opt
+    mkdir /opt && chmod 755 /opt
 fi
 
 
