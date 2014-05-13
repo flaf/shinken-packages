@@ -98,7 +98,7 @@ output=$(timeout "$TIMEOUT" SMCIPMITool "$HOST" "$USER" "$PASSWORD" ipmi sensor 
 
 if [ "$(echo "$output" | tail -n 1)" = "$CODE_TIMEOUT" ]
 then
-    echo "WARNING, SMCIMPITool timeout."
+    echo "State unknown, SMCIMPITool timeout."
     exit "$CODE_UNKNOWN"
 fi
 
@@ -141,7 +141,7 @@ IFS="$OLD_IFS"
 # no sensor to check.
 if [ -z "$info" ]
 then
-    echo "WARNING, there is no sensor to check. Maybe a bad usage of -e option..."
+    echo "State unknown, there is no sensor to check. Maybe a bad usage of -e option..."
     exit "$CODE_UNKNOWN"
 fi
 
