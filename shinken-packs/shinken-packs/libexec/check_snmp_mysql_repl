@@ -29,6 +29,13 @@ OID='NET-SNMP-EXTEND-MIB::nsExtendOutputFull."get_mysql_repl_status"'
 if output=$(snmpget -OvQ -r "$retry" -t "$timeout" $AUTH_OPTIONS "$host" $OID 2>&1)
 then
 
+    if ! echo "$output" | grep -q '^slave_io_state:'
+    then
+        # Not expected output.
+        echo "$output"
+        exit "$UNKNOWN"
+    fi
+
     # We must delete ' and " characters to avoid errors during notification.
     slave_io_state=$(echo "$output" | sed -n 's/^slave_io_state://p' | tr -d "'\"")
     slave_io_running=$(echo "$output" | sed -n 's/^slave_io_running://p' | tr -d "'\"")
