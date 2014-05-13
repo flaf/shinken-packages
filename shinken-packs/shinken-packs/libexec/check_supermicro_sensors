@@ -109,20 +109,10 @@ fi
 # and we remove the spaces before and after the delimiters.
 output=$(echo "$output"                                 | \
          sed -n '/|/p'                                  | \
-         sed -rn '/[[:space:]]*(Status|---)/!p'         | \
+         sed -rn '/^[[:space:]]*(Status|---)/!p'        | \
          cut -d '|' -f'1-3'                             | \
          sed -r -e 's/(^[[:space:]]*|[[:space:]]*$)//g'   \
                 -e 's/[[:space:]]*\|[[:space:]]*/|/g')
-
-# We remove some lines if REGEX is not empty.
-if [ -n "$REGEX" ]
-then
-    if ! output=$(echo "$output" | grep -vE "$REGEX" 2>/dev/null)
-    then
-        echo "Sorry, bad regex in the --exclude option."
-        exit "$CODE_UNKNOWN"
-    fi
-fi
 
 all_is_ok=true
 info=''
@@ -130,19 +120,33 @@ info=''
 IFS="$LINE_FEED"
 for line in $output
 do
+
     status=$(echo $line | cut -d'|' -f1)
-    sensor=$(echo $line | cut -d'|' -f2)
+    sensor=$(echo $line | cut -d'|' -f2 | sed -r 's/^\([0-9]+\)[[:space:]]*//') # Cleaning of sensor name.
     value=$(echo $line | cut -d'|' -f3)
+
+    # If the sensor is N/A (non-available), we skip it.
     [ "$value" = 'N/A' ] && continue
-    [ "$status" != 'OK' ] &&  all_is_ok=false
 
-    # Cleaning of sensor name.
-    #sensor=$(echo $sensor | sed -r 's/^\([0-9]+\)[[:space:]]*//')
+    # We skip the sensor too if REGEX is not empty and if it matches.
+    [ -n "$REGEX" ] && (echo "$sensor" | grep -qE "$REGEX" 2>/dev/null) && continue
 
-    info="$info [$sensor = $status]"
+    [ "$status" != 'OK' ] && all_is_ok=false
+    info="$info, [$sensor]=$status"
 
 done
 IFS="$OLD_IFS"
+
+# If "$info" is empty, it isn't normal because there is
+# no sensor to check.
+if [ -z "$info" ]
+then
+    echo "WARNING, there is no sensor to check. Maybe a bad usage of -e option..."
+    exit "$CODE_UNKNOWN"
+fi
+
+# Remove the first character in $info.
+info=${info#,}
 
 if "$all_is_ok"
 then
