@@ -94,11 +94,16 @@ then
 fi
 
 # The "IPMI" request.
-output=$(timeout "$TIMEOUT" SMCIPMITool "$HOST" "$USER" "$PASSWORD" ipmi sensor 2>&1 || echo "$?")
+output=$(timeout "$TIMEOUT" SMCIPMITool "$HOST" "$USER" "$PASSWORD" ipmi sensor 2>&1; echo "$?")
+exit_code=$(echo "$output" | tail -n 1)
 
-if [ "$(echo "$output" | tail -n 1)" = "$CODE_TIMEOUT" ]
+if [ "$exit_code" -eq "$CODE_TIMEOUT" ]
 then
     echo "State unknown, SMCIMPITool timeout."
+    exit "$CODE_UNKNOWN"
+elif [ "$exit_code" -gt "0" ]
+then
+    echo "$output" | head -n 1
     exit "$CODE_UNKNOWN"
 fi
 
