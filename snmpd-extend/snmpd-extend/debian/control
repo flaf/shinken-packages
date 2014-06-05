@@ -1,14 +1,16 @@
 Source: snmpd-extend
 Section: misc
 Priority: extra
-Maintainer: Francois Lafont <francois.lafont@crdp.ac-versailles.fr>
+Maintainer: François Lafont <francois.lafont@crdp.ac-versailles.fr>
 Build-Depends: devscripts, fakeroot, debhelper (>= 7.0.50~)
-Standards-Version: 3.8.4
-Vcs-Browser: https://github.com/flaf/snmpd-extend.git
+Standards-Version: 3.9.4
+Vcs-Browser: https://github.com/flaf/shinken-packages/tree/master/snmpd-extend
 
 Package: snmpd-extend
 Architecture: all
-Depends: ${misc:Depends}, sudo, lsb-release, sed, coreutils, perl, libdbd-mysql-perl, freeipmi-tools
+Depends: ${misc:Depends}, sudo, lsb-release,
+ sed (>> 4), coreutils (>> 6),
+ perl, libdbd-mysql-perl, freeipmi-tools |,
 Pre-Depends: snmpd
-Description: Scripts used with the snmpd daemon and the extend statement.
+Description: Scripts which extend snmpd daemon
  Scripts used with the snmpd daemon and the extend statement.

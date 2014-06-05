@@ -1,18 +1,17 @@
 This work was packaged for Debian by:
 
-    Francois Lafont <francois.lafont@crdp.ac-versailles.fr> on Wed, 10 Jul 2013 23:00:30 +0200
+    François Lafont <francois.lafont@crdp.ac-versailles.fr> on Wed, 10 Jul 2013 23:00:30 +0200
 
 It was downloaded from:
 
-    https://github.com/flaf/snmpd-extend.git
+    https://github.com/flaf/shinken-packages/tree/master/snmpd-extend
 
-Upstream Author(s):
+Upstream Author:
 
-    Francois Lafont <francois.lafont@crdp.ac-versailles.fr>
-
-Copyright:
-
-    Copyright 2013 Francois Lafont <francois.lafont@crdp.ac-versailles.fr>
+    Files: *
+    François Lafont <francois.lafont@crdp.ac-versailles.fr>
+    Copyright (C) 2013 François Lafont <francois.lafont@crdp.ac-versailles.fr>
+    License: GPL-3.0+
 
 License:
 
@@ -34,7 +33,7 @@ Public License version 3 can be found in "/usr/share/common-licenses/GPL-3".
 
 The Debian packaging is:
 
-    Copyright (C) 2013 Francois Lafont <francois.lafont@crdp.ac-versailles.fr>
+    Copyright (C) 2013 François Lafont <francois.lafont@crdp.ac-versailles.fr>
 
 and is licensed under the GPL version 3, see above.
 
