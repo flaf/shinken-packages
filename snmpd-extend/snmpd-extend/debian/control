@@ -10,7 +10,7 @@ Package: snmpd-extend
 Architecture: all
 Depends: ${misc:Depends}, sudo, lsb-release,
  sed (>> 4), coreutils (>> 6),
- perl, libdbd-mysql-perl, freeipmi-tools | apt (<< 0.7.30),
+ perl, libdbd-mysql-perl, freeipmi-tools (>= 1.1.5) | apt (<< 0.7.30),
 Pre-Depends: snmpd
 Description: Scripts which extend snmpd daemon
  Scripts used with the snmpd daemon and the extend statement.
