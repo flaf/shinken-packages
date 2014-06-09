@@ -19,17 +19,25 @@
 export LC_ALL=C
 export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
 
+codename=$(lsb_release --codename --short)
+
+if [ "$codename" = "lenny" ] || [ "$codename" = "squeeze" ]
+then
+    echo "Sorry ipmi-sensors is not available in Lenny and Squeeze."
+    exit 1
+fi
+
 if ! which ipmi-sensors >/dev/null 2>&1
 then
     echo "No ipmi-sensors command. The package freeipmi-tools is probably not installed."
     exit 1
 fi
 
-ipmi-sensors -q --output-sensor-state          \
-                --ignore-not-available-sensors \
-                --ignore-unrecognized-events   \
-                --interpret-oem-data           \
-                --comma-separated-output       \
+timeout 6s ipmi-sensors -q --output-sensor-state \
+                --ignore-not-available-sensors   \
+                --ignore-unrecognized-events     \
+                --interpret-oem-data             \
+                --comma-separated-output         \
                 | sed -nr '1p;/(power|temp)/Ip'
 
 
