@@ -13,7 +13,7 @@ GET_SPECIFIC_OPTIONS () {
 . "$SCRIPT_DIRECTORY/share/snmp.sh"
 
 # The oid 'NET-SNMP-EXTEND-MIB::nsExtendOutputFull."get_ipmi_status"' in text format.
-odi='.1.3.6.1.4.1.8072.1.3.2.3.1.2.15.103.101.116.95.105.112.109.105.95.115.116.97.116.117.115'
+oid='.1.3.6.1.4.1.8072.1.3.2.3.1.2.15.103.101.116.95.105.112.109.105.95.115.116.97.116.117.115'
 
 old_IFS=$IFS
 LINE_FEED='
@@ -27,12 +27,15 @@ then
     output=$(echo "${output#\"}")
     output=$(echo "${output%\"}")
 
-    if ! echo "$output" | head -n 1 | grep -Eq '^[a-zA-Z0-9]+='
+    if ! echo "$output" | head -n 1 | grep -q '^ID,Name,Type,State,Event$'
     then
         # The output is incorrect (unlikely when the "snmpget" command has succeeded).
         echo "Unexpected output in the snmpget request: \"$output\""
         exit "$CODE_UNKNOWN"
     fi
+
+    # Remove header.
+    output=$(echo "$output" | sed -n '1!p')
 
     all_is_ok=true
     list=''
@@ -40,10 +43,13 @@ then
     IFS="$LINE_FEED"
     for line in $output
     do
-        pool=$(echo "$line" | cut -d'=' -f1)
-        state=$(echo "$line" | cut -d'=' -f'2-')
-        list="$list $pool=$state"
-        [ "$state" != 'ONLINE' ] && all_is_ok=false
+        name=$(echo "$line" | cut -d',' -f2 | tr ' ' '_')
+        state=$(echo "$line" | cut -d',' -f'4')
+        [ "$state" = 'Nominal' ] && state=OK # "OK" is more explicit
+        list="$list $name=$state"
+
+        [ "$state" != 'OK' ] && all_is_ok=false
+
     done
     IFS="$old_IFS"
 
@@ -51,10 +57,10 @@ then
 
     if "$all_is_ok"
     then
-        echo "zpool(s) OK: $list."
+        echo "IPMI sensors OK: $list."
         exit "$CODE_OK"
     else
-        echo "zpool(s) WARNING: $list."
+        echo "IPMI sensors WARNING: $list."
         exit "$CODE_WARNING"
     fi
 
