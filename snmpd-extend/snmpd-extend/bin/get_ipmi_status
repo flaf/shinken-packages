@@ -33,6 +33,10 @@ then
     exit 1
 fi
 
+# Load kernel modules.
+modprobe ipmi_devintf >/dev/null 2>&1
+modprobe ipmi_si      >/dev/null 2>&1
+
 timeout 6s ipmi-sensors -q --output-sensor-state \
                 --ignore-not-available-sensors   \
                 --ignore-unrecognized-events     \
