@@ -2,11 +2,17 @@
 
 SCRIPT_NAME=${0##*/}
 SCRIPT_DIRECTORY=${0%/*}
-SPECIFIC_SHORT_OPTIONS=''
-SPECIFIC_LONG_OPTIONS=''
+SPECIFIC_SHORT_OPTIONS='-e:'
+SPECIFIC_LONG_OPTIONS='--exclude:'
 SPECIFIC_SYNOPSIS=''
 
 GET_SPECIFIC_OPTIONS () {
+    case "$1" in
+        --exclude|-e)
+            REGEX="$2"
+            return 2
+        ;;
+    esac
     return 0
 }
 
@@ -43,10 +49,14 @@ then
     IFS="$LINE_FEED"
     for line in $output
     do
-        name=$(echo "$line" | cut -d',' -f2 | tr ' ' '_')
+        sensor=$(echo "$line" | cut -d',' -f2 | tr ' ' '_')
         state=$(echo "$line" | cut -d',' -f'4')
+
+        # We skip the sensor too if REGEX is not empty and if it matches.
+        [ -n "$REGEX" ] && (echo "$sensor" | grep -qE "$REGEX" 2>/dev/null) && continue
+
         [ "$state" = 'Nominal' ] && state=OK # "OK" is more explicit
-        list="$list $name=$state"
+        list="$list $sensor=$state"
 
         [ "$state" != 'OK' ] && all_is_ok=false
 
