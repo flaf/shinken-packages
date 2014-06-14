@@ -14,7 +14,7 @@ CODE_UNKNOWN=3
 # when there is a timeout.
 CODE_TIMEOUT=124
 
-SYNOPSIS='--host <address> --user <user> --password <pwd> [--timeout <timeout>] [ --exclude <regex>]'
+SYNOPSIS='--host <address> --user <user> --password <pwd> [--timeout <timeout>] [--exclude <regex>]'
 SHORT_OPTIONS='h,H:,u:,p:,t:,e:'
 LONG_OPTIONS='help,host:,user:,password:,timeout:,exclude:'
 OLD_IFS="$IFS"
