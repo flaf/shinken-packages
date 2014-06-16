@@ -34,13 +34,13 @@ then
 fi
 
 # Load kernel modules.
-if modprobe ipmi_devintf >/dev/null 2>&1
+if ! modprobe ipmi_devintf >/dev/null 2>&1
 then
     echo "Sorry, impossible to load the kernel module ipmi_devintf."
     exit 1
 fi
 
-if modprobe ipmi_si >/dev/null 2>&1
+if ! modprobe ipmi_si >/dev/null 2>&1
 then
     echo "Sorry, impossible to load the kernel module ipmi_si."
     exit 1
