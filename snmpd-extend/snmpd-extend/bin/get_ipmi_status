@@ -34,8 +34,17 @@ then
 fi
 
 # Load kernel modules.
-modprobe ipmi_devintf >/dev/null 2>&1
-modprobe ipmi_si      >/dev/null 2>&1
+if modprobe ipmi_devintf >/dev/null 2>&1
+then
+    echo "Sorry, impossible to load the kernel module ipmi_devintf."
+    exit 1
+fi
+
+if modprobe ipmi_si >/dev/null 2>&1
+then
+    echo "Sorry, impossible to load the kernel module ipmi_si."
+    exit 1
+fi
 
 output=$(timeout 6s ipmi-sensors                   \
             --quiet-cache --sdr-cache-recreate     \
