@@ -37,12 +37,21 @@ fi
 modprobe ipmi_devintf >/dev/null 2>&1
 modprobe ipmi_si      >/dev/null 2>&1
 
-timeout 6s ipmi-sensors --quiet-cache --sdr-cache-recreate \
-                -q --output-sensor-state                   \
-                --ignore-not-available-sensors             \
-                --ignore-unrecognized-events               \
-                --interpret-oem-data                       \
-                --comma-separated-output                   \
-                | sed -nr '1p;/(power|temp)/Ip'
+output=$(timeout 6s ipmi-sensors                   \
+            --quiet-cache --sdr-cache-recreate     \
+            --quiet-readings --output-sensor-state \
+            --ignore-not-available-sensors         \
+            --ignore-unrecognized-events           \
+            --interpret-oem-data                   \
+            --comma-separated-output); exit_code="$?"
+
+if [ "$exit_code" = "124" ]
+then
+    echo "Sorry, ipmi-sensors command too long."
+else
+    printf "%s\n" "$output" | sed -nr '1p;/(power|temp)/Ip'
+fi
+
+exit "$exit_code"
 
 
