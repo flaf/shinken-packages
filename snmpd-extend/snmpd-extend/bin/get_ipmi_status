@@ -47,7 +47,8 @@ output=$(timeout 6s ipmi-sensors                   \
 
 if [ "$exit_code" = "124" ]
 then
-    echo "Sorry, ipmi-sensors command too long."
+    # "timeout" command has broken the "ipmi-sensors" execution.
+    echo "Sorry, ipmi-sensors execution is too long."
 else
     printf "%s\n" "$output" | sed -nr '1p;/(power|temp)/Ip'
 fi
