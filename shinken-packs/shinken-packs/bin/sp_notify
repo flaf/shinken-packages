@@ -26,7 +26,11 @@ import re
 import string
 
 os.environ['PATH'] = '/bin:/usr/bin'
-os.environ['LC_ALL'] = 'C'
+
+# Do not set this environment variable.
+# This script will use the locale of the calling program.
+#os.environ['LC_ALL'] = 'C'
+
 PROG = os.path.basename(sys.argv[0])
 LOCAL_SERVER = os.uname()[1]
 
@@ -258,7 +262,7 @@ class Notification:
                 stdin=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
             )
-            p.communicate(input=self.get_message())
+            p.communicate(input=self.get_message().encode('utf-8'))
             self.logger.write(u"Notification sent by e-mail (to %s): " % (self.contact.email,) + str(self))
         except:
             msg = u"Problem with the e-mail sending (to %s) and the 'mail' command: " % (self.contact.email,) + str(self)
@@ -268,7 +272,7 @@ class Notification:
     def write_in_file(self):
         try:
             f = open(self.file_name, 'a')
-            f.write(self.get_short_message())
+            f.write(self.get_short_message().encode('utf-8'))
             f.close()
             self.logger.write(u"Notification sent by file (%s): " % (self.file_name) + str(self))
         except:
