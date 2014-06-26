@@ -85,8 +85,13 @@ do
     esac
 done
 
+if [ -z "$HOST" ]
+then
+    echo "Sorry, the --host option is mandatory and the value must be non-empty."
+    exit "$CODE_UNKNOWN"
+fi
 
-if [ -z "$HOST" ] || [ -z "$USER" ] || [ -z "$PASSWORD" ]
+if [ -z "$USER" ] || [ -z "$PASSWORD" ]
 then
     echo "Sorry bad syntax. Some options are missing."
     print_help
