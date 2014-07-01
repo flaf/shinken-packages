@@ -22,18 +22,18 @@
 export LC_ALL=C
 export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
 
-# After talking with Michael Nourry on IRC, the line 6 of the
-# output is irrelevant (this line 'Running: zmstat-proc').
-# We skip it.
-output=$(/opt/zimbra/bin/zmstatctl status 2>&1 | sed -n '6!p')
+output=$(/opt/zimbra/bin/zmstatctl status 2>&1)
 
 output_ok="Running: zmstat-mysql
-Running: zmstat-cpu
-Running: zmstat-io
-Running: zmstat-fd
-Running: zmstat-df
+Running: zmstat-mtaqueue
+Running: zmstat-ldap
 Running: zmstat-allprocs
+Running: zmstat-df
+Running: zmstat-fd
 Running: zmstat-io-x
+Running: zmstat-proc
+Running: zmstat-io
+Running: zmstat-cpu
 Running: zmstat-vm"
 
 if [ "$output" = "$output_ok" ]; then
