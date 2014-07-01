@@ -19,9 +19,10 @@
 export LC_ALL=C
 SCRIPT_NAME=${0##*/}
 UNKNOWN=3
-OPTIONS_LIST="ssl,ip-address:,url:,regex:,warning:,critical:,timeout:,plugin-http:,certificate:"
+OPTIONS_LIST="ssl,ip-address:,url:,regex:,warning:,critical:,timeout:,plugin-http:,certificate:,onredirect:"
 
-if ! TEMP=$(getopt -o "" -l "$OPTIONS_LIST" -n "$SCRIPT_NAME" -- "$@"); then
+if ! TEMP=$(getopt -o "" -l "$OPTIONS_LIST" -n "$SCRIPT_NAME" -- "$@")
+then
     echo "Syntax error with $SCRIPT_NAME command." >&2
     exit 3
 fi
@@ -34,6 +35,7 @@ warning="3"
 critical="7"
 timeout="10"
 plugin_http="/usr/lib/nagios/plugins/check_http"
+onredirect="ok"
 
 while true
 do
@@ -99,6 +101,11 @@ do
             shift 2
         ;;
 
+        --onredirect)
+            onredirect="$2"
+            shift 2
+        ;;
+
         --)
             shift 1
             break
@@ -152,15 +159,17 @@ fi
 #   - '-H' option is the host header in the http[s] request, ie the
 #     requested virtual host.
 
-if [ -z "$regex" ]; then
+if [ -z "$regex" ]
+then
     "$plugin_http" "$ssl" -4 -I "$ip_address" -H "$host" -u "$path" \
-        -p "$port" -w "$warning" -c "$critical" --timeout="$timeout"
+        -p "$port" -w "$warning" -c "$critical" --timeout="$timeout" --onredirect="$onredirect"
 else
     # There is a regex.
     # If the exit code is not OK and if the pattern is not found,
     # there is a specific output.
     output=$("$plugin_http" "$ssl" -4 -I "$ip_address" -H "$host" -u "$path" --regex "$regex" \
-                  -p "$port" -w "$warning" -c "$critical" --timeout="$timeout" 2>&1); exit_code="$?"
+                  -p "$port" -w "$warning" -c "$critical" --timeout="$timeout"                \
+                  --onredirect="$onredirect" 2>&1); exit_code="$?"
 
     if [ "$exit_code" = "0" ]
     then
