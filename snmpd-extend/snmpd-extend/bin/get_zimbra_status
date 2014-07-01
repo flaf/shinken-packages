@@ -36,7 +36,8 @@ Running: zmstat-io
 Running: zmstat-cpu
 Running: zmstat-vm"
 
-if [ "$output" = "$output_ok" ]; then
+if [ "$output" = "$output_ok" ]
+then
     echo "Zimbra OK."
 else
     # Replace '\n' by '; ', remove ':' and strip the output.
