@@ -61,8 +61,8 @@ then
     # Remove leading double quotes because snmpget adds leading
     # double quotes when we use a numerical OID (but not with
     # a string OID, it is not logical but it is so).
-    output=$(echo "${output#\"}")
-    output=$(echo "${output%\"}")
+    output="${output#\"}"
+    output="${output%\"}"
 
     # For the moment, everything's fine.
     CRIT="false"

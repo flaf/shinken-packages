@@ -30,8 +30,8 @@ if output=$(snmpget $SNMP_CMD_OPTIONS -OvQ "$HOSTNAME" "$oid" 2>&1)
 then
 
     # Remove leading double quotes.
-    output=$(echo "${output#\"}")
-    output=$(echo "${output%\"}")
+    output="${output#\"}"
+    output="${output%\"}"
 
     if ! echo "$output" | head -n 1 | grep -q '^ID,Name,Type,State,Event$'
     then
