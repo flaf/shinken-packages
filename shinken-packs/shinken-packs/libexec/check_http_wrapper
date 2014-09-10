@@ -37,6 +37,7 @@ timeout="10"
 plugin_http="/usr/lib/nagios/plugins/check_http"
 onredirect="ok"
 
+
 while true
 do
     case "$1" in
@@ -54,8 +55,16 @@ do
         --url)
             url="$2"
 
-            # Cut url to have <host>:<port>:<path>
-            array=$(echo "$url" | sed -nr 's;^([-a-zA-Z0-9_.]+)(:([0-9]+))?(/.*)?$;\1 \3 \4;p')
+            cleaned_url="${url#url->}"
+            if [ "$url" = "$cleaned_url" ]
+            then
+                ignore_ip_address=false
+            else
+                ignore_ip_address=true
+            fi
+
+            # Split cleaned_url to have <host> <port> <path>
+            array=$(echo "$cleaned_url" | sed -nr 's;^([-a-zA-Z0-9_.]+)(:([0-9]+))?(/.*)?$;\1 \3 \4;p')
 
             if [ -z "$array" ]
             then
@@ -149,8 +158,9 @@ then
     fi
 fi
 
-# Default value of ip_address if the variable is empty.
-if [ -z "$ip_address" ]
+# Default value of ip_address if the variable is empty or if
+# ignore_ip_address is true.
+if [ -z "$ip_address" ] || "$ignore_ip_address"
 then
     ip_address="$host"
 fi
