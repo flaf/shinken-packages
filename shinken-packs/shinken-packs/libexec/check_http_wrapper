@@ -64,7 +64,7 @@ do
             fi
 
             # Split cleaned_url to have <host>:<port>:<path>
-            array=$(echo "$cleaned_url" | sed -nr 's;^([-a-zA-Z0-9_.]+)(:([0-9]+))?(/.*)?$;\1 \3 \4;p')
+            array=$(echo "$cleaned_url" | sed -nr 's;^([-a-zA-Z0-9_.]+)(:([0-9]+))?(/.*)?$;\1:\3:\4;p')
 
             if [ -z "$array" ]
             then
