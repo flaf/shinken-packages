@@ -1,0 +1,130 @@
+#!/bin/sh
+
+export LC_ALL=C
+export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
+SCRIPT_NAME=${0##*/}
+
+# The return values of a nagios plugin.
+CODE_OK=0
+CODE_WARNING=1
+CODE_CRITICAL=2
+CODE_UNKNOWN=3
+
+long_options='mailserver:,username:,password:,mailto:,warning:,critical:'
+if ! TEMP=$(getopt -o '' -l "$long_options" -n "$SCRIPT_NAME" -- "$@")
+then
+    printf "Syntax error with $SCRIPT_NAME command.\n" >&2
+    exit "$CODE_UNKNOWN"
+fi
+
+eval set -- "$TEMP"
+unset TEMP
+
+while true
+do
+    case "$1" in
+
+        --mailserver)
+            MAILSERVER="$2"
+            shift 2
+        ;;
+
+        --username)
+            USERNAME="$2"
+            shift 2
+        ;;
+
+        --password)
+            PASSWORD="$2"
+            shift 2
+        ;;
+
+        --mailto)
+            MAILTO="$2"
+            shift 2
+        ;;
+
+        --warning)
+            WARNING="$2"
+            shift 2
+        ;;
+
+        --critical)
+            CRITICAL="$2"
+            shift 2
+        ;;
+
+        --)
+            shift 1
+            break
+        ;;
+    esac
+done
+
+# Top! The check is started. Tic tac tic tac tic tac...
+TOP=$(date +%s)
+
+# BODY must be discriminating enough to be able sure that this
+# BODY belongs to our sent message.
+BODY="Test from $(hostname -f), epoch $TOP"
+
+# Mails with this subject must be redirect to MAILSERVER.
+SUBJECT="Monitoring loop mails"
+
+# Time in seconds between 2 attempts.
+SLEEP_TIME=20
+
+# Send an email.
+if ! printf "$BODY\n" | timeout 20 mail -s "$SUBJECT" "$MAILTO" >/dev/null 2>&1
+then
+    printf "CRITICAL. Unable to send email from $(hostname -f) to $MAILTO.\n"
+    exit "$CODE_CRITICAL"
+fi
+
+# The email is sent.
+
+fetchmailrc="poll $MAILSERVER protocol POP3"
+fetchmailrc="$fetchmailrc username \"$USERNAME\" password \"$PASSWORD\""
+which_mail="Mail from $(hostname -f)"
+when="$(date -d @$TOP)"
+
+while true
+do
+    now=$(date +%s)
+    delta=$((now - TOP))
+    remaining_time=$(( CRITICAL - delta ))
+
+    if [ "$remaining_time" -le 0 ]
+    then
+        output="CRITICAL. $which_mail never retrieved after $CRITICAL seconds"
+        output="$output (mail sent on $when)."
+        printf "$output\n"
+        exit "$CODE_CRITICAL"
+    elif [ "$remaining_time" -lt "$SLEEP_TIME" ]
+    then
+        # Sleep during the remaining time before the last attempt.
+        sleep "$remaining_time"
+    else
+        # Wait a little before the next attempt.
+        sleep "$SLEEP_TIME"
+    fi
+
+    # Try to fetch the mail.
+    if printf "${fetchmailrc}\n"                                  \
+        | fetchmail -f '-' --timeout 10 --nokeep --bsmtp '-' 2>&1 \
+        | grep -q "^$BODY" >/dev/null 2>&1
+    then
+        # Update the elapsed time before printing the output.
+        now=$(date +%s)
+        delta=$((now - TOP))
+        if [ "$delta" -gt "$WARNING" ]
+        then
+            printf "WARNING. $which_mail retrieved after $delta seconds.\n"
+            exit "$CODE_WARNING"
+        else
+            printf "OK. $which_mail retrieved after $delta seconds.\n"
+            exit "$CODE_OK"
+        fi
+    fi
+done
+
