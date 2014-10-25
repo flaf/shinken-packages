@@ -23,14 +23,26 @@ SCRIPT_NAME=${0##*/}
 # Mails with this subject must be redirect to MAILSERVER.
 SUBJECT="Monitoring loop mails"
 
+print_help () {
+    synopsis="--mailserver <mailserver> --username <username>"
+    synopsis="$synopsis --password <password> --mailto <email>"
+    synopsis="$synopsis --warning <timeout1> --critical <timeout2>"
+    cat <<EOF
+The syntax is:
+    $SCRIPT_NAME --help
+    $SCRIPT_NAME $synopsis
+The timeouts are in seconds.
+EOF
+}
+
 # The return values of a nagios plugin.
 CODE_OK=0
 CODE_WARNING=1
 CODE_CRITICAL=2
 CODE_UNKNOWN=3
 
-long_options='mailserver:,username:,password:,mailto:,warning:,critical:'
-if ! TEMP=$(getopt -o '' -l "$long_options" -n "$SCRIPT_NAME" -- "$@")
+long_options='help,mailserver:,username:,password:,mailto:,warning:,critical:'
+if ! TEMP=$(getopt -o 'h' -l "$long_options" -n "$SCRIPT_NAME" -- "$@")
 then
     printf "Syntax error with $SCRIPT_NAME command.\n" >&2
     exit "$CODE_UNKNOWN"
@@ -73,12 +85,25 @@ do
             shift 2
         ;;
 
+        --help|-h)
+            print_help
+            exit "$CODE_OK"
+        ;;
+
         --)
             shift 1
             break
         ;;
     esac
 done
+
+if [ -z "$MAILSERVER" ] || [ -z "$USERNAME" ] || [ -z "$PASSWORD" ] \
+   || [ -z "$MAILTO" ] || [ -z "$WARNING" ] || [ -z "$CRITICAL" ]
+then
+    printf "Bad syntax. Try \`$SCRIPT_NAME -h' for futher information.\n"
+    exit "$CODE_UNKNOWN"
+fi
+
 
 # Test if the command is already running.
 list_processes=$(pgrep --full --list "$SCRIPT_NAME")
@@ -87,8 +112,8 @@ n=$(printf "$list_processes\n" | grep "$USERNAME" | grep -c "$MAILSERVER")
 # The current process is the only instance of this check <=> ("$n" == 1).
 if [ "$n" != 1 ]
 then
-    message="UNKNOWN. Check aborted because already running"
-    message="$message with the same mail server ($MAILSERVER)"
+    message="UNKNOWN. check Aborted because an instance of the check is"
+    message="$message already running with the same mail server ($MAILSERVER)"
     message="$message and the same account ($USERNAME)."
     printf "$message\n"
     exit "$CODE_UNKNOWN"
