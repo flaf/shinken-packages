@@ -20,6 +20,9 @@ export LC_ALL=C
 export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
 SCRIPT_NAME=${0##*/}
 
+# Mails with this subject must be redirect to MAILSERVER.
+SUBJECT="Monitoring loop mails"
+
 # The return values of a nagios plugin.
 CODE_OK=0
 CODE_WARNING=1
@@ -97,9 +100,6 @@ TOP=$(date +%s)
 # BODY must be discriminating enough to be able sure that this
 # BODY belongs to our sent message.
 BODY="Test from $(hostname -f), epoch $TOP"
-
-# Mails with this subject must be redirect to MAILSERVER.
-SUBJECT="Monitoring loop mails"
 
 # Time in seconds between 2 attempts.
 SLEEP_TIME=20
