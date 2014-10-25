@@ -13,6 +13,6 @@ Depends: ${misc:Depends}, snmp, sed, python, python-argparse,
  libcrypt-rijndael-perl, ftp-upload, nagios-plugins-basic,
  nagios-snmp-plugins, nagios-plugins-common, wmi-cli,
  libnumber-format-perl, libconfig-inifiles-perl, libdatetime-perl,
- fetchmail
+ fetchmail, procps
 Description: Personnal packs for shinken.
  Personnal packs for shinken.

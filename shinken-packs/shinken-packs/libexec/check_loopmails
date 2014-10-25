@@ -77,6 +77,20 @@ do
     esac
 done
 
+# Test if the command is already running.
+list_processes=$(pgrep --full --list "$SCRIPT_NAME")
+n=$(printf "$list_processes\n" | grep "$USERNAME" | grep -c "$MAILSERVER")
+
+# The current process is the only instance of this check <=> ("$n" == 1).
+if [ "$n" != 1 ]
+then
+    message="UNKNOWN. Check aborted because already running"
+    message="$message with the same mail server ($MAILSERVER)"
+    message="$message and the same account ($USERNAME)."
+    printf "$message\n"
+    exit "$CODE_UNKNOWN"
+fi
+
 # Top! The check is started. Tic tac tic tac tic tac...
 TOP=$(date +%s)
 
