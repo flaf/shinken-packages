@@ -27,65 +27,7 @@ import string
 
 
 class Rule:
-    """Represents a rule in a black list file.
-
-    >>> contact_pattern = u'^(john|bob)$'
-    >>> ts = TimeSlots()
-    >>> ts.add(u'[12h00;13h35][23h00;23h59]')
-    >>> name = u'john'
-    >>> service_desc_regex = u'^disk space$'
-    >>> service_desc = u'disk space'
-    >>> hostname = u'srv-2'
-    >>> now = datetime.time(23, 2)
-    >>> def test():
-    ...     rule = Rule(
-    ...         contact_names = Regexp(contact_pattern),
-    ...         hostnames = Regexp(u'^srv-'), timeslots = ts,
-    ...         service_desc = Regexp(service_desc_regex))
-    ...     contact = Contact(
-    ...         name = name, sms_threshold = 4, rarefaction_threshold = 15,
-    ...         email = u'john@domain.tld', phone_number=u'0666666666')
-    ...     notif = Notification(
-    ...         contact = contact, hostname = hostname, address = u'172.31.0.1',
-    ...         ntype = u'Problem', state = u'CRITICAL', business_impact = 4,
-    ...         additional_info = u'CRITICAL, there is a big problem',
-    ...         number = 7, service_desc = service_desc, time = now)
-    ...     return rule.is_matching_with(notif)
-
-    >>> test()
-    True
-
-    >>> now = datetime.time(0, 0) # time doesn't match
-    >>> test()
-    False
-
-    >>> now = datetime.time(23, 0)
-    >>> hostname = u'wsrv-2' # hostname doesn't match
-    >>> test()
-    False
-
-    >>> contact_pattern = u'!^(john|bob)$'
-    >>> hostname = u'srv-2'
-    >>> name = u'bobby' # name doesn't match but the pattern begins with '!'
-    >>> test()
-    True
-
-    >>> name = u'bob' # name matches but the pattern begins with '!'
-    >>> test()
-    False
-
-    >>> name = u'pit' # it's matched (it's host notification)
-    >>> service_desc_regex = u''
-    >>> service_desc = None
-    >>> test()
-    True
-
-    >>> name = u'john'
-    >>> service_desc_regex = u'cpu'
-    >>> service_desc = None
-    >>> test()
-    False
-    """
+    """Represents a rule in a black list file."""
 
     def __init__(self, contact_names, hostnames, timeslots, service_desc=None):
         assert isinstance(contact_names, Regexp)
@@ -124,28 +66,7 @@ class Rule:
 
 
 class Regexp:
-    """Represents a regexp.
-
-    >>> r1 = Regexp(u'^(aaa|bbb)')
-    >>> r2 = Regexp(u'!^(aaa|bbb)') # '!' must reverse the regex.
-    >>> r3 = Regexp(u'') # an empty regex must catch nothing.
-    >>> r1.is_empty()
-    False
-    >>> r3.is_empty()
-    True
-    >>> r1.catch(u'aaaxxxx')
-    True
-    >>> r1.catch(u'xaaaxxxx')
-    False
-    >>> r2.catch(u'xaaaxxxx')
-    True
-    >>> r2.catch(u'aaaxxxx')
-    False
-    >>> r3.catch(u'')
-    False
-    >>> r3.catch(u'any')
-    False
-    """
+    """Represents a regexp."""
 
     def __init__(self, s):
         assert isinstance(s, unicode)
@@ -182,16 +103,7 @@ class Regexp:
 
 
 class Notification:
-    """Represents a notification to a contact.
-
-    >>> c = Contact(
-    ...    name=u'john', sms_threshold=4, rarefaction_threshold=10,
-    ...    email=u'john@domain.tld', phone_number=u'0666666666')
-    >>> notif = Notification(
-    ...     contact=c, hostname=u'google', address=u'www.google.fr',
-    ...     ntype=u'PROBLEM', state=u'CRITICAL', business_impact=4,
-    ...     additional_info=u'http is out!', number=34, service_desc=u'http')
-    """
+    """Represents a notification to a contact."""
 
     date_now = datetime.datetime.now().replace(microsecond=0)
     time_now = date_now.time()
@@ -327,10 +239,7 @@ Additionnal info: $additional_info
 
 
 class Contact:
-    """Represents a contact.
-    >>> c = Contact(name=u'john', sms_threshold=4, rarefaction_threshold=10,
-    ...             email=u'john@domain.tld', phone_number=u'0666666666')
-    """
+    """Represents a contact."""
 
     def __init__(self, name, sms_threshold, rarefaction_threshold, email=None, phone_number=None):
         assert isinstance(name, unicode)
