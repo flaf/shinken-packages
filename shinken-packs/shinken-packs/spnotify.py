@@ -1,0 +1,515 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+# Copyright: 2013 Francois Lafont <francois.lafont@ac-versailles.fr>
+#
+# License: GPL-3.0+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+
+import sys
+import os
+import datetime
+import subprocess
+import re
+import string
+
+
+class Rule:
+    """Represents a rule in a black list file.
+
+    >>> contact_pattern = u'^(john|bob)$'
+    >>> ts = TimeSlots()
+    >>> ts.add(u'[12h00;13h35][23h00;23h59]')
+    >>> name = u'john'
+    >>> service_desc_regex = u'^disk space$'
+    >>> service_desc = u'disk space'
+    >>> hostname = u'srv-2'
+    >>> now = datetime.time(23, 2)
+    >>> def test():
+    ...     rule = Rule(
+    ...         contact_names = Regexp(contact_pattern),
+    ...         hostnames = Regexp(u'^srv-'), timeslots = ts,
+    ...         service_desc = Regexp(service_desc_regex))
+    ...     contact = Contact(
+    ...         name = name, sms_threshold = 4, rarefaction_threshold = 15,
+    ...         email = u'john@domain.tld', phone_number=u'0666666666')
+    ...     notif = Notification(
+    ...         contact = contact, hostname = hostname, address = u'172.31.0.1',
+    ...         ntype = u'Problem', state = u'CRITICAL', business_impact = 4,
+    ...         additional_info = u'CRITICAL, there is a big problem',
+    ...         number = 7, service_desc = service_desc, time = now)
+    ...     return rule.is_matching_with(notif)
+
+    >>> test()
+    True
+
+    >>> now = datetime.time(0, 0) # time doesn't match
+    >>> test()
+    False
+
+    >>> now = datetime.time(23, 0)
+    >>> hostname = u'wsrv-2' # hostname doesn't match
+    >>> test()
+    False
+
+    >>> contact_pattern = u'!^(john|bob)$'
+    >>> hostname = u'srv-2'
+    >>> name = u'bobby' # name doesn't match but the pattern begins with '!'
+    >>> test()
+    True
+
+    >>> name = u'bob' # name matches but the pattern begins with '!'
+    >>> test()
+    False
+
+    >>> name = u'pit' # it's matched (it's host notification)
+    >>> service_desc_regex = u''
+    >>> service_desc = None
+    >>> test()
+    True
+
+    >>> name = u'john'
+    >>> service_desc_regex = u'cpu'
+    >>> service_desc = None
+    >>> test()
+    False
+    """
+
+    def __init__(self, contact_names, hostnames, timeslots, service_desc=None):
+        assert isinstance(contact_names, Regexp)
+        assert isinstance(hostnames, Regexp)
+        assert isinstance(timeslots, TimeSlots)
+        assert isinstance(service_desc, Regexp) or (service_desc is None)
+        self.contact_names = contact_names
+        self.hostnames = hostnames
+        self.service_desc = service_desc
+        if self.service_desc.is_empty():
+            self.service_desc = None
+        self.timeslots = timeslots
+
+    def is_matching_with(self, notif):
+        assert isinstance(notif, Notification)
+        if self.service_desc == None and notif.service_desc == None:
+            # This is a host rule and a host notification.
+            if self.contact_names.catch(notif.contact.name):
+                if self.hostnames.catch(notif.hostname):
+                    if notif.time in self.timeslots:
+                        # The rule is matching.
+                        return True
+        elif self.service_desc != None and notif.service_desc != None:
+            # This is a service rule and a service notification.
+            if self.contact_names.catch(notif.contact.name):
+                if self.hostnames.catch(notif.hostname):
+                    if self.service_desc.catch(notif.service_desc):
+                        if notif.time in self.timeslots:
+                            # The rule is matching.
+                            return True
+        # If no matching.
+        return False
+
+    def __repr__(self):
+        return repr(self.timeslots)
+
+
+class Regexp:
+    """Represents a regexp.
+
+    >>> r1 = Regexp(u'^(aaa|bbb)')
+    >>> r2 = Regexp(u'!^(aaa|bbb)') # '!' must reverse the regex.
+    >>> r3 = Regexp(u'') # an empty regex must catch nothing.
+    >>> r1.is_empty()
+    False
+    >>> r3.is_empty()
+    True
+    >>> r1.catch(u'aaaxxxx')
+    True
+    >>> r1.catch(u'xaaaxxxx')
+    False
+    >>> r2.catch(u'xaaaxxxx')
+    True
+    >>> r2.catch(u'aaaxxxx')
+    False
+    >>> r3.catch(u'')
+    False
+    >>> r3.catch(u'any')
+    False
+    """
+
+    def __init__(self, s):
+        assert isinstance(s, unicode)
+        if s == '':
+            self.reverse = False
+            self.pattern = ''
+        elif s[0] == '!':
+            self.reverse = True
+            self.pattern = s[1:]
+        else:
+            self.reverse = False
+            self.pattern = s
+
+    def is_empty(self):
+        if self.pattern == '':
+            return True
+        else:
+            return False
+
+    def catch(self, s_test):
+        assert isinstance(s_test, unicode)
+        if self.pattern == '':
+            # An empty pattern catches nothing
+            return False
+        else:
+            try:
+                if self.reverse:
+                    return not bool(re.search(self.pattern, s_test))
+                else:
+                    return bool(re.search(self.pattern, s_test))
+            except:
+                # If there is a problem, the Regexp doesn't catch.
+                return False
+
+
+class Notification:
+    """Represents a notification to a contact.
+
+    >>> c = Contact(
+    ...    name=u'john', sms_threshold=4, rarefaction_threshold=10,
+    ...    email=u'john@domain.tld', phone_number=u'0666666666')
+    >>> notif = Notification(
+    ...     contact=c, hostname=u'google', address=u'www.google.fr',
+    ...     ntype=u'PROBLEM', state=u'CRITICAL', business_impact=4,
+    ...     additional_info=u'http is out!', number=34, service_desc=u'http')
+    """
+
+    date_now = datetime.datetime.now().replace(microsecond=0)
+    time_now = date_now.time()
+    sender = os.uname()[1]
+    subject_pattern = u''
+    message_pattern = u''
+
+    def __init__(
+            self, contact,
+            hostname, address, ntype, state, business_impact,
+            additional_info, number, service_desc=None, time=None, file_name=None):
+        assert isinstance(contact, Contact)
+        assert isinstance(hostname, unicode)
+        assert isinstance(address, unicode)
+        assert isinstance(ntype, unicode)
+        assert isinstance(state, unicode)
+        assert isinstance(business_impact, int)
+        assert isinstance(additional_info, unicode)
+        assert isinstance(number, int)
+        assert isinstance(service_desc, unicode) or (service_desc is None)
+        assert isinstance(time, datetime.time) or (time is None)
+        assert isinstance(file_name, unicode) or (file_name is None)
+        self.contact = contact
+        self.hostname = hostname
+        self.address = address
+        self.ntype = ntype
+        self.state = state
+        self.business_impact = business_impact
+        self.additional_info = additional_info
+        self.number = number
+        self.service_desc = service_desc
+        self.time = time
+        self.date = Notification.date_now
+        self.file_name = file_name
+        if self.time == None:
+            self.time = Notification.time_now
+        self.sender = Notification.sender
+        self.logger = Logger()
+
+    def get_subject(self):
+        return string.Template(self.subject_pattern).substitute(self.__dict__)
+
+    def get_message(self):
+        return string.Template(self.message_pattern).substitute(self.__dict__)
+
+    def get_short_message(self):
+        return string.Template(self.short_message_pattern).substitute(self.__dict__)
+
+    def __repr__(self):
+        t = (self.contact.name, self.number, self.contact.rarefaction_threshold,
+             notification.hostname, notification.service_desc, notification.ntype,
+             notification.state, notification.additional_info)
+        return str(t)
+
+    def send_email(self):
+        try:
+            p = subprocess.Popen(
+                ['mail', '-s', self.get_subject(), self.contact.email],
+                stdout=subprocess.PIPE,
+                stdin=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            )
+            p.communicate(input=self.get_message().encode('utf-8'))
+            self.logger.write(u"Notification sent by e-mail (to %s): " % (self.contact.email,) + str(self))
+        except:
+            msg = u"Problem with the e-mail sending (to %s) and the 'mail' command: " % (self.contact.email,) + str(self)
+            self.logger.write(msg)
+            sys.exit(1)
+
+    def write_in_file(self):
+        try:
+            f = open(self.file_name, 'a')
+            f.write(self.get_short_message().encode('utf-8'))
+            f.close()
+            self.logger.write(u"Notification sent by file (%s): " % (self.file_name) + str(self))
+        except:
+            self.logger.write(u'Problem with the writing in the "%s" file: ' % (self.file_name,) + str(self))
+            sys.exit(1)
+
+    def send(self):
+        if self.file_name:
+            self.write_in_file()
+        else:
+            self.send_email()
+
+    def in_rarefaction_range(self):
+        R = self.contact.rarefaction_threshold
+        N = self.number
+        if R > 0 and N >= R and (N %10 != 0):
+            return True
+        else:
+            return False
+
+
+class HostNotification(Notification):
+
+    subject_pattern = u'$hostname $ntype: state is $state'
+    message_pattern = u'''This is a shinken notification from $sender server.
+
+Host: $hostname (address $address)
+State: $state (business impact $business_impact/5)
+Date: $date
+
+Additional info
+$additional_info
+'''
+    # The last \n is crucial. If absent, the last line isn't sent.
+
+    short_message_pattern = '''
+$hostname ($address) $ntype: state is $state.
+Additionnal info: $additional_info
+'''
+
+class ServiceNotification(Notification):
+
+    subject_pattern = u'$hostname $ntype: "$service_desc" in $state state'
+    message_pattern = u'''This is a shinken notification from $sender server.
+
+Service: $service_desc
+Host: $hostname (address $address)
+State: $state (business impact $business_impact/5)
+Date: $date
+
+Additional info
+$additional_info
+'''
+    # The last \n is crucial. If absent, the last line isn't sent.
+
+    short_message_pattern = '''
+$hostname ($address) $ntype: \"$service_desc\" in $state state.
+Additionnal info: $additional_info
+'''
+
+
+class Contact:
+    """Represents a contact.
+    >>> c = Contact(name=u'john', sms_threshold=4, rarefaction_threshold=10,
+    ...             email=u'john@domain.tld', phone_number=u'0666666666')
+    """
+
+    def __init__(self, name, sms_threshold, rarefaction_threshold, email=None, phone_number=None):
+        assert isinstance(name, unicode)
+        assert isinstance(sms_threshold, int)
+        assert isinstance(rarefaction_threshold, int)
+        assert isinstance(email, unicode) or (email is None)
+        assert isinstance(phone_number, unicode) or (phone_number is None)
+        self.name = name
+        self.sms_threshold = sms_threshold
+        self.rarefaction_threshold = rarefaction_threshold
+        self.email = email
+        self.phone_number = phone_number
+
+
+class TimeSlot:
+    """Represents a time slot.
+    Takes 2 datetime.time arguments and represents the time
+    slot between this 2 datetimes. In this example below,
+    ts is represents [14h30; 17h47] time slot.
+
+    >>> t1 = datetime.time(14, 30)
+    >>> t2 = datetime.time(17, 47)
+    >>> ts = TimeSlot(t1, t2)
+
+    >>> t_in = datetime.time(14, 30)
+    >>> t_out = datetime.time(14, 29)
+    >>> t_in in ts
+    True
+    >>> t_out in ts
+    False
+    """
+    def __init__(self, t1, t2):
+        assert isinstance(t1, datetime.time) and isinstance(t1, datetime.time)
+        assert t1 <= t2
+        self.t1 = t1
+        self.t2 = t2
+
+    def __contains__(self, time):
+        assert isinstance(time, datetime.time)
+        # Round the time to the minute.
+        rounded_time = datetime.time(time.hour, time.minute)
+        return self.t1 <= rounded_time <= self.t2
+
+    def __repr__(self):
+        return '[' + str(self.t1) + '-->' + str(self.t2) + ']'
+
+
+class TimeSlots:
+    """Represents an union of TimeSlot objects.
+    Takes one argument which must be a list of TimeSlot objects.
+    If the argument is omitted, the list is an empty list.
+    The .add method takes one argument which can be a TimeSlot
+    objet or an unicode string which represents an of timeslots.
+
+    >>> ta = datetime.time(20,4)
+    >>> tb = datetime.time(23,31)
+
+    >>> a1 = datetime.time(14, 30)
+    >>> a2 = datetime.time(17, 47)
+    >>> tsa = TimeSlot(a1, a2)
+
+    >>> b1 = datetime.time(19, 31)
+    >>> b2 = datetime.time(20, 9)
+    >>> tsb = TimeSlot(b1, b2)
+
+    >>> timeslots = TimeSlots()
+    >>> ta in timeslots
+    False
+
+    >>> timeslots = TimeSlots([tsa])
+    >>> ta in timeslots
+    False
+
+    >>> timeslots.add(tsb)
+    >>> ta in timeslots
+    True
+    >>> tb in timeslots
+    False
+
+    >>> timeslots.add(u'[9h35; 10h30] [23h25; 23h31]')
+    >>> ta in timeslots
+    True
+    >>> tb in timeslots
+    True
+    """
+    timeslots_pattern = r'^(\[\d+h\d+;\d+h\d+\])+$'
+    timeslots_regex = re.compile(timeslots_pattern)
+    numbers_regex = re.compile(r'\d+')
+
+    def __init__(self, timeslots=None):
+        if timeslots is None:
+            timeslots = []
+        assert isinstance(timeslots, list)
+        for ts in timeslots:
+            assert isinstance(ts, TimeSlot)
+        self.timeslots = timeslots
+
+    def add(self, ts):
+        assert isinstance(ts, TimeSlot) or isinstance(ts, unicode)
+        if isinstance(ts, TimeSlot):
+            self.timeslots.append(ts)
+        elif isinstance(ts, unicode):
+            self._add_via_unicode(ts)
+
+    def _add_via_unicode(self, s):
+        assert isinstance(s, unicode)
+        s = s.replace('\t', '').replace(' ', '').lower()
+        assert TimeSlots.timeslots_regex.match(s)
+        numbers = TimeSlots.numbers_regex.findall(s)
+        timeslots = []
+        for i in xrange(0, len(numbers), 4):
+            t1 = datetime.time(int(numbers[i]), int(numbers[i+1]))
+            t2 = datetime.time(int(numbers[i+2]), int(numbers[i+3]))
+            timeslots.append(TimeSlot(t1,t2))
+        for timeslot in timeslots:
+            self.add(timeslot)
+
+    def __contains__(self, time):
+        for timeslot in self.timeslots:
+            if time in timeslot:
+                return True
+        return False
+
+    def __repr__(self):
+        return str(self.timeslots)
+
+
+class Logger:
+
+    def __init__(self):
+      self.tag = u'shinken/' + os.path.basename(sys.argv[0])
+
+    def write(self, message):
+        assert isinstance(message, unicode)
+        subprocess.call(['logger', '-t', self.tag, message])
+
+
+class Line:
+    """Represents a line in the black list file.
+
+    >>> l = Line(u'    aaaa bbbb # just a test...   ')
+    >>> l.line
+    u'aaaa bbbb'
+    >>> l = Line(u'    aaaa bbbb')
+    >>> l.line
+    u'aaaa bbbb'
+    >>> l = Line(u'# blabla')
+    >>> l.line
+    u''
+    >>> l = Line(u'')
+    >>> l.line
+    u''
+
+    >>> l = Line(u'^john:^srv-$:load cpu:[00h30;2h00][14h00;17h00]')
+    >>> rule = l.get_rule()
+    >>> isinstance(rule, Rule)
+    True
+    >>> l = Line(u'^john:^srv-$:load cpu:::[00h30;2h00][14h00;17h00]') # bad syntax
+    >>> rule = l.get_rule()
+    >>> rule is None
+    True
+    """
+    comments_regex = re.compile('#.*$')
+
+    def __init__(self, s):
+        assert isinstance(s, unicode)
+        self.line = Line.comments_regex.sub('', s).strip()
+
+    def get_rule(self):
+        if self.line.count(':') != 3:
+            # The rule is not well written.
+            return None
+        l = self.line.split(':')
+        ts = TimeSlots()
+        ts.add(l[3])
+        rule = Rule(
+            contact_names = Regexp(l[0]),
+            hostnames = Regexp(l[1]), timeslots = ts,
+            service_desc = Regexp(l[2]))
+        return rule
+
+
