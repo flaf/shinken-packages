@@ -258,19 +258,8 @@ class TimeSlot:
     """Represents a time slot.
     Takes 2 datetime.time arguments and represents the time
     slot between this 2 datetimes. In this example below,
-    ts is represents [14h30; 17h47] time slot.
+    ts is represents [14h30; 17h47] time slot."""
 
-    >>> t1 = datetime.time(14, 30)
-    >>> t2 = datetime.time(17, 47)
-    >>> ts = TimeSlot(t1, t2)
-
-    >>> t_in = datetime.time(14, 30)
-    >>> t_out = datetime.time(14, 29)
-    >>> t_in in ts
-    True
-    >>> t_out in ts
-    False
-    """
     def __init__(self, t1, t2):
         assert isinstance(t1, datetime.time) and isinstance(t1, datetime.time)
         assert t1 <= t2
@@ -292,39 +281,8 @@ class TimeSlots:
     Takes one argument which must be a list of TimeSlot objects.
     If the argument is omitted, the list is an empty list.
     The .add method takes one argument which can be a TimeSlot
-    objet or an unicode string which represents an of timeslots.
+    objet or an unicode string which represents an of timeslots."""
 
-    >>> ta = datetime.time(20,4)
-    >>> tb = datetime.time(23,31)
-
-    >>> a1 = datetime.time(14, 30)
-    >>> a2 = datetime.time(17, 47)
-    >>> tsa = TimeSlot(a1, a2)
-
-    >>> b1 = datetime.time(19, 31)
-    >>> b2 = datetime.time(20, 9)
-    >>> tsb = TimeSlot(b1, b2)
-
-    >>> timeslots = TimeSlots()
-    >>> ta in timeslots
-    False
-
-    >>> timeslots = TimeSlots([tsa])
-    >>> ta in timeslots
-    False
-
-    >>> timeslots.add(tsb)
-    >>> ta in timeslots
-    True
-    >>> tb in timeslots
-    False
-
-    >>> timeslots.add(u'[9h35; 10h30] [23h25; 23h31]')
-    >>> ta in timeslots
-    True
-    >>> tb in timeslots
-    True
-    """
     timeslots_pattern = r'^(\[\d+h\d+;\d+h\d+\])+$'
     timeslots_regex = re.compile(timeslots_pattern)
     numbers_regex = re.compile(r'\d+')
@@ -378,30 +336,8 @@ class Logger:
 
 
 class Line:
-    """Represents a line in the black list file.
+    """Represents a line in the black list file."""
 
-    >>> l = Line(u'    aaaa bbbb # just a test...   ')
-    >>> l.line
-    u'aaaa bbbb'
-    >>> l = Line(u'    aaaa bbbb')
-    >>> l.line
-    u'aaaa bbbb'
-    >>> l = Line(u'# blabla')
-    >>> l.line
-    u''
-    >>> l = Line(u'')
-    >>> l.line
-    u''
-
-    >>> l = Line(u'^john:^srv-$:load cpu:[00h30;2h00][14h00;17h00]')
-    >>> rule = l.get_rule()
-    >>> isinstance(rule, Rule)
-    True
-    >>> l = Line(u'^john:^srv-$:load cpu:::[00h30;2h00][14h00;17h00]') # bad syntax
-    >>> rule = l.get_rule()
-    >>> rule is None
-    True
-    """
     comments_regex = re.compile('#.*$')
 
     def __init__(self, s):

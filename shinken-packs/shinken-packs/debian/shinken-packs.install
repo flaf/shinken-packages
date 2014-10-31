@@ -1,4 +1,6 @@
-bin/*                                     usr/bin/
+bin/sp_merge_cfg                          usr/bin/
+bin/sp_notify                             usr/bin/
+bin/SMCIPMITool                           usr/bin/
 sp.example.cfg                            usr/share/shinken-packs/
 templates                                 usr/share/shinken-packs/
 libexec                                   usr/share/shinken-packs/
@@ -7,5 +9,4 @@ check_wmi_plus/check_wmi_plus.conf.sample usr/share/shinken-packs/wmi/
 check_wmi_plus/check_wmi_plus.d           usr/share/shinken-packs/wmi/
 check_wmi_plus/check_wmi_plus.README.txt  usr/share/shinken-packs/wmi/
 SMCIPMITool                               opt/
-
 
