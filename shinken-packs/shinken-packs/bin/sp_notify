@@ -129,6 +129,12 @@ common_options = [
    'only if business impact >= SMS-THRESHOLD.',
   ],
   [
+   '--sms-url', '--SMS-URL', str, True,
+   'sms_url',
+   'SMS-URL',
+   'The url to send SMS with "phone" and "msg" POST variables.',
+  ],
+  [
    '--contact-number', '--NUMBER', str, True,
    'contact_number',
    'CONTACT_NUMBER',

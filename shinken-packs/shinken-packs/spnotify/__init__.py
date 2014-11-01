@@ -183,6 +183,9 @@ class Notification:
             self.logger.write(u'Problem with the writing in the "%s" file: ' % (self.file_name,) + str(self))
             sys.exit(1)
 
+    def send_sms(self):
+        
+
     def send(self):
         if self.file_name:
             self.write_in_file()
@@ -241,14 +244,17 @@ Additionnal info: $additional_info
 class Contact:
     """Represents a contact."""
 
-    def __init__(self, name, sms_threshold, rarefaction_threshold, email=None, phone_number=None):
+    def __init__(self, name, sms_threshold, sms_url, rarefaction_threshold,
+                 email=None, phone_number=None):
         assert isinstance(name, unicode)
         assert isinstance(sms_threshold, int)
+        assert isinstance(sms_url, unicode)
         assert isinstance(rarefaction_threshold, int)
         assert isinstance(email, unicode) or (email is None)
         assert isinstance(phone_number, unicode) or (phone_number is None)
         self.name = name
         self.sms_threshold = sms_threshold
+        self.sms_url = sms_url
         self.rarefaction_threshold = rarefaction_threshold
         self.email = email
         self.phone_number = phone_number
