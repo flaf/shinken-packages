@@ -139,7 +139,7 @@ common_options = [
    'contact_number',
    'CONTACT_NUMBER',
    "Phone number of the contact. If CONTACT-NUMBER doesn't match " \
-   'with /^[0-9]+/, no SMS is sent.',
+   'with /^[0-9]+$/, no SMS is sent.',
   ],
 ]
 
@@ -326,10 +326,5 @@ if opt_dict['print_only']:
     print(notification.get_message())
 else:
     notification.send()
-
-if __name__ == '__main__':
-    #import doctest
-    #doctest.testmod()
-    pass
 
 

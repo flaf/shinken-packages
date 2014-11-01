@@ -24,6 +24,10 @@ import datetime
 import subprocess
 import re
 import string
+import pycurl
+import cStringIO
+from urllib import urlencode
+
 
 
 class Rule:
@@ -171,7 +175,6 @@ class Notification:
         except:
             msg = u"Problem with the e-mail sending (to %s) and the 'mail' command: " % (self.contact.email,) + str(self)
             self.logger.write(msg)
-            sys.exit(1)
 
     def write_in_file(self):
         try:
@@ -181,16 +184,41 @@ class Notification:
             self.logger.write(u"Notification sent by file (%s): " % (self.file_name) + str(self))
         except:
             self.logger.write(u'Problem with the writing in the "%s" file: ' % (self.file_name,) + str(self))
-            sys.exit(1)
 
     def send_sms(self):
-        
+        phone = self.contact.phohe_number
+        if phone is not None:
+            phone = phone.encode('utf-8')
+        sms_threshold = self.contact.sms_threshold
+        sms_url = self.contact.sms_url.encode('utf-8')
+        msg = self.get_short_message().encode('utf-8')
+        business_impact = self.business_impact
+        if phone is not None and business_impact >= sms_threshold:
+            try:
+                post_data = { 'phone': phone, 'msg': msg }
+                postfields = urlencode(post_data)
+                buf = cStringIO.StringIO()
+                c = pycurl.Curl()
+                c.setopt(c.URL, sms_url)
+                c.setopt(c.WRITEFUNCTION, buf.write)
+                c.setopt(c.POSTFIELDS, postfields)
+                c.setopt(c.TIMEOUT, 5)
+                c.perform()
+                output = buf.getvalue()
+                buf.close()
+                self.logger.write("SMS sent %s" % phone + str(self))
+            except Exception as e:
+                if 'buf' in globals(): buf.close()
+                self.logger.write("Failed to send SMS %s. Exception raised %s" \
+                                  % (phone + str(self), e))
+
 
     def send(self):
         if self.file_name:
             self.write_in_file()
         else:
             self.send_email()
+        self.send_sms()
 
     def in_rarefaction_range(self):
         R = self.contact.rarefaction_threshold
@@ -257,7 +285,10 @@ class Contact:
         self.sms_url = sms_url
         self.rarefaction_threshold = rarefaction_threshold
         self.email = email
-        self.phone_number = phone_number
+        if phone_number is not None and re.search(ur'^[0-9]+$', phone_number):
+            self.phone_number = phone_number
+        else:
+            self.phone_number = None
 
 
 class TimeSlot:
