@@ -206,7 +206,11 @@ class Notification:
                 c.perform()
                 output = buf.getvalue()
                 buf.close()
-                self.logger.write("SMS sent %s" % phone + str(self))
+                if output.upper().startswith(u'OK'):
+                    self.logger.write("SMS sent %s" % phone + str(self))
+                else:
+                    self.logger.write("Failed to send SMS %s" \
+                                      % phone + str(self))
             except Exception as e:
                 if 'buf' in globals(): buf.close()
                 self.logger.write("Failed to send SMS %s. Exception raised %s" \
