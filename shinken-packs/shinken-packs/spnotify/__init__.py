@@ -158,8 +158,8 @@ class Notification:
 
     def __repr__(self):
         t = (self.contact.name, self.number, self.contact.rarefaction_threshold,
-             notification.hostname, notification.service_desc, notification.ntype,
-             notification.state, notification.additional_info)
+             self.hostname, self.service_desc, self.ntype, self.state,
+             self.additional_info)
         return str(t)
 
     def send_email(self):
@@ -186,7 +186,7 @@ class Notification:
             self.logger.write(u'Problem with the writing in the "%s" file: ' % (self.file_name,) + str(self))
 
     def send_sms(self):
-        phone = self.contact.phohe_number
+        phone = self.contact.phone_number
         if phone is not None:
             phone = phone.encode('utf-8')
         sms_threshold = self.contact.sms_threshold
@@ -207,14 +207,14 @@ class Notification:
                 output = buf.getvalue()
                 buf.close()
                 if output.upper().startswith(u'OK'):
-                    self.logger.write("SMS sent %s" % phone + str(self))
+                    self.logger.write("SMS sent to %s" % phone + ' ' + str(self))
                 else:
-                    self.logger.write("Failed to send SMS %s" \
-                                      % phone + str(self))
+                    self.logger.write("Failed to send SMS to %s" \
+                                      % phone + ' ' + str(self))
             except Exception as e:
                 if 'buf' in globals(): buf.close()
-                self.logger.write("Failed to send SMS %s. Exception raised %s" \
-                                  % (phone + str(self), e))
+                self.logger.write("Failed to send SMS to %s. Exception raised %s" \
+                                  % (phone + ' ' + str(self), e))
 
 
     def send(self):
@@ -372,7 +372,8 @@ class Logger:
       self.tag = u'shinken/' + os.path.basename(sys.argv[0])
 
     def write(self, message):
-        assert isinstance(message, unicode)
+        if isinstance(message, unicode):
+            message = message.encode('utf-8')
         subprocess.call(['logger', '-t', self.tag, message])
 
 

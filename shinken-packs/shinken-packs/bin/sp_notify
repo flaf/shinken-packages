@@ -283,6 +283,7 @@ else:
 contact = Contact(
     name                  = opt_dict['contact_name'],
     sms_threshold         = opt_dict['sms_threshold'],
+    sms_url               = opt_dict['sms_url'],
     rarefaction_threshold = opt_dict['rarefaction_threshold'],
     email                 = opt_dict['contact_email'],
     phone_number          = opt_dict['contact_number'])
