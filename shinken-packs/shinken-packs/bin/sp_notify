@@ -55,67 +55,67 @@ common_options = [
   [
    '--contact-name', '-C', str, True,
    'contact_name',
-   'CONTACT-NAME',
+   '<contact-name>',
    'The shinken name of the contact.',
   ],
   [
    '--black-list', '--BL', str, False,
    'black_list',
-   'BLACK-LIST-FILE',
+   '<black-list-file>',
    'The file name used as a black list.',
   ],
   [
    '--host-name', '-H', str, True,
    'host_name',
-   'HOST-NAME',
+   '<host-name>',
    'The shinken host name.',
   ],
   [
    '--host-address', '-I', str, True,
    'host_address',
-   'HOST-ADDRESS',
+   '<host-address>',
    'The shinken host address.',
   ],
   [
    '--service-description', '-S', str, False,
    'service_description',
-   'SERVICE-DESCRIPTION',
+   '<service-description>',
    'The description of the service, not required for a host notification.',
   ],
   [
    '--notification-type', '-T', str, True,
    'notification_type',
-   'NOTIFICATION-TYPE',
+   '<notification-type>',
    'The type of the notification (PROBLEM, RECOVERY etc).',
   ],
   [
    '--state', '--ST', str, True,
    'state',
-   'STATE',
+   '<state>',
    'The state of the check (CRITICAL, WARNING etc).',
   ],
   [
    '--business-impact', '-B', int, True,
    'business_impact',
-   'BUSINESS-IMPACT',
+   '<business-impact>',
    'The business impact of the check.',
   ],
   [
    '--additional-info', '-A', str, True,
    'additional_info',
-   'ADDITIONAL-INFO',
+   '<additional-info>',
    'The additional information of the check.',
   ],
   [
    '--notification-number', '-N', int, True,
    'notification_number',
-   'NOTIFICATION-NUMBER',
+   '<notification-number>',
    'The number of consecutive notifications.',
   ],
   [
    '--rarefaction-threshold', '-R', int, True,
    'rarefaction_threshold',
-   'RAREFACTION-THRESHOLD',
+   '<rarefaction-threshold>',
    'As soon as the notication number ' \
    'N >= RAREFACTION-THRESHOLD, the notification is sent only if ' \
    'N = 0 (mod 10). RAREFACTION-THRESHOLD = 0 is equivalent to ' \
@@ -124,20 +124,20 @@ common_options = [
   [
    '--sms-threshold', '--SMS-THR', int, True,
    'sms_threshold',
-   'SMS-THRESHOLD',
+   '<sms-threshold>',
    'Send SMS (in addition to send an e-mail) ' \
    'only if business impact >= SMS-THRESHOLD.',
   ],
   [
    '--sms-url', '--SMS-URL', str, True,
    'sms_url',
-   'SMS-URL',
+   '<sms-url>',
    'The url to send SMS with "phone" and "msg" POST variables.',
   ],
   [
    '--contact-number', '--NUMBER', str, True,
    'contact_number',
-   'CONTACT_NUMBER',
+   '<contact-number>',
    "Phone number of the contact. If CONTACT-NUMBER doesn't match " \
    'with /^[0-9]+$/, no SMS is sent.',
   ],
@@ -225,7 +225,7 @@ parser_by_email.add_argument(
     action='store',
     dest='contact_email',
     type=str,
-    metavar='CONTACT-EMAIL',
+    metavar='<contact-email>',
     help='E-mail of the contact.',
 )
 
@@ -241,7 +241,7 @@ parser_by_file.add_argument(
     action='store',
     dest='file_name',
     type=str,
-    metavar='FILE-NAME',
+    metavar='<file-name>',
     help='The file name (a priori a pipe file).',
 )
 
