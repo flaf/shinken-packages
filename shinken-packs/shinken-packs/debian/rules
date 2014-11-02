@@ -23,7 +23,7 @@ PKG_VERSION := $(shell dpkg-parsechangelog | sed -nr 's/^version:(.*)$$/\1/ip' |
 
 
 %:
-	dh $@
+	dh $@ --with python2
 
 override_dh_clean:
 	cd "$(WORKING_DIR)" && rm -f ../$(PKG_NAME)*.deb
