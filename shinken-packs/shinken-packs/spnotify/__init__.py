@@ -171,9 +171,11 @@ class Notification:
                 stderr=subprocess.STDOUT,
             )
             p.communicate(input=self.get_message().encode('utf-8'))
-            self.logger.write(u"Notification sent by e-mail (to %s): " % (self.contact.email,) + str(self))
+            self.logger.write(u"Notification sent by e-mail to %s: " \
+                              % (self.contact.email,) + str(self))
         except:
-            msg = u"Problem with the e-mail sending (to %s) and the 'mail' command: " % (self.contact.email,) + str(self)
+            msg = u"Problem with the e-mail sending to %s and the 'mail' " \
+                  u"command: " % (self.contact.email,) + str(self)
             self.logger.write(msg)
 
     def write_in_file(self):
@@ -181,9 +183,11 @@ class Notification:
             f = open(self.file_name, 'a')
             f.write(self.get_short_message().encode('utf-8'))
             f.close()
-            self.logger.write(u"Notification sent by file (%s): " % (self.file_name) + str(self))
+            self.logger.write(u"Notification sent by file %s: " \
+                              % (self.file_name) + str(self))
         except:
-            self.logger.write(u'Problem with the writing in the "%s" file: ' % (self.file_name,) + str(self))
+            self.logger.write(u'Problem with the writing in the "%s" file: ' \
+                              % (self.file_name,) + str(self))
 
     def send_sms(self):
         phone = self.contact.phone_number
