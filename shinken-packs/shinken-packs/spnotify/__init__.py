@@ -195,7 +195,8 @@ class Notification:
             phone = phone.encode('utf-8')
         sms_threshold = self.contact.sms_threshold
         sms_url = self.contact.sms_url.encode('utf-8')
-        msg = self.get_short_message().encode('utf-8')
+        msg = 'Date: ' + str(self.date) + '\n' + \
+              self.get_short_message().encode('utf-8')
         business_impact = self.business_impact
         if phone is not None and business_impact >= sms_threshold:
             try:
