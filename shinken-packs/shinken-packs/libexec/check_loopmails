@@ -127,7 +127,7 @@ TOP=$(date +%s)
 BODY="Test from $(hostname -f), epoch $TOP"
 
 # Time in seconds between 2 attempts.
-SLEEP_TIME=20
+SLEEP_TIME=30
 
 # Send an email.
 if ! printf "$BODY\n" | timeout 20 mail -s "$SUBJECT" "$MAILTO" >/dev/null 2>&1
