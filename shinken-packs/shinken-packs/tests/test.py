@@ -24,6 +24,7 @@ def test_Rule():
             service_desc = Regexp(service_desc_regex))
         contact = Contact(
             name = name, sms_threshold = 4, rarefaction_threshold = 15,
+            sms_url = u'http://hostname/sendsms.pl',
             email = u'john@domain.tld', phone_number=u'0666666666')
         notif = Notification(
             contact = contact, hostname = hostname, address = u'172.31.0.1',
@@ -79,6 +80,7 @@ def test_Notification():
 
     c = Contact(
        name=u'john', sms_threshold=4, rarefaction_threshold=10,
+       sms_url = u'http://hostname/sendsms.pl',
        email=u'john@domain.tld', phone_number=u'0666666666')
     notif = Notification(
         contact=c, hostname=u'google', address=u'www.google.fr',
@@ -89,6 +91,7 @@ def test_Notification():
 def test_Contact():
 
     c = Contact(name=u'john', sms_threshold=4, rarefaction_threshold=10,
+                sms_url = u'http://hostname/sendsms.pl',
                 email=u'john@domain.tld', phone_number=u'0666666666')
 
 
