@@ -156,6 +156,9 @@ class Notification:
     def get_short_message(self):
         return string.Template(self.short_message_pattern).substitute(self.__dict__)
 
+    def get_mini_message(self):
+        return string.Template(self.mini_message_pattern).substitute(self.__dict__)
+
     def __repr__(self):
         t = (self.contact.name, self.number, self.contact.rarefaction_threshold,
              self.hostname, self.service_desc, self.ntype, self.state,
@@ -195,8 +198,7 @@ class Notification:
             phone = phone.encode('utf-8')
         sms_threshold = self.contact.sms_threshold
         sms_url = self.contact.sms_url.encode('utf-8')
-        msg = 'Date: ' + str(self.date) + '\n' + \
-              self.get_short_message().encode('utf-8')
+        msg = self.get_mini_message().encode('utf-8')
         business_impact = self.business_impact
         if phone is not None and business_impact >= sms_threshold:
             try:
@@ -257,6 +259,11 @@ $hostname ($address) $ntype: state is $state.
 Additionnal info: $additional_info
 '''
 
+    mini_message_pattern = \
+'''$hostname ($address) $ntype: state is $state.
+Date: $date'''
+
+
 class ServiceNotification(Notification):
 
     subject_pattern = u'$hostname $ntype: "$service_desc" in $state state'
@@ -276,6 +283,10 @@ $additional_info
 $hostname ($address) $ntype: \"$service_desc\" in $state state.
 Additionnal info: $additional_info
 '''
+
+    mini_message_pattern = \
+'''$hostname ($address) $ntype: \"$service_desc\" in $state state.
+Date: $date'''
 
 
 class Contact:
