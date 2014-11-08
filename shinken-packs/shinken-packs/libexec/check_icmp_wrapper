@@ -17,7 +17,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 export LC_ALL=C
-export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
+export PATH="/usr/bin:/bin"
 SCRIPT_NAME=${0##*/}
 
 print_help () {
