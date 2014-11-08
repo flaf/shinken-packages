@@ -91,12 +91,13 @@ do
     output=$("$CHECK_ICMP" "$@"); rt=$?
     c=$((c+1))
 
-    if [ "$rt" = "$CODE_OK" ] || [ "$rt" = "$CODE_WARNING" ] || \
-       [ "$c" = "$ATTEMPTS" ]
+    if [ "$rt" = "$CODE_OK" ] || [ "$c" = "$ATTEMPTS" ]
     then
+        # In these cases, the check is finished.
         echo "$output"
         exit "$rt"
     else
+        # Else, new attempt after a little sleep.
         sleep "$PAUSE"
     fi
 done
