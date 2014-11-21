@@ -4,6 +4,7 @@ Cmnd_Alias SNMPCMD_ROOT = /usr/share/snmpd-extend/bin/get_hashes, \
                           /usr/share/snmpd-extend/bin/get_mounts, \
                           /usr/share/snmpd-extend/bin/get_raid_status, \
                           /usr/share/snmpd-extend/bin/get_puppet_run, \
+                          /usr/share/snmpd-extend/bin/get_mysql_threads, \
                           /usr/share/snmpd-extend/bin/get_mysql_repl_status, \
                           /usr/share/snmpd-extend/bin/get_ipmi_status, \
                           /usr/share/snmpd-extend/bin/update_snmpd-extend, \
