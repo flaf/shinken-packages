@@ -57,7 +57,7 @@ then
     # Number of threads connected.
     threads=$(echo "$output" | sed -r -n 's/^threads_connected=([0-9]+)$/\1/p')
 
-    if [ -z "$theads" ]
+    if [ -z "$threads" ]
     then
         # The output is incorrect (even if the "snmpget" command
         # has succeeded).
