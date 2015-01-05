@@ -58,13 +58,14 @@ for cciss_cmd in cciss_vol_status cciss-vol-status
 do
     if which "$cciss_cmd" >/dev/null
     then
-        RAID_FOUND="$RAID_FOUND cciss"
         if [ -e "/etc/init.d/cciss-vol-statusd" ]
         then
             device=$(sed -n -r 's:^ID=(/dev.*)$:\1:p' "/etc/init.d/cciss-vol-statusd")
             if [ -z "$device" ]
             then
                 final_message "Problem: device not found in /etc/init.d/cciss-vol-statusd."
+            else
+                RAID_FOUND="$RAID_FOUND $device"
             fi
         else
             final_message "Problem: /etc/init.d/cciss-vol-statusd doesn't exist."
