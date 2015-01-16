@@ -1,24 +1,75 @@
 --- a/libexec/check_snmp_netint.pl
 +++ b/libexec/check_snmp_netint.pl
-@@ -1057,7 +1057,7 @@
+@@ -658,6 +658,7 @@
+ my $o_host = 		undef; 	# hostname
+ my $o_timeout=  	undef;  # Timeout (Default 10) 
+ my $o_descr = 		undef; 	# description filter
++my $o_exception =       undef;  # Regex exception. flaf hack to add on option.
+ my $o_help=		undef; 	# wan't some help ?
+ my $o_admin=		undef;	# admin status instead of oper
+ my $o_inverse=  	undef;	# Critical when up
+@@ -1057,7 +1058,16 @@
  sub perf_name {
    my ($iname,$vtype) = @_;
    $iname =~ s/'\/\(\)/_/g; #' get rid of special characters in performance description name
--  return "'".$iname."_".$vtype."'";
-+  return '"'.$iname."_".$vtype.'"';
++
++  # flaf hack to have no simple quotes if iname and vtype have no space in
++  # perfdata.
++  if (not $iname =~ / / and not $vtype =~ / /) {
++    return $iname."_".$vtype;
++  }
++  ### end of flaf hack ###
++
+   return "'".$iname."_".$vtype."'";
++
  }
  
  # alternative function used by WL
-@@ -1078,7 +1078,7 @@
-  $name = perf_name($name,$vtype) if defined($vtype);
-  return $prev_perf_data{$name} if exists($prev_perf_data{$name});
-  # also lets check in case nagios stripped quotes out of perf
-- if ($name =~ /^'(.*)`$/) {
-+ if ($name =~ /^"(.*)`$/) {
-     return $prev_perf_data{$1} if exists($prev_perf_data{$1});
-  }
-  return undef;
-@@ -2728,4 +2728,4 @@
+@@ -1092,6 +1102,7 @@
+         'H:s'   => \$o_host,		'hostname:s'	=> \$o_host,
+         'p:i'   => \$o_port,   		'port:i'	=> \$o_port,
+ 	'n:s'   => \$o_descr,           'name:s'        => \$o_descr,
++                                    'exception:s'   => \$o_exception, # flaf hack to add an option.
+         'C:s'   => \$o_community,	'community:s'	=> \$o_community,
+ 	 '2'	=> \$o_version2,	'v2c'		=> \$o_version2,
+ 	'l:s'	=> \$o_login,		'login:s'	=> \$o_login,
+@@ -1358,7 +1369,16 @@
+     return 1 if !defined($o_descr);
+     # test by regexp or exact match
+     return ($name eq $o_descr) if defined($o_noreg);
+-    return ($name =~ /$o_descr/);
++
++    ### flaf hack to use the --exception option ###
++    return ($name =~ /$o_descr/) if !defined($o_exception);
++
++    if ($name =~ /$o_descr/) {
++        if ($name =~ /$o_exception/) { return 0; } else { return 1; }
++    } else {
++        return 0;
++    }
++    ### end of flaf hack ###
+ }
+ 
+ # new function that cleans interface name as it may appear in SNMP into what we use
+@@ -2278,8 +2298,15 @@
+ my $usable_data=0;
+ my $n_rows=0;
+ my $n_items_check=(defined($o_ext_checkperf))?7:3;
+-my $trigger=$timenow - ($o_delta - ($o_delta/4));
+-my $trigger_low=$timenow - 4*$o_delta;
++
++# flaf hack to remove the (useless) feature of trigger or not
++# trigger the evaluation of bandwith.
++#my $trigger=$timenow - ($o_delta - ($o_delta/4));
++#my $trigger_low=$timenow - 4*$o_delta;
++my $trigger=$timenow;
++my $trigger_low=0;
++### End of flaf hack ###
++
+ my $old_value=undef;
+ my $old_time=undef;
+ my $speed_unit=undef;
+@@ -2728,4 +2755,4 @@
  	print $saved_out;
  }
  print "\n";
