@@ -1,14 +1,15 @@
 --- a/libexec/check_snmp_netint.pl
 +++ b/libexec/check_snmp_netint.pl
-@@ -658,6 +658,7 @@
+@@ -658,6 +658,8 @@
  my $o_host = 		undef; 	# hostname
  my $o_timeout=  	undef;  # Timeout (Default 10) 
  my $o_descr = 		undef; 	# description filter
 +my $o_exception =       undef;  # Regex exception. flaf hack to add on option.
++my $o_okifnoiface =     undef;  # Return Ok if no interface found. flaf hack.
  my $o_help=		undef; 	# wan't some help ?
  my $o_admin=		undef;	# admin status instead of oper
  my $o_inverse=  	undef;	# Critical when up
-@@ -1057,7 +1058,16 @@
+@@ -1057,7 +1059,16 @@
  sub perf_name {
    my ($iname,$vtype) = @_;
    $iname =~ s/'\/\(\)/_/g; #' get rid of special characters in performance description name
@@ -25,15 +26,32 @@
  }
  
  # alternative function used by WL
-@@ -1092,6 +1102,7 @@
+@@ -1092,6 +1103,8 @@
          'H:s'   => \$o_host,		'hostname:s'	=> \$o_host,
          'p:i'   => \$o_port,   		'port:i'	=> \$o_port,
  	'n:s'   => \$o_descr,           'name:s'        => \$o_descr,
-+                                    'exception:s'   => \$o_exception, # flaf hack to add an option.
++    'exception:s'   => \$o_exception,   # flaf hack to add an option.
++    'okifnoiface'   => \$o_okifnoiface, # flaf hack to add an option.
          'C:s'   => \$o_community,	'community:s'	=> \$o_community,
  	 '2'	=> \$o_version2,	'v2c'		=> \$o_version2,
  	'l:s'	=> \$o_login,		'login:s'	=> \$o_login,
-@@ -1358,7 +1369,16 @@
+@@ -1140,6 +1153,15 @@
+     if (defined ($o_help) ) { help(); exit $ERRORS{"UNKNOWN"}};
+     if (defined($o_version)) { p_version(); exit $ERRORS{"UNKNOWN"}};
+ 
++    # flaf hack: if --exception value is equal to "<no-exception>", it's
++    # as if the option was not used.
++    if (defined($o_exception)) {
++      if ($o_exception eq "<no-exception>") {
++          $o_exception = undef;
++      }
++    }
++    ### end of flaf hack ###
++
+     # check snmp information
+     # 06/25/12: this is now required only if plugin name starts with check_snmp or if host is specified)
+     if ($0 =~ /^check_snmp/ || defined($o_host)) {
+@@ -1358,7 +1380,16 @@
      return 1 if !defined($o_descr);
      # test by regexp or exact match
      return ($name eq $o_descr) if defined($o_noreg);
@@ -51,7 +69,22 @@
  }
  
  # new function that cleans interface name as it may appear in SNMP into what we use
-@@ -2278,8 +2298,15 @@
+@@ -2254,6 +2285,14 @@
+ 
+ if ($num_int == 0) {
+    if (defined($o_descr)) {
++      # flaf hack. If --okifnoiface is enable, the check returns
++      # OK if no interface is found.
++      if (defined($o_okifnoiface)) {
++          print "No interface found but it is supposed to be OK.\n";
++          exit $ERRORS{"OK"};
++      }
++      ### End of flaf hack. ###
++
+ 	  print "ERROR : Unknown interface $o_descr\n";
+    }
+    else {
+@@ -2278,8 +2317,15 @@
  my $usable_data=0;
  my $n_rows=0;
  my $n_items_check=(defined($o_ext_checkperf))?7:3;
@@ -69,7 +102,7 @@
  my $old_value=undef;
  my $old_time=undef;
  my $speed_unit=undef;
-@@ -2728,4 +2755,4 @@
+@@ -2728,4 +2774,4 @@
  	print $saved_out;
  }
  print "\n";
