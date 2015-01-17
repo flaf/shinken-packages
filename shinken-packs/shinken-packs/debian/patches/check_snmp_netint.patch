@@ -117,7 +117,25 @@
  my $old_value=undef;
  my $old_time=undef;
  my $speed_unit=undef;
-@@ -2728,4 +2780,4 @@
+@@ -2400,7 +2452,16 @@
+ 				$data_ok=0 if $k<3;
+ 			}
+ 		}
+-		if ($data_ok && $prev_values[$jj][1]!=0 && $prev_values[$jj][2]!=0) {
++        ### flaf hack ###
++        #       $prev_values[$jj][1] = "in_octet of the current interface
++        #                               in the previous perfdata"
++        #       $prev_values[$jj][2] = "out_octet of the current interface
++        #                               in the previous perfdata"
++        # I don't understand why 0 is forbidden for these parameters.
++        # It's possible to have no traffic on a specific interface, isn't it?
++		#if ($data_ok && $prev_values[$jj][1]!=0 && $prev_values[$jj][2]!=0) {
++		if ($data_ok) {
++        ### End of flaf hack. ###
+ 			$jj++;
+ 		}
+ 		else {
+@@ -2728,4 +2789,4 @@
  	print $saved_out;
  }
  print "\n";
