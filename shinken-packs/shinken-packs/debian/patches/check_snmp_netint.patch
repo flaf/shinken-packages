@@ -1,15 +1,16 @@
 --- a/libexec/check_snmp_netint.pl
 +++ b/libexec/check_snmp_netint.pl
-@@ -658,6 +658,8 @@
+@@ -658,6 +658,9 @@
  my $o_host = 		undef; 	# hostname
  my $o_timeout=  	undef;  # Timeout (Default 10) 
  my $o_descr = 		undef; 	# description filter
 +my $o_exception =       undef;  # Regex exception. flaf hack to add on option.
 +my $o_okifnoiface =     undef;  # Return Ok if no interface found. flaf hack.
++my $o_nodelta =         undef;  # No use this fucking delta etc. flaf hack.
  my $o_help=		undef; 	# wan't some help ?
  my $o_admin=		undef;	# admin status instead of oper
  my $o_inverse=  	undef;	# Critical when up
-@@ -1046,7 +1048,13 @@
+@@ -1046,7 +1049,13 @@
             # $pdh{$nm}=$dt if $nm !~ /^time_/;
             $pdh{$nm}=$dt;
             $pdh{$nm}=$1 if $dt =~ /(\d+)c/; # 'c' is added as designation for octet
@@ -24,7 +25,7 @@
         }
     }
     return %pdh;
-@@ -1057,7 +1065,16 @@
+@@ -1057,7 +1066,16 @@
  sub perf_name {
    my ($iname,$vtype) = @_;
    $iname =~ s/'\/\(\)/_/g; #' get rid of special characters in performance description name
@@ -41,16 +42,17 @@
  }
  
  # alternative function used by WL
-@@ -1092,6 +1109,8 @@
+@@ -1092,6 +1110,9 @@
          'H:s'   => \$o_host,		'hostname:s'	=> \$o_host,
          'p:i'   => \$o_port,   		'port:i'	=> \$o_port,
  	'n:s'   => \$o_descr,           'name:s'        => \$o_descr,
 +    'exception:s'   => \$o_exception,   # flaf hack to add an option.
 +    'okifnoiface'   => \$o_okifnoiface, # flaf hack to add an option.
++    'nodelta'       => \$o_nodelta,     # flaf hack to add an option.
          'C:s'   => \$o_community,	'community:s'	=> \$o_community,
  	 '2'	=> \$o_version2,	'v2c'		=> \$o_version2,
  	'l:s'	=> \$o_login,		'login:s'	=> \$o_login,
-@@ -1140,6 +1159,15 @@
+@@ -1140,6 +1161,15 @@
      if (defined ($o_help) ) { help(); exit $ERRORS{"UNKNOWN"}};
      if (defined($o_version)) { p_version(); exit $ERRORS{"UNKNOWN"}};
  
@@ -66,7 +68,7 @@
      # check snmp information
      # 06/25/12: this is now required only if plugin name starts with check_snmp or if host is specified)
      if ($0 =~ /^check_snmp/ || defined($o_host)) {
-@@ -1358,7 +1386,16 @@
+@@ -1358,7 +1388,16 @@
      return 1 if !defined($o_descr);
      # test by regexp or exact match
      return ($name eq $o_descr) if defined($o_noreg);
@@ -84,7 +86,7 @@
  }
  
  # new function that cleans interface name as it may appear in SNMP into what we use
-@@ -2254,6 +2291,14 @@
+@@ -2254,6 +2293,14 @@
  
  if ($num_int == 0) {
     if (defined($o_descr)) {
@@ -99,7 +101,7 @@
  	  print "ERROR : Unknown interface $o_descr\n";
     }
     else {
-@@ -2278,8 +2323,15 @@
+@@ -2278,8 +2325,20 @@
  my $usable_data=0;
  my $n_rows=0;
  my $n_items_check=(defined($o_ext_checkperf))?7:3;
@@ -108,16 +110,21 @@
 +
 +# flaf hack to remove the (useless) feature of trigger or not
 +# trigger the evaluation of bandwith.
-+#my $trigger=$timenow - ($o_delta - ($o_delta/4));
-+#my $trigger_low=$timenow - 4*$o_delta;
-+my $trigger=$timenow;
-+my $trigger_low=0;
++my $trigger = undef;
++my $trigger_low = undef;
++if (defined($o_nodelta)) {
++    $trigger=$timenow;
++    $trigger_low=0;
++} else {
++    $trigger=$timenow - ($o_delta - ($o_delta/4));
++    $trigger_low=$timenow - 4*$o_delta;
++}
 +### End of flaf hack ###
 +
  my $old_value=undef;
  my $old_time=undef;
  my $speed_unit=undef;
-@@ -2400,7 +2452,16 @@
+@@ -2400,7 +2459,16 @@
  				$data_ok=0 if $k<3;
  			}
  		}
@@ -135,7 +142,19 @@
  			$jj++;
  		}
  		else {
-@@ -2728,4 +2789,4 @@
+@@ -2519,6 +2587,11 @@
+       }
+       else {
+         $usable_data=1;
++        ### flaf hack, we use the previous perfdata anyway. ###
++        if (defined($o_nodelta)) {
++            $usable_data=0;
++        }
++        ### end of flaf hack. ###
+       }
+     }
+ 
+@@ -2728,4 +2801,4 @@
  	print $saved_out;
  }
  print "\n";
