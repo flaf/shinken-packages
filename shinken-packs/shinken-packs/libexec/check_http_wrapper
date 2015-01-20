@@ -19,7 +19,7 @@
 export LC_ALL=C
 SCRIPT_NAME=${0##*/}
 UNKNOWN=3
-OPTIONS_LIST="ssl,ip-address:,url:,regex:,warning:,critical:,timeout:,plugin-http:,certificate:,onredirect:,case-insensitive"
+OPTIONS_LIST="ssl,ip-address:,url:,regex:,warning:,critical:,timeout:,plugin-http:,certificate:,onredirect:,case-insensitive,invert-regex"
 
 if ! TEMP=$(getopt -o "" -l "$OPTIONS_LIST" -n "$SCRIPT_NAME" -- "$@")
 then
@@ -37,6 +37,7 @@ timeout="10"
 plugin_http="/usr/lib/nagios/plugins/check_http"
 onredirect="ok"
 case_insensitive=false
+invert_regex=false
 
 
 while true
@@ -128,6 +129,11 @@ do
             shift 1
         ;;
 
+        --invert-regex)
+            invert_regex="true"
+            shift 1
+        ;;
+
         --)
             shift 1
             break
@@ -187,6 +193,8 @@ then
     "$plugin_http" "$ssl" -4 -I "$ip_address" -H "$host" -u "$path" \
         -p "$port" -w "$warning" -c "$critical" --timeout="$timeout" --onredirect="$onredirect"
 else
+    # There is a regex.
+
     if "$case_insensitive"
     then
         opt_regex='--eregi' # option for the regex case INsensitive.
@@ -194,12 +202,21 @@ else
         opt_regex='--ereg'  # option for the regex case sensitive.
     fi
 
-    # There is a regex.
+    if "$invert_regex"
+    then
+        opt_invert_regex='--invert-regex'
+        msg='CONTAINS'
+    else
+        opt_invert_regex=''
+        msg='does NOT contain'
+    fi
+
     # If the exit code is not OK and if the pattern is not found,
     # there is a specific output.
     output=$("$plugin_http" "$ssl" -4 -I "$ip_address" -H "$host" -u "$path" \
               "$opt_regex" "$regex" -p "$port" -w "$warning" -c "$critical"  \
-              --timeout="$timeout" --onredirect="$onredirect" 2>&1); exit_code="$?"
+              --timeout="$timeout" --onredirect="$onredirect"                \
+              "$opt_invert_regex" 2>&1); exit_code="$?"
 
     if [ "$exit_code" = "0" ]
     then
@@ -207,10 +224,10 @@ else
         exit "$exit_code"
     fi
 
-    if echo "$output" | grep -q 'pattern not found'
+    if echo "$output" | grep -Eq 'pattern( not)? found'
     then
         perfdata=$(echo "$output" | sed -r "s/^.*\|(.*)$/\1/")
-        output="Response from host which does NOT contain this pattern --> $regex |$perfdata"
+        output="Response from host which $msg this pattern --> $regex |$perfdata"
     fi
 
     echo "$output"
