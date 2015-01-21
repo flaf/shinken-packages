@@ -21,7 +21,7 @@ SCRIPT_NAME=${0##*/}
 UNKNOWN=3
 OPTIONS_LIST="ssl,ip-address:,url:,regex:,warning:,critical:,timeout:,plugin-http:,certificate:,onredirect:,case-insensitive,invert-regex"
 
-if ! TEMP=$(getopt -o "" -l "$OPTIONS_LIST" -n "$SCRIPT_NAME" -- "$@")
+if ! TEMP=$(getopt -o "i,v" -l "$OPTIONS_LIST" -n "$SCRIPT_NAME" -- "$@")
 then
     echo "Syntax error with $SCRIPT_NAME command." >&2
     exit 3
@@ -124,12 +124,12 @@ do
             shift 2
         ;;
 
-        --case-insensitive)
+        --case-insensitive|-i)
             case_insensitive="true"
             shift 1
         ;;
 
-        --invert-regex)
+        --invert-regex|-v)
             invert_regex="true"
             shift 1
         ;;
@@ -198,8 +198,10 @@ else
     if "$case_insensitive"
     then
         opt_regex='--eregi' # option for the regex case INsensitive.
+        flag='case-insensitive'
     else
         opt_regex='--ereg'  # option for the regex case sensitive.
+        flag='case-sensitive'
     fi
 
     if "$invert_regex"
@@ -227,7 +229,15 @@ else
     if echo "$output" | grep -Eq 'pattern( not)? found'
     then
         perfdata=$(echo "$output" | sed -r "s/^.*\|(.*)$/\1/")
-        output="Response from host which $msg this pattern --> $regex |$perfdata"
+
+        if echo "$regex" | grep -Eq '\|'
+        then
+            # The regex contains "|" so impossible to put it
+            # in the output because of a conflict with perfdata.
+            output="Response from host which $msg the $flag pattern. |$perfdata"
+        else
+            output="Response from host which $msg this $flag pattern: $regex |$perfdata"
+        fi
     fi
 
     echo "$output"
