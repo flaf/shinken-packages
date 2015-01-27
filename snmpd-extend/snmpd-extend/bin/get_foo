@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright: 2014 François Lafont <francois.lafont@ac-versailles.fr>
+# Copyright: 2013 Francois Lafont <francois.lafont@crdp.ac-versailles.fr>
 #
 # License: GPL-3.0+
 #    This program is free software: you can redistribute it and/or modify
@@ -19,12 +19,7 @@
 export LC_ALL=C
 export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
 
-# We assume that there is a ".my.cnf" file in the home of root.
-echo "SHOW GLOBAL STATUS LIKE 'Threads%';" | mysql \
-    | tr '[:upper:]' '[:lower:]'                   \
-    | sed -nr -e 's/[[:space:]]+/ /g'              \
-              -e 's/\t/ /g'                        \
-              -e 's/([^[:space:]]*) +/\1=/g'       \
-              -e '/thread/p'
+version=$(dpkg -s libc6 | grep ^Version | cut -d':' -f2 | tr -d ' ')
+echo "$(hostname): ditribution $(lsb_release -sc), libc6 version $version"
 
 
