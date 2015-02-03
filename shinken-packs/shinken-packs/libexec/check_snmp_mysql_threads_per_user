@@ -73,9 +73,15 @@ then
 
     info="thresholds warn=$WARNING,crit=$CRITICAL"
 
-    if [ -n "$regex" ] || [ "$regex" = "<no-regex>" ]
+    if [ -n "$regex" ] && [ "$regex" != "<no-regex>" ]
     then
-        output=$(echo "$output" | grep -Ev ";${regex}$")
+        if ! output=$(echo "$output" | grep -Ev ";${regex}$" 2>/dev/null)
+        then
+            printf "Problem with the regex to exclude users. "
+            printf "Bad regex or maybe no remaining user after "
+            printf "the regex filter.\n"
+            exit "$CODE_UNKNOWN"
+        fi
         info="$info,users-excluded-via-regex"
     fi
 
