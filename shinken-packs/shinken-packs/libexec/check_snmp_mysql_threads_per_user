@@ -19,12 +19,18 @@
 SCRIPT_NAME=${0##*/}
 SCRIPT_DIRECTORY=${0%/*}
 SPECIFIC_SHORT_OPTIONS='w:,c:'
-SPECIFIC_LONG_OPTIONS='warning:,critical:'
-SPECIFIC_SYNOPSIS='[--warning <num> --critical <num>]'
+SPECIFIC_LONG_OPTIONS='warning:,critical:,exclude-users:'
+SPECIFIC_SYNOPSIS='[--warning <num> --critical <num> --exclude-users <regex>]'
 
-# Default thresholds.
+# Default thresholds etc.
 WARNING=5
 CRITICAL=10
+# By default, regex is empty ie no user excluded.
+# The value "<no-regex>" has the same meaning.
+# You can't use ^ or $, the regex must completely the user name.
+# For instance, --exclude-users='bwmn[1-3]' will exclude user
+# name if and only if username ~ /^bwmn[1-3]/.
+regex=''
 
 GET_SPECIFIC_OPTIONS () {
     case "$1" in
@@ -34,6 +40,10 @@ GET_SPECIFIC_OPTIONS () {
         ;;
         --critical|-c)
             CRITICAL="$2"
+            return 2
+        ;;
+        --exclude-users)
+            regex="$2"
             return 2
         ;;
     esac
@@ -55,13 +65,19 @@ then
     output="${output#\"}"
     output="${output%\"}"
 
-    if ! echo "$output" | head -n 1 | grep -Eiq '^[0-9]+;[-a-z0-9]+$'
+    if ! echo "$output" | head -n 1 | grep -Eiq '^[0-9]+;[-_a-z0-9]+$'
     then
         echo "Unexpected output: $output" | head -n 1
         exit "$CODE_UNKNOWN"
     fi
 
     info="thresholds warn=$WARNING,crit=$CRITICAL"
+
+    if [ -n "$regex" ] || [ "$regex" = "<no-regex>" ]
+    then
+        output=$(echo "$output" | grep -Ev ";${regex}$")
+        info="$info,users-excluded-via-regex"
+    fi
 
     l=0
     for line in $output
