@@ -1,0 +1,137 @@
+#!/bin/sh
+
+# Copyright: 2015 François Lafont <francois.lafont@ac-versailles.fr>
+#
+# License: GPL-3.0+
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+SCRIPT_NAME=${0##*/}
+SCRIPT_DIRECTORY=${0%/*}
+SPECIFIC_SHORT_OPTIONS='w:,c:'
+SPECIFIC_LONG_OPTIONS='warning:,critical:'
+SPECIFIC_SYNOPSIS='[--warning <num> --critical <num>]'
+
+# Default thresholds.
+WARNING=5
+CRITICAL=10
+
+GET_SPECIFIC_OPTIONS () {
+    case "$1" in
+        --warning|-w)
+            WARNING="$2"
+            return 2
+        ;;
+        --critical|-c)
+            CRITICAL="$2"
+            return 2
+        ;;
+    esac
+    return 0
+}
+
+. "$SCRIPT_DIRECTORY/share/snmp.sh"
+
+
+# OID 'NET-SNMP-EXTEND-MIB::nsExtendOutputFull."get_mysql_threads_per_user"'
+# in numeric format:
+oid='.1.3.6.1.4.1.8072.1.3.2.3.1.2.26.103.101.116.95.109.121.115.113.108.95.116.104.114.101.97.100.115.95.112.101.114.95.117.115.101.114'
+
+# SNMP request.
+if output=$(snmpget $SNMP_CMD_OPTIONS -OvQ "$HOSTNAME" "$oid" 2>&1)
+then
+
+    # Remove leading double quotes.
+    output="${output#\"}"
+    output="${output%\"}"
+
+    if ! echo "$output" | head -n 1 | grep -Eiq '^[0-9]+;[-a-z0-9]+$'
+    then
+        echo "Unexpected output: $output" | head -n 1
+        exit "$CODE_UNKNOWN"
+    fi
+
+    info="thresholds warn=$WARNING,crit=$CRITICAL"
+
+    l=0
+    for line in $output
+    do
+
+        l=$((l+1))
+
+        n="${line%;*}"
+        user="${line#*;}"
+
+        if [ "$l" -eq '1' ]
+        then
+            if [ "$n" -lt "$WARNING" ]
+            then
+                status='OK'
+                exit_code="$CODE_OK"
+                break
+            elif [ "$n" -lt "$CRITICAL" ]
+            then
+                status='WARNING'
+                exit_code="$CODE_WARNING"
+            else
+                status='CRITICAL'
+                exit_code="$CODE_CRITICAL"
+            fi
+        fi
+
+        # After 10 lines, we break the loop.
+        [ "$l" -eq '10' ] && break
+
+        # Here, it's inevitably WARNING or CRITICAL.
+        if [ "$n" -ge "$WARNING" ]
+        then
+            if [ "$n" -lt "$CRITICAL" ]
+            then
+                list_warn="$list_warn,$user=$n"
+            else
+                list_crit="$list_crit,$user=$n"
+            fi
+        fi
+
+    done
+
+    if [ "$status" = "OK" ]
+    then
+        echo "MySQL threads per user $status ($info)."
+        exit "$exit_code"
+    fi
+
+    if [ "$status" = "WARNING" ]
+    then
+        # Remove the leading ",".
+        list="${list_warn#,}"
+    fi
+
+    if [ "$status" = "CRITICAL" ]
+    then
+        # Remove the leading ",".
+        list="${list_crit#,}"
+    fi
+
+    echo "MySQL threads per user $status: $list ($info)."
+    exit "$exit_code"
+
+else
+
+    # The "snmpget" command hasn't succeeded.
+    echo "$output"
+    exit "$CODE_UNKNOWN"
+
+fi
+
+
