@@ -205,8 +205,11 @@ fi
 
 if [ -z "$regex" ]
 then
-    "$plugin_http" "$ssl" -4 -I "$ip_address" -H "$host" -u "$path" \
-        -p "$port" -w "$warning" -c "$critical" --timeout="$timeout" --onredirect="$onredirect"
+    output=$("$plugin_http" "$ssl" -4 -I "$ip_address" -H "$host" -u "$path" \
+             -p "$port" -w "$warning" -c "$critical" --timeout="$timeout"    \
+             --onredirect="$onredirect"); exit_code="$?"
+    printf "$OUTPUT_PATTERN" "$full_url" "$output"
+    exit "$exit_code"
 else
     # There is a regex.
 
