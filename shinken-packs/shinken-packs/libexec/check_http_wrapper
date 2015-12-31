@@ -176,6 +176,10 @@ then
     ip_address="$host"
 fi
 
+# The first %s is the checked url and the second %s is the output
+# of the `check_http` nagios plugin.
+OUTPUT_PATTERN='Url: %s . %s'
+
 # Case when we just want to check the certificate.
 if [ -n "$certificate" ]
 then
@@ -184,7 +188,7 @@ then
     output=$("$plugin_http" "$ssl" -4 -I "$ip_address" -H "$host" \
               --sni -p "$port" -C "$certificate"                  \
               --timeout="$timeout"); exit_code="$?"
-    printf '%s %s' "$full_url" "$output"
+    printf "$OUTPUT_PATTERN" "$full_url" "$output"
     exit "$exit_code"
 fi
 
@@ -233,7 +237,7 @@ else
 
     if [ "$exit_code" = "0" ]
     then
-        printf '%s %s' "$full_url" "$output"
+        printf "$OUTPUT_PATTERN" "$full_url" "$output"
         exit "$exit_code"
     fi
 
@@ -251,7 +255,7 @@ else
         fi
     fi
 
-    printf '%s %s' "$full_url" "$output"
+    printf "$OUTPUT_PATTERN" "$full_url" "$output"
     exit "$exit_code"
 
 fi
