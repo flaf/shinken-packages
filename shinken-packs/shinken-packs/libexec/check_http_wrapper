@@ -149,6 +149,14 @@ then
     exit "$UNKNOWN"
 fi
 
+if [ -z "$ssl" ]
+then
+    # No ssl so, it's http.
+    full_url="http://$cleaned_url"
+else
+    full_url="https://$cleaned_url"
+fi
+
 # Default value of port if the variable is empty.
 if [ -z "$port" ]
 then
@@ -173,8 +181,11 @@ if [ -n "$certificate" ]
 then
     # The --sni option enables "SSL/TLS hostname extension support"
     # which allows to check the certificate according to the vhost.
-    "$plugin_http" "$ssl" -4 -I "$ip_address" -H "$host" --sni -p "$port" \
-        -C "$certificate" --timeout="$timeout"; exit "$?"
+    output=$("$plugin_http" "$ssl" -4 -I "$ip_address" -H "$host" \
+              --sni -p "$port" -C "$certificate"                  \
+              --timeout="$timeout"); exit_code="$?"
+    printf '%s %s' "$full_url" "$output"
+    exit "$exit_code"
 fi
 
 # Default value of path if the variable is empty.
@@ -222,7 +233,7 @@ else
 
     if [ "$exit_code" = "0" ]
     then
-        echo "$output"
+        printf '%s %s' "$full_url" "$output"
         exit "$exit_code"
     fi
 
@@ -240,7 +251,7 @@ else
         fi
     fi
 
-    echo "$output"
+    printf '%s %s' "$full_url" "$output"
     exit "$exit_code"
 
 fi
