@@ -12,6 +12,7 @@ Depends: ${misc:Depends}, sudo, lsb-release,
  sed (>> 4), coreutils (>> 6),
  perl, libdbd-mysql-perl,
  freeipmi-tools | apt (<< 0.7.30),
+ jq | apt (<< 1.0),
 Pre-Depends: snmpd
 Description: Scripts which extend snmpd daemon
  Scripts used with the snmpd daemon and the extend statement.
