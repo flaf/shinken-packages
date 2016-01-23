@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright: 2014 François Lafont <francois.lafont@crdp.ac-versailles.fr>
+# Copyright: 2016 François Lafont <francois.lafont@ac-versailles.fr>
 #
 # License: GPL-3.0+
 #    This program is free software: you can redistribute it and/or modify
@@ -20,24 +20,22 @@ export LC_ALL=C
 export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
 
 
-if ! which ceph >/dev/null 2>&1
+if ! which mongo >/dev/null 2>&1
 then
-    echo "No ceph command found. The package ceph is probably not installed."
+    echo "Sorry, no mongo command found."
     exit 1
 fi
 
-if ! which jq >/dev/null 2>&1
-then
-    echo "No jq command found and it's necessary to check the ceph status."
-    exit 1
-fi
+mongo_code='m = rs.status().members; for(var i = 0; i < m.length; i++) { print(m[i]["health"]); }'
 
-if json=$(timeout --kill-after=5s 10s ceph --format=json status 2>&1)
+# This command below assume that a .mongorc.js file already
+# exists and trigger automatically a connection as admin.
+if output=$(timeout --kill-after=5s 10s printf '%s' "$mongo_code" | mongo --quiet | sort | uniq 2>&1)
 then
-  printf '%s' "$json" | jq -r '.["health"] | .["overall_status"]'
+  printf '%s' "$output"
   exit 0
 else
-  echo "The command [ceph status] has failed."
+  echo "The mongodb check has failed."
   exit 1
 fi
 
