@@ -1,8 +1,16 @@
-shinken-packs (1.4) UNRELEASED; urgency=low
+shinken-packs (1.5) unstable; urgency=low
 
+  * Add the ceph check.
+  * Add the mongodb replica set check.
+
+ -- Francois Lafont <francois.lafont@ac-versailles.fr>  Sat, 23 Jan 2016 05:08:21 +0100
+
+shinken-packs (1.4) unstable; urgency=low
+
+  [ francois ]
   * Add the SMCIPMITool (IPMI tool in command line of SuperMicro).
 
- -- francois <francois@dtic-flaf.crdp.local>  Tue, 13 May 2014 01:20:40 +0200
+ -- Francois Lafont <francois.lafont@ac-versailles.fr>  Sat, 23 Jan 2016 05:07:18 +0100
 
 shinken-packs (1.3) unstable; urgency=low
 
