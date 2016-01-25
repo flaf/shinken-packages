@@ -33,9 +33,23 @@ export LC_ALL=C
 export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
 OPTIONS="--portability --local"
 
-file_temp=$(mktemp)
-df $OPTIONS --block-size=1K | tail -n +2 | grep "^/" | sort | awk '{ print $1":"$6":"$2":"$3 }' > "$file_temp"
-df $OPTIONS --human-readable | tail -n +2 | grep "^/" | sort | awk '{ print $1":"$2":"$3":"$5 }' | join -t ":" "$file_temp" -
-rm "$file_temp"
+# Below, try a new method without the "join" command and
+# without a temporary file.
+#
+#
+#file_temp=$(mktemp)
+#df $OPTIONS --block-size=1K | tail -n +2 | grep "^/" | sort | awk '{ print $1":"$6":"$2":"$3 }' > "$file_temp"
+#df $OPTIONS --human-readable | tail -n +2 | grep "^/" | sort | awk '{ print $1":"$2":"$3":"$5 }' | join -t ":" "$file_temp" -
+#rm "$file_temp"
+
+a=$(df $OPTIONS --block-size=1K  | tail -n +2 | grep "^/" | sort | awk '{ print $1":"$6":"$2":"$3 }')
+b=$(df $OPTIONS --human-readable | tail -n +2 | grep "^/" | sort | awk '{ print $1":"$2":"$3":"$5 }')
+
+printf '%s\n' "$a" | while read la <&0 && read lb <&3
+do
+    printf '%s:%s\n' "$la" "${lb#*:}"
+done 3<< EOF
+$b
+EOF
 
 
