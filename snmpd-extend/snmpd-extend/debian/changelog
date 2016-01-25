@@ -2,8 +2,10 @@ snmpd-extend (1.3.7) unstable; urgency=low
 
   * Addition of "get_ceph_status".
   * Addition of "get_mongodb_rs_status".
+  * get_storage and get_inodes via sudo now.
+  * get_storage which doesn't use a temporary file now.
 
- -- Francois Lafont <francois.lafont@ac-versailles.fr>  Sat, 23 Jan 2016 04:38:43 +0100
+ -- Francois Lafont <francois.lafont@ac-versailles.fr>  Mon, 25 Jan 2016 04:23:14 +0100
 
 snmpd-extend (1.3.6) unstable; urgency=low
 
