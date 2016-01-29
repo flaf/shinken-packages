@@ -27,7 +27,15 @@ export PATH="/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin"
 #
 #prstat -c -p "$(pgrep '^lockd$' | head -1)" 0 1 | sed -nr 's:^.*lockd/(.*)$:\1:p'
 
-# Use "ps" command instead of "prstat" because ps is more portable.
-ps -p $(pgrep '^lockd$' | head -1) -o 'nlwp' | sed -n '2p' | tr -d ' '
+pid=$(pgrep '^lockd$' | head -1)
+
+if [ "$pid" = '' ]
+then
+    # No lockd daemon. So number of lockd threads is 0.
+    echo 0
+else
+    # Use "ps" command instead of "prstat" because ps is more portable.
+    ps -p "$pid" -o 'nlwp' | sed -n '2p' | tr -d ' '
+fi
 
 
