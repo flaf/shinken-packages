@@ -1,0 +1,46 @@
+#!/bin/sh
+
+# Copyright: 2016 Francois Lafont <francois.lafont@ac-versailles.fr>
+#
+# License: GPL-3.0+
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+set -e
+
+problem() {
+    # We print a message error only if there is an exit code != 0.
+    if [ "$?" != "0" ]
+    then
+        echo "Error during the execution of the check."
+        exit 1
+    fi
+}
+
+trap problem EXIT
+
+export LC_ALL=C
+export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
+OPTIONS="-l"
+
+a=$(df $OPTIONS    | tail -n +2 | grep "^/" | sort | awk '{ print $1":"$6":"$2":"$3 }')
+b=$(df $OPTIONS -h | tail -n +2 | grep "^/" | sort | awk '{ print $1":"$2":"$3":"$5 }')
+
+printf '%s\n' "$a" | while read la <&0 && read lb <&3
+do
+    printf '%s:%s\n' "$la" "${lb#*:}"
+done 3<< EOF
+$b
+EOF
+
+
