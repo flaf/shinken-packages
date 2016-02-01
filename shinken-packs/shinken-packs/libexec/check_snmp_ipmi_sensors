@@ -33,7 +33,22 @@ then
     output="${output#\"}"
     output="${output%\"}"
 
-    if ! echo "$output" | head -n 1 | grep -q '^ID,Name,Type,State,Event$'
+    line1=$(printf '%s' "$output" | head -n 1)
+    if printf '%s' "$line1" | grep -q '^ID,Name,Type,State,Event$'
+    then
+        valid_output='true'
+        field_sensor=2
+        field_state=4
+    elif printf '%s' "$line1" | grep -q '^Name,State$'
+    then
+        valid_output='true'
+        field_sensor=1
+        field_state=2
+    else
+        valid_output='false'
+    fi
+
+    if ! "$valid_output"
     then
         # The output is incorrect (unlikely when the "snmpget" command has succeeded).
         echo "Unexpected output in the snmpget request: \"$output\""
@@ -49,8 +64,8 @@ then
     IFS="$LINE_FEED"
     for line in $output
     do
-        sensor=$(echo "$line" | cut -d',' -f2)
-        state=$(echo "$line" | cut -d',' -f'4')
+        sensor=$(echo "$line" | cut -d',' -f"$field_sensor")
+        state=$(echo "$line" | cut -d',' -f"$field_state")
 
         # We skip the sensor too if REGEX is not empty and if it matches.
         [ -n "$REGEX" ] && (echo "$sensor" | grep -qE "$REGEX" 2>/dev/null) && continue
