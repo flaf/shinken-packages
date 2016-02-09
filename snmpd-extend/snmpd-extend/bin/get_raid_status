@@ -133,7 +133,21 @@ then
     fi
 fi
 
+if which hpssacli >/dev/null
+then
+    RAID_FOUND="$RAID_FOUND hp-smart-array"
 
+    # We take all lines where "status" is present.
+    output=$(hpssacli controller all show status 2>&1 | grep -i 'status')
+    n=$(printf '%s' "$output" | wc -l)
+    bad_lines_number=$(printf '%s' "$output" | grep -Evc ' Status: OK$')
+
+    if [ "$n" = '0' ] || [ "$bad_lines_number" != '0' ]
+    then
+        final_message 'RAID problem (for further information try the command: hpssacli controller all show status).'
+    fi
+
+fi
 
 
 if [ -n "$RAID_FOUND" ] # "$RAID_FOUND" non empty.
