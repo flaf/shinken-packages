@@ -1,0 +1,58 @@
+#!/bin/sh
+
+# Copyright: 2015 Francois Lafont <francois.lafont@ac-versailles.fr>
+#
+# License: GPL-3.0+
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+export LC_ALL=C
+export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
+
+if ! output=$(netstat -lntp | grep -E 'memcached[[:space:]]*$')
+then
+    echo "Problem, are you sure memcached is running on this host?"
+    exit 0
+fi
+
+port=$(printf '%s' "$output" | head -n+1 | awk '{ print $4}' | cut -d':' -f2)
+
+if ! printf '%s' "$port" | grep -qE '^[0-9]+$'
+then
+    echo "Problem, impossible to retrieve the listening port of memcached."
+    exit 0
+fi
+
+# Warning: the output can contain the \r character.
+#          We need to remove it with the tr command.
+#          Indeed printf and \r don't give good result.
+if ! output=$(echo 'stats' | nc localhost "$port" | tr -d '\r' | grep -E '^STAT (bytes|limit_maxbytes) ')
+then
+    echo "Problem during the 'stats' memcached request."
+    exit 0
+fi
+
+max=$(printf '%s' "$output" | awk '$2 == "limit_maxbytes" { print $3 }')
+mem=$(printf '%s' "$output" | awk '$2 == "bytes"          { print $3 }')
+result="$mem:$max"
+
+if printf "$result" | grep -Eq '^[0-9]+:[0-9]+$'
+then
+    printf -- '%s\n' "$result"
+    exit 0
+else
+    echo "Problem, output of the stats request to memcached hasn't the expected format."
+    exit 0
+fi
+
+

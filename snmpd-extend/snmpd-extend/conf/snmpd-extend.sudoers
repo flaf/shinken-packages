@@ -14,6 +14,7 @@ Cmnd_Alias SNMPCMD_ROOT = /usr/share/snmpd-extend/bin/get_hashes, \
                           /usr/share/snmpd-extend/bin/update_snmpd-extend, \
                           /usr/share/snmpd-extend/bin/check_mysql_health, \
                           /usr/share/snmpd-extend/bin/get_ceph_status, \
+                          /usr/share/snmpd-extend/bin/get_memory_memcached, \
                           /usr/share/snmpd-extend/bin/get_mongodb_rs_status
 
 snmp ALL = (zimbra) NOPASSWD: SNMPCMD_ZIMBRA
