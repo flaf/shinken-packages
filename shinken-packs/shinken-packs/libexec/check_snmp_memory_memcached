@@ -2,13 +2,31 @@
 
 SCRIPT_NAME=${0##*/}
 SCRIPT_DIRECTORY=${0%/*}
-SPECIFIC_SHORT_OPTIONS=''
-SPECIFIC_LONG_OPTIONS=''
-SPECIFIC_SYNOPSIS=''
+SPECIFIC_SHORT_OPTIONS='w:,c:'
+SPECIFIC_LONG_OPTIONS='warning:,critical:'
+SPECIFIC_SYNOPSIS='--warning <percent> --critical <percent>'
 
 GET_SPECIFIC_OPTIONS () {
+
+    case "$1" in
+
+        --warning|-w)
+            warning="$2"
+            return 2
+        ;;
+
+        --critical|-c)
+            critical="$2"
+            return 2
+        ;;
+
+    esac
+
     return 0
 }
+
+warning=80
+critical=90
 
 . "$SCRIPT_DIRECTORY/share/snmp.sh"
 
@@ -24,10 +42,26 @@ output="${output%\"}"
 if ! printf '%s' "$output" | grep -Eq '^[0-9]+:[0-9]+$'
 then
     # There is something wrong.
-    printf 'snmpget output not expected: %s\n' "$output"
+    printf 'UNKNOWN: snmpget output not expected: %s\n' "$output"
     exit "$CODE_UNKNOWN"
 fi
 
+mem="${output%:*}"
+max="${output#*:}"
+percent=$(( (mem * 100) / max  ))
+msg='memcached memory usage %s: %s%% (thresholds %s,%s)\n'
 
+if [ "$percent" -ge "$critical" ]
+then
+    printf "$msg" 'CRITICAL' "$percent" "$warning" "$critical"
+    exit "$CODE_CRITICAL"
+elif [ "$percent" -ge "$warning" ]
+then
+    printf "$msg" 'WARNING' "$percent" "$warning" "$critical"
+    exit "$CODE_WARNING"
+else
+    printf "$msg" 'OK' "$percent" "$warning" "$critical"
+    exit "$CODE_OK"
+fi
 
 
