@@ -49,7 +49,7 @@ fi
 mem="${output%:*}"
 max="${output#*:}"
 percent=$(( (mem * 100) / max  ))
-msg='memcached memory usage %s: %s%% (thresholds %s,%s)\n'
+msg='Memcached memory usage %s: %s%% (thresholds %s,%s)\n'
 
 if [ "$percent" -ge "$critical" ]
 then
