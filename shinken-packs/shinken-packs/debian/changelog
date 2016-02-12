@@ -1,3 +1,9 @@
+shinken-packs (1.6) unstable; urgency=low
+
+  * Add the memcached template with just the memcached-memory service.
+
+ -- Francois Lafont <francois.lafont@ac-versailles.fr>  Fri, 12 Feb 2016 14:58:43 +0100
+
 shinken-packs (1.5) unstable; urgency=low
 
   * Add the ceph check.
