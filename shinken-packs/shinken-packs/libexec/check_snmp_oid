@@ -1,0 +1,43 @@
+#!/bin/sh
+
+SCRIPT_NAME=${0##*/}
+SCRIPT_DIRECTORY=${0%/*}
+SPECIFIC_SHORT_OPTIONS='o:'
+SPECIFIC_LONG_OPTIONS='oid:'
+SPECIFIC_SYNOPSIS=''
+
+GET_SPECIFIC_OPTIONS () {
+
+    case "$1" in
+
+        --oid|-o)
+            oid="$2"
+            return 2
+        ;;
+
+    esac
+
+    return 0
+}
+
+. "$SCRIPT_DIRECTORY/share/snmp.sh"
+
+# Getting of the ceph status.
+output=$(snmpget $SNMP_CMD_OPTIONS -OvQ "$HOSTNAME" "$oid" 2>&1)
+
+# Remove leading double quotes.
+output="${output#\"}"
+output="${output%\"}"
+
+if exit_code=$(printf '%s' "$output" | head -n1 | grep '^[0123]$')
+then
+    msg=$(printf '%s' "$output" | tail -n+2)
+    printf '%s' "$msg"
+    exit "$exit_code"
+else
+    # Unexpected output for this kind of check.
+    printf 'Unexpected output: %s\n' "$output"
+    exit "$CODE_UNKNOWN"
+fi
+
+
