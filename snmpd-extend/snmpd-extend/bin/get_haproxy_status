@@ -18,6 +18,8 @@
 
 SCRIPT_NAME=${0##*/}
 
+. share.sh
+
 cfg_file='/etc/haproxy/haproxy.cfg'
 
 if [ ! -f "$cfg_file" ]
