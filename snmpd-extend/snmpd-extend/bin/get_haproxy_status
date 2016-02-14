@@ -89,10 +89,10 @@ no_up=$(printf '%s' "$stats" | grep -v ',UP,' | cut -d',' -f'1,2' | head -n3 | t
 if [ -n "$no_up" ]
 then
     end "$CODE_CRITICAL" \
-    'HAproxy CRITICAL, some backends are not UP: %s(non-exhaustive list)\n' "$no_up"
+    'HAproxy CRITICAL, some backends are not UP: %s(non-exhaustive list).\n' "$no_up"
 else
     end "$CODE_OK" \
-    'HAproxy OK, all backends are UP\n'
+    'HAproxy OK, all backends are UP.\n'
 fi
 
 
