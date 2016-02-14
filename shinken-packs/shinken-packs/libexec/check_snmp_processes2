@@ -33,9 +33,6 @@ output="${output%\"}"
 
 if printf '%s' "$output" | head -n1 | grep -Eq '^[0-9]+ [A-Z] [^[:space:]]+$'
 then
-    printf 'Unexpected output: %s\n' "$output"
-    exit "$CODE_UNKNOWN"
-else
     not_present=''
     for process in $processes
     do
@@ -53,6 +50,9 @@ else
         printf 'WARNING, the following processes are not present:%s.\n' "$not_present"
         exit "$CODE_WARNING"
     fi
+else
+    printf 'Unexpected output: %s\n' "$output"
+    exit "$CODE_UNKNOWN"
 fi
 
 
