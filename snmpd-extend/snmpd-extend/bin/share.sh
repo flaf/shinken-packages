@@ -1,3 +1,5 @@
+SCRIPT_NAME=${0##*/}
+
 export LC_ALL=C
 export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
 
