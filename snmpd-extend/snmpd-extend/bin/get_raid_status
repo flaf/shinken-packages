@@ -124,9 +124,14 @@ fi
 if which areca-cli > /dev/null
 then
     RAID_FOUND="$RAID_FOUND areca"
-    output=$(areca-cli vsf info | sed -n '/^====/,/^====/p' | grep -v '^====')
-    l=$(echo $output | wc -l)
-    n=$(echo $output | grep -ci 'normal$')
+
+    output=$(areca-cli vsf info 2>&1 | sed -n '/^====/,/^====/p' | grep -v '^====')
+    # "grep" instead of "wc -l" below because with printf the last \n
+    # seems to be removed and "wc -l" doesn't take into account the
+    # last line of $output.
+    l=$(printf '%s' "$output" | grep -c '.*')
+    n=$(printf '%s' "$output" | grep -Eci '[[:space:]]+normal$')
+
     if [ "$l" = 0 ] || [ "$l" != "$n" ]
     then
         final_message 'RAID problem (for further information try the areca-cli command).'
