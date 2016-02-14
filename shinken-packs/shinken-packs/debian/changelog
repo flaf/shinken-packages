@@ -1,6 +1,9 @@
 shinken-packs (1.6) unstable; urgency=low
 
   * Add the memcached template with just the memcached-memory service.
+  * Add check_snmp_oid for basic checks where the status can be retrieved
+    directly in the snmp server.
+  * Add the haproxy_tpl template.
 
  -- Francois Lafont <francois.lafont@ac-versailles.fr>  Fri, 12 Feb 2016 14:58:43 +0100
 
