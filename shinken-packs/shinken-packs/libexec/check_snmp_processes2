@@ -50,7 +50,7 @@ then
         # the process contains a dot character in its name
         # and we don't want to have the dot interpreted as a
         # special character.
-        if ! printf '%s' "$output" | grep -Fq " ${process}"'!$'
+        if ! printf '%s' "$output" | grep -Fq " $process"'!'
         then
           not_present="$not_present $process"
         fi
