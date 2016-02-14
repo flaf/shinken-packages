@@ -14,8 +14,6 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-SCRIPT_NAME=${0##*/}
-
 export LC_ALL=C
 export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
 
