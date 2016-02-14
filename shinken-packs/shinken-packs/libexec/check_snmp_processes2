@@ -37,12 +37,20 @@ output=$(snmpget $SNMP_CMD_OPTIONS -OvQ "$HOSTNAME" "$oid" 2>&1)
 output="${output#\"}"
 output="${output%\"}"
 
+# A tip to be able to use the option -F (--fixed-strings)
+# with grep below.
+output=$(printf '%s' "$output" | sed 's/$/!/')
+
 if printf '%s' "$output" | head -n1 | grep -Eq '^[0-9]+ [A-Z] [^[:space:]]+$'
 then
     not_present=''
     for process in $processes
     do
-        if ! printf '%s' "$output" | grep -q " ${process}\$"
+        # We use -F option (--fixed-strings) because maybe
+        # the process contains a dot character in its name
+        # and we don't want to have the dot interpreted as a
+        # special character.
+        if ! printf '%s' "$output" | grep -Fq " ${process}"'!$'
         then
           not_present="$not_present $process"
         fi
