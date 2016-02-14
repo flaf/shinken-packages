@@ -32,7 +32,7 @@ output="${output%\"}"
 if exit_code=$(printf '%s' "$output" | head -n1 | grep '^[0123]$')
 then
     msg=$(printf '%s' "$output" | tail -n+2)
-    printf '%s' "$msg"
+    printf '%s\n' "$msg"
     exit "$exit_code"
 else
     # Unexpected output for this kind of check.
