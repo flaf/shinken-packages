@@ -57,7 +57,7 @@ fi
 ### The backends ###
 ####################
 
-backends=$(grep use_backend "$cfg_file" | awk '{ print $2}' | sort | uniq)
+backends=$(grep use_backend "$cfg_file" | awk '{ print $2 }' | sort | uniq)
 
 if [ -z "$backends" ]
 then
