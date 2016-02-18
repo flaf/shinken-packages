@@ -5,6 +5,7 @@ shinken-packs (1.6) unstable; urgency=low
     directly in the snmp server.
   * Add the haproxy_tpl template.
   * Add check_snmp_processes2 and related service in the linux_tpl template.
+  * Add mounts check for mac.
 
  -- Francois Lafont <francois.lafont@ac-versailles.fr>  Fri, 12 Feb 2016 14:58:43 +0100
 
