@@ -4,6 +4,8 @@ snmpd-extend (1.4.0) unstable; urgency=low
     retrieved directly after execution in the snmpd server side.
   * Add get_haproxy_status.
   * Limit get_processes to the non-kernel processes.
+  * Split get_processes to get_kprocesses (kernel processes) and get_processes
+    (non kernel processes).
 
  -- Francois Lafont <francois.lafont@ac-versailles.fr>  Sun, 14 Feb 2016 06:07:27 +0100
 
