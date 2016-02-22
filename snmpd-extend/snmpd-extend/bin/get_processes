@@ -20,6 +20,23 @@ export LC_ALL=C
 export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
 
 # The goal of tail is to remove the head of the ps command.
-ps -e -o state,comm --sort comm | tail -n +2 | sort | uniq -c | sed -r 's/^[[:space:]]+//'
+#
+# The command below is fine... but outputs too the "kernel"
+# processes so that the output can too long, for instance longer than the
+# MTU of the network. In this case, snmpget fails to retrieve the
+# extend:
+#
+#    ps -e -o state,comm --sort comm | \
+#        tail -n +2 | sort | uniq -c | sed -r 's/^[[:space:]]+//'
+#
+# So, to avoid this problem, we limit the output of the ps commande
+# to the "non-kernel" processes via the "--ppid 2 --pid 2 --deselect"
+# options. Trick found here:
+#
+#    http://unix.stackexchange.com/questions/78583/can-ps-display-only-non-kernel-processes-on-linux
+#
+#
+ps --ppid 2 --pid 2 --deselect -o state,comm --sort comm | \
+    tail -n +2 | sort | uniq -c | sed -r 's/^[[:space:]]+//'
 
 
