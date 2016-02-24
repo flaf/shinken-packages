@@ -6,8 +6,12 @@ snmpd-extend (1.4.0) unstable; urgency=low
   * Limit get_processes to the non-kernel processes.
   * Split get_processes to get_kprocesses (kernel processes) and get_processes
     (non kernel processes).
-  * The netcat-openbsd dependency is removed. Too dangerous, this package is
-    not compatible with proxmox (and some proxmox packages could be removed).
+  * The "netcat-openbsd" package, needed for the script get_haproxy_status,
+    is removed from the dependencies. Too dangerous, this package is not
+    compatible with proxmox. Indeed, this package is the field "Conflicts:"
+    within the package pve-manager (for the version 4.0-48 for instance).
+    So the installation of "netcat-openbsd" removes the pve-manager package
+    of the proxmox software. Not good...
 
  -- Francois Lafont <francois.lafont@ac-versailles.fr>  Sun, 14 Feb 2016 06:07:27 +0100
 
