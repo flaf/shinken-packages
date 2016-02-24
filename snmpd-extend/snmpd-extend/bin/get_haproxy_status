@@ -76,6 +76,12 @@ backends_regex='^('"${backends_regex%|}"')'
 ### The stats ###
 #################
 
+if ! which nc.openbsd >/dev/null
+then
+    end "$CODE_UNKNOWN" \
+    "Problem, the nc.openbsd command is not installed (you should install the package netcat-openbsd).\n"
+fi
+
 stats=$(echo "show stat" | nc -U "$socket_file" | grep -E "$backends_regex" | grep -v ',no check,')
 
 if [ -z "$stats" ]
