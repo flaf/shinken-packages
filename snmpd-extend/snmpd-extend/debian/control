@@ -11,7 +11,6 @@ Architecture: all
 Depends: ${misc:Depends}, sudo, lsb-release,
  sed (>> 4), coreutils (>> 6),
  perl, libdbd-mysql-perl,
- netcat-openbsd,
  freeipmi-tools | apt (<< 0.7.30),
  jq | apt (<< 1.0),
 Pre-Depends: snmpd
