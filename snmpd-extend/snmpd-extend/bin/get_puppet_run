@@ -85,7 +85,7 @@ then
     # puppet run.
     timestamp=$(stat --format='%Y' "$STATE")
 
-    printf "%s;N/A;N/A" "$timestamp"
+    printf '%s;N/A;N/A\n' "$timestamp"
     exit 0
 fi
 
