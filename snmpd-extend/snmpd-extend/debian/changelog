@@ -1,3 +1,15 @@
+snmpd-extend (1.4.1) unstable; urgency=low
+
+  * The check get_mounts now checks the "/" mountpoint too.
+    It's not really useful but the advantage is that the
+    output of this check will have always the same form. In
+    clear an empty output will be impossible now (before it
+    was possible when "/" was the only one mountpoint). Now
+    it will be better, easier, safer to validate the output
+    of this check in the snmp client side.
+
+ -- Francois Lafont <francois.lafont@ac-versailles.fr>  Sun, 06 Mar 2016 04:11:17 +0100
+
 snmpd-extend (1.4.0) unstable; urgency=low
 
   * Add share.sh for basic checks, ie checks where status can be

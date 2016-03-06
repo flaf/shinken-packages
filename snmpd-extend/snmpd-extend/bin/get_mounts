@@ -46,8 +46,21 @@ else
     COMMAND="timeout"
 fi
 
+# Finally, we don't remove the "/" mountpoint via the regex
+# of the last grep below. Indeed, in this case the
+# mountpoint "/" will be always checked. In a sense, it's
+# completely useless but the advantage is that the output of
+# this check will have always the same form and will be
+# easier to validate in the snmp client side.
+#
+# If we remove the "/" mountpoint via the grep below, this
+# check can have 2 different valid form: the classical form
+# "<mountpoint>:(problem|ok)" per line or an empty output
+# (if "/" is the only one mountpoint). It's better, safer
+# etc. to valide only one form for the output in the snmp
+# client side.
 mount_dirs=$(grep -v '^[[:space:]]*#' /etc/fstab | awk '{print $2}' \
-    | grep '^/' | grep -vE '(^/$|^/media/cdrom0$|^/media/floppy0$|^/proc$|^/dev/)')
+    | grep '^/' | grep -vE '(^/media/cdrom0$|^/media/floppy0$|^/proc$|^/dev/)')
 
 for dir in $mount_dirs
 do
@@ -66,6 +79,5 @@ do
     fi
 
 done
-
 
 
