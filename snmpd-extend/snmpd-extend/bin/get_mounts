@@ -73,9 +73,9 @@ do
        # could be 0, even if the ls command fails.
        #timeout --signal=SIGKILL "$TIMEOUT" \ls -f "$dir" | head -n 5 >/dev/null 2>&1
     then
-        echo "$dir:ok"
+        printf "%s:ok\n" "$dir"
     else
-        echo "$dir:problem"
+        printf "%s:problem\n" "$dir"
     fi
 
 done
