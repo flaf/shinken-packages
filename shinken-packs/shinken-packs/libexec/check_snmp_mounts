@@ -49,7 +49,7 @@ then
     #
     #    good_output='false'
     #
-elif printf '%s' "$output" | grep -vqE '^/.+:(problem|ok)$'
+elif printf '%s' "$output" | grep -vqE '^/.*:(problem|ok)$'
 then
     # There is a line, at least, which doesn't match with the pattern.
     good_output='false'
