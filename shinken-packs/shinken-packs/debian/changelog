@@ -9,6 +9,7 @@ shinken-packs (1.6) unstable; urgency=low
   * Change check_snmp_processes2 to accept the --kernel option.
   * Now the linux_tpl template has a service for non kernel processes
     and another service for kernel processes.
+  * New version check_snmp_mounts which uses share/snmp.sh now.
 
  -- Francois Lafont <francois.lafont@ac-versailles.fr>  Fri, 12 Feb 2016 14:58:43 +0100
 
