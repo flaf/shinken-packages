@@ -93,18 +93,17 @@ then
     changes="${tmp%;*}"
     errors="${tmp#*;}"
 
-    hlast_run=$(htime "$last_run")
+    now=$(date '+%s')
+    delta=$(( now - last_run ))
+    hdelta=$(htime "$delta")
 
     if printf '%s' "$errors" | grep -qE '^[0-9]+$' && [ "$errors" -gt 0 ]
     then
         msg='Last puppet run WARNING: %s error(s) during the last run (%s ago).\n'
-        printf "$msg" "$errors" "$hlast_run"
+        printf "$msg" "$errors" "$hdelta"
         exit "$CODE_WARNING"
     fi
 
-    now=$(date '+%s')
-    delta=$(( now - last_run ))
-    hdelta=$(htime "$delta")
     hwarning=$(htime "$warning")
 
     if [ "$delta" -gt "$warning" ]
