@@ -75,6 +75,9 @@ output="${output%\"}"
 # Remove all trailing blanks.
 output=$(printf '%s' "$output" | sed 's/[[:space:]]*$//g')
 
+# Validation of the output. The field "changes" and "error" can be
+# an integer or "N/A" or... empty (TODO: only for the old version
+# of snmpd-extend).
 if [ $(printf '%s\n' "$output" | wc -l) = 1 ] &&
    printf '%s' "$output" | grep -qE '^[0-9]+;([0-9]*|N/A);([0-9]*|N/A)$'
 then
@@ -92,7 +95,7 @@ then
 
     hlast_run=$(htime "$last_run")
 
-    if [ "$errors" -gt 0 ]
+    if printf '%s' "$errors" | grep -qE '^[0-9]+$' && [ "$errors" -gt 0 ]
     then
         msg='Last puppet run WARNING: %s error(s) during the last run (%s ago).\n'
         printf "$msg" "$errors" "$hlast_run"
