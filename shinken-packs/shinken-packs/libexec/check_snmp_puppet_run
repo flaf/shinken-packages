@@ -109,11 +109,11 @@ then
 
     if [ "$delta" -gt "$warning" ]
     then
-        msg='Last puppet run WARNING: no error but was %s ago (threshold is %s).\n'
+        msg='Last puppet run WARNING: no error but it was %s ago (threshold is %s).\n'
         printf "$msg" "$hdelta" "$hwarning"
         exit "$CODE_WARNING"
     else
-        msg='Last puppet run OK: no error and was %s ago (threshold is %s).\n'
+        msg='Last puppet run OK: no error and it was %s ago (threshold is %s).\n'
         printf "$msg" "$hdelta" "$hwarning"
         exit "$CODE_OK"
     fi
