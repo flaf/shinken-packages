@@ -104,7 +104,7 @@ then
     hdelta=$(htime "$delta")
     hwarning=$(htime "$warning")
 
-    if [ "$warning" -gt "$delta" ]
+    if [ "$delta" -gt "$warning" ]
     then
         msg='Last puppet run WARNING: no error but was %s ago (threshold is %s).\n'
         printf "$msg" "$hdelta" "$hwarning"
