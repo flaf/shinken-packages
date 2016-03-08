@@ -25,8 +25,6 @@ export LC_ALL=C
 export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
 
 
-
-
 # Handle with a decent version of Puppet (ie version >= 2.7)
 # where a "summary" file is usually available. The path of
 # the "summary" file is not the same between Puppet version
@@ -34,9 +32,11 @@ export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
 if [ -f '/opt/puppetlabs/puppet/cache/state/last_run_summary.yaml' ]
 then
     SUMMARY='/opt/puppetlabs/puppet/cache/state/last_run_summary.yaml'
+    STATE='/opt/puppetlabs/puppet/cache/state/state.yaml'
 elif [ -f '/var/lib/puppet/state/last_run_summary.yaml' ]
 then
     SUMMARY='/var/lib/puppet/state/last_run_summary.yaml'
+    STATE='/var/lib/puppet/state/state.yaml'
 else
     SUMMARY=''
 fi
@@ -48,12 +48,31 @@ then
     changed=$(printf '%s' "$summary" | sed -n 's/^[[:space:]]*changed:[[:space:]]*//p')
     failed=$(printf '%s' "$summary" | sed -n 's/^[[:space:]]*failed:[[:space:]]*//p')
 
+    ### Case where the puppet run has failed in the server side ###
+    #
     # If the puppet run doesn't come to the end (compilation
-    # error on the master), the "changed:" and "failed:"
-    # fields don't exist. In this case, we decide to have
-    # failed=1 and changed=0.
-    [ -z "$failed" ] && failed="1"
-    [ -z "$changed" ] && changed="0"
+    # error on the master, for instance error with the ENC
+    # etc.), the "changed" and "failed" fields could not
+    # exist. Furthermore, in this case, the "last_run" field
+    # is available but gives the time of this incomplete
+    # run. So we have no error, no change explicitly showed
+    # and we have the last_run time of this incomplete
+    # puppet run (seen on Puppet 4 and Puppet 3 too). But,
+    # in this case it's more relevant to retrieve the time
+    # of the previous puppet run.
+    if [ -z "$failed" ] or [ -z "$changed" ]
+    then
+        if [ ! -f "$STATE" ]
+        then
+            echo "Sorry, file $STATE doesn't exist."
+            exit 0
+        fi
+        # In this case, the time of the previous puppet run
+        # is available, it's the mtime of the $STATE file.
+        timestamp=$(stat --format='%Y' "$STATE")
+        printf '%s;N/A;N/A\n' "$timestamp"
+        exit 0
+    fi
 
     printf '%s;%s;%s\n' "$timestamp" "$changed" "$failed"
     exit 0
@@ -84,7 +103,6 @@ then
     # which is supposed to be the timestamp of the last
     # puppet run.
     timestamp=$(stat --format='%Y' "$STATE")
-
     printf '%s;N/A;N/A\n' "$timestamp"
     exit 0
 fi
