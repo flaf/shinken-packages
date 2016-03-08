@@ -60,7 +60,7 @@ then
     # puppet run (seen on Puppet 4 and Puppet 3 too). But,
     # in this case it's more relevant to retrieve the time
     # of the previous puppet run.
-    if [ -z "$failed" ] or [ -z "$changed" ]
+    if [ -z "$failed" ] || [ -z "$changed" ]
     then
         if [ ! -f "$STATE" ]
         then
@@ -71,10 +71,9 @@ then
         # is available, it's the mtime of the $STATE file.
         timestamp=$(stat --format='%Y' "$STATE")
         printf '%s;N/A;N/A\n' "$timestamp"
-        exit 0
+    else
+        printf '%s;%s;%s\n' "$timestamp" "$changed" "$failed"
     fi
-
-    printf '%s;%s;%s\n' "$timestamp" "$changed" "$failed"
     exit 0
 fi
 
