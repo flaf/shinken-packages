@@ -24,6 +24,12 @@
 export LC_ALL=C
 export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
 
+if [ "$1" = "readable" ]
+then
+    readable='true'
+else
+    readable='false'
+fi
 
 # Handle with a decent version of Puppet (ie version >= 2.7)
 # where a "summary" file is usually available. The path of
@@ -70,10 +76,20 @@ then
         # In this case, the time of the previous puppet run
         # is available, it's the mtime of the $STATE file.
         timestamp=$(stat --format='%Y' "$STATE")
-        printf '%s;N/A;N/A\n' "$timestamp"
+        changed='N/A'
+        failed='N/A'
+    fi
+
+    if "$readable"
+    then
+        now=$(data '+%s')
+        deltamin=$(( (now - timestamp) / 60  ))
+        deltasec=$((  now - (60 * deltamin)  ))
+        printf '   time: %s (%smin %ss ago)\nchanges: %s\n errors: %s\n' "$timestamp" "$deltamin" "$deltasec" "$changed" "$failed"
     else
         printf '%s;%s;%s\n' "$timestamp" "$changed" "$failed"
     fi
+
     exit 0
 fi
 
