@@ -86,7 +86,7 @@ then
         delta=$(( now - timestamp            ))
         deltamin=$(( delta /  60             ))
         deltasec=$(( delta - (60 * deltamin) ))
-        printf '   time: %s (%smin %ss ago)\nchanges: %s\n errors: %s\n' "$timestamp" "$deltamin" "$deltasec" "$changed" "$failed"
+        printf 'last run: %s (%smin %ss ago)\n changes: %s\n  errors: %s\n' "$timestamp" "$deltamin" "$deltasec" "$changed" "$failed"
     else
         printf '%s;%s;%s\n' "$timestamp" "$changed" "$failed"
     fi
