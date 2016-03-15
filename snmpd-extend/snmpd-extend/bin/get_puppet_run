@@ -82,7 +82,7 @@ then
 
     if "$readable"
     then
-        now=$(data '+%s')
+        now=$(date '+%s')
         deltamin=$(( (now - timestamp) / 60  ))
         deltasec=$((  now - (60 * deltamin)  ))
         printf '   time: %s (%smin %ss ago)\nchanges: %s\n errors: %s\n' "$timestamp" "$deltamin" "$deltasec" "$changed" "$failed"
