@@ -1,0 +1,92 @@
+#!/bin/sh
+
+SCRIPT_NAME=${0##*/}
+
+print_help () {
+    PATH='/usr/bin:/bin' LC_ALL='C' cat <<EOF
+The syntax is:
+    $SCRIPT_NAME --help
+    $SCRIPT_NAME --name <name> -- CMD...
+EOF
+}
+
+if ! TEMP=$(PATH='/usr/bin:/bin' LC_ALL='C' getopt -o "h,n:" -l "help,name:" \
+    -n "$SCRIPT_NAME" -- "$@")
+then
+    printf 'Syntax error with %s command.\n' "$SCRIPT_NAME" >&2
+    print_help
+    exit 1
+fi
+
+eval set -- "$TEMP"
+unset TEMP
+
+while true
+do
+    case "$1" in
+
+        --name|-n)
+            NAME_CRON="$2"
+            shift 2
+        ;;
+
+        --help|-h)
+            print_help
+            exit 1
+        ;;
+
+        --)
+            shift 1
+            break
+        ;;
+
+    esac
+done
+
+if [ -z "$NAME_CRON" ]
+then
+    printf 'Sorry, you have to set the option --name.\n' >&2
+    printf 'Script aborted.\n'                           >&2
+    exit 1
+fi
+
+if ! printf '%s\n' "$NAME_CRON" | grep -qEi '^[-_0-9a-z]+$'
+then
+    printf 'Sorry, the value of the --name option must match' >&2
+    printf ' this regex %s.\n' '/^[-_0-9a-z]+$/'              >&2
+    printf 'Script aborted.\n'                                >&2
+    exit 1
+fi
+
+FILE_CRON_STATUS="/usr/local/cron-status/${NAME_CRON}"
+
+# Cleaning before to launch the command, except for the
+# variables FILE_CRON_STATUS and NAME_CRON. Normally no
+# environment variable is defined in this script to not
+# disturb the execution of the command.
+unset SCRIPT_NAME
+unset -f print_help
+
+
+### Execution of the command. ###
+"$@"; exit_code="$?"
+
+
+# Now the command is launched, so we can set environment.
+export PATH='/usr/bin:/bin'
+export LC_ALL='C'
+
+epoch=$(date +%s)
+me=$(id --user --name)
+
+if [ "$me" = 'root' ] || [ -w "$FILE_CRON_STATUS" ]
+then
+    # TODO: add --period and --percent ???
+    printf '%s;%s;%s\n' "$NAME_CRON" "$exit_code" "$epoch" >"$FILE_CRON_STATUS"
+else
+    printf 'Sorry, the file %s does not exist or is' "$FILE_CRON_STATUS" >&2
+    printf ' not writable by the current user (%s).\n' "$me"             >&2
+    exit 1
+fi
+
+
