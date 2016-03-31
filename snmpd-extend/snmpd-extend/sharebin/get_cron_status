@@ -38,7 +38,7 @@ then
     printf '%s\n' "$msg_no_status"
     exit 0
 else
-    printf '%s' "$output"
+    printf '%s\n' "$output"
     exit 0
 fi
 
