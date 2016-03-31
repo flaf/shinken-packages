@@ -18,7 +18,8 @@ Cmnd_Alias SNMPCMD_ROOT = /usr/share/snmpd-extend/bin/get_hashes, \
                           /usr/share/snmpd-extend/bin/get_processes, \
                           /usr/share/snmpd-extend/bin/get_kprocesses, \
                           /usr/share/snmpd-extend/bin/get_haproxy_status, \
-                          /usr/share/snmpd-extend/bin/get_mongodb_rs_status
+                          /usr/share/snmpd-extend/bin/get_mongodb_rs_status, \
+                          /usr/share/snmpd-extend/bin/get_cron_status
 
 snmp ALL = (zimbra) NOPASSWD: SNMPCMD_ZIMBRA
 snmp ALL = (root) NOPASSWD: SNMPCMD_ROOT
