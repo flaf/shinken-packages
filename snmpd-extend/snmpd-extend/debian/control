@@ -14,5 +14,8 @@ Depends: ${misc:Depends}, sudo, lsb-release,
  freeipmi-tools | apt (<< 0.7.30),
  jq | apt (<< 1.0),
 Pre-Depends: snmpd
-Description: Scripts which extend snmpd daemon
- Scripts used with the snmpd daemon and the extend statement.
+Description: Scripts to extend snmpd daemon
+ Scripts usable via the snmpd daemon and the extend statement.
+ All these scripts are in the directory /usr/share/snmpd-extend/bin/.
+ Some of them have to be launched via the sudo command. So this
+ package gives some "sudo" rights to the snmp Unix account.
