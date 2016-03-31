@@ -9,6 +9,8 @@ snmpd-extend (1.4.1) unstable; urgency=low
     of this check in the snmp client side.
   * Update get_puppet_run which is compatible with Puppet 4
     now (because paths have been changed with Puppet 4).
+  * Rename the directory which contains binaries in the source
+    package. Now it's sharebin instead of bin.
 
  -- Francois Lafont <francois.lafont@ac-versailles.fr>  Sun, 06 Mar 2016 19:13:38 +0100
 
