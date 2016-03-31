@@ -1,5 +1,21 @@
 #!/bin/sh
 
+# Copyright: 2016 Francois Lafont <francois.lafont@ac-versailles.fr>
+#
+# License: GPL-3.0+
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 SCRIPT_NAME=${0##*/}
 
 print_help () {
@@ -81,7 +97,6 @@ me=$(id --user --name)
 
 if [ "$me" = 'root' ] || [ -w "$FILE_CRON_STATUS" ]
 then
-    # TODO: add --period and --percent ???
     printf '%s;%s;%s\n' "$NAME_CRON" "$exit_code" "$epoch" >"$FILE_CRON_STATUS"
 else
     printf 'Sorry, the file %s does not exist or is' "$FILE_CRON_STATUS" >&2
