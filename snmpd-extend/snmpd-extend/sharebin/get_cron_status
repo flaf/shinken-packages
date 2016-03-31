@@ -1,0 +1,45 @@
+#!/bin/sh
+
+# Copyright: 2015 Francois Lafont <francois.lafont@ac-versailles.fr>
+#
+# License: GPL-3.0+
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+export LC_ALL='C'
+export PATH='/usr/bin:/bin'
+
+msg_no_status='No cron status available.'
+cron_status_dir='/usr/local/cron-status'
+
+if [ ! -d "$cron_status_dir" ]
+then
+    printf '%s\n' "$msg_no_status"
+    exit 0
+fi
+
+# The output is limited by the head command.
+# 50 lines seems to be reasonable.
+output=$(find /usr/local/cron-status/ -maxdepth 1 -type f -exec cat '{}' \+ \
+    | head -n 50)
+
+if [ -z "$output" ]
+then
+    printf '%s\n' "$msg_no_status"
+    exit 0
+else
+    printf '%s' "$output"
+    exit 0
+fi
+
+
