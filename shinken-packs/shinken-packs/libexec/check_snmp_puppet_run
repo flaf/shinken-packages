@@ -39,7 +39,7 @@ GET_SPECIFIC_OPTIONS () {
 # Default value of warning.
 warning=691200 # it's 8 days.
 
-# Takes one integer as argument which represent seconds and
+# Takes one integer as argument which represents seconds and
 # displays an equivalent human readable time (ex: 5d 5h 3min 25s).
 htime() {
 

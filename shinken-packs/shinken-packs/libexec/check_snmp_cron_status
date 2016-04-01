@@ -78,6 +78,27 @@ period2second () {
     return 0
 }
 
+# Takes one integer as argument which represents seconds and
+# displays an equivalent human readable time (ex: 5d 5h 3min 25s).
+htime() {
+
+  local T="$1"
+  local D=$(( T / 86400     )) # T / 60 / 60 / 24
+  local H=$(( T / 3600  %24 ))
+  local M=$(( T / 60    %60 ))
+  local S=$(( T         %60 ))
+
+  result=$([ "$D" -gt 0 ] && printf '%dd ' "$D"
+           [ "$H" -gt 0 ] && printf '%dh ' "$H"
+           [ "$M" -gt 0 ] && printf '%dmin ' "$M"
+           [ "$S" -gt 0 ] && printf '%ds ' "$S")
+
+  # Remove trailing spaces.
+  result="${result% *}"
+  printf '%s' "$result"
+
+}
+
 . "$SCRIPT_DIRECTORY/share/snmp.sh"
 
 
@@ -184,14 +205,17 @@ then
         then
             now=$(date "+%s")
             since_last_cron=$(( now - timestamp ))
+            h_since_last_cron=$(htime "$since_last_cron")
             if [ "$since_last_cron" -gt "$threshold" ]
             then
                 printf 'Cron %s WARNING: exit code OK but last execution too old' "$name"
-                printf ' (period = %s and gap = %s)\n' "$period_ori" "$gap_ori"
+                printf ' (last execution %s ago and the period is' "$h_since_last_cron"
+                printf ' %s with gap = %s).\n' "$period_ori" "$gap_ori"
                 exit "$CODE_WARNING"
             else
                 printf 'Cron %s OK: exit code OK and last execution not too old' "$name"
-                printf ' (period = %s and gap = %s)\n' "$period_ori" "$gap_ori"
+                printf ' (last execution %s ago and the period is' "$h_since_last_cron"
+                printf ' %s with gap = %s).\n' "$period_ori" "$gap_ori"
                 exit "$CODE_OK"
             fi
 
