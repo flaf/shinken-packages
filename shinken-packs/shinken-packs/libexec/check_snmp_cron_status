@@ -209,7 +209,7 @@ then
             h_since_last_cron=$(htime "$since_last_cron")
             if [ "$since_last_cron" -gt "$threshold" ]
             then
-                printf 'Cron %s WARNING: exit code OK but last execution too old' "$name"
+                printf 'Cron %s WARNING: exit code ok but last execution too old' "$name"
                 printf ' (last execution %s ago and the period is' "$h_since_last_cron"
                 printf ' %s with gap = %s).\n' "$period_ori" "$gap_ori"
                 exit "$CODE_WARNING"
