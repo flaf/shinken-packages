@@ -53,7 +53,7 @@ period2second () {
 
     for i in $period
     do
-        if printf '%s\n' "$i" | grep -q '^[0-9]+(d|h|m)$'
+        if printf '%s\n' "$i" | grep -Eq '^[0-9]+(d|h|m)$'
         then
             n="${i%[dhm]}"
             unit="${i##*[0-9]}"
