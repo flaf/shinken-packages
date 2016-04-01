@@ -1,6 +1,8 @@
 shinken-packs (1.7) unstable; urgency=low
 
   * Add libexec/check_snmp_cron_status.
+  * Remove all ">&2" in libexec/* because shinken is not able to print
+    stderr in the WebUI.
 
  -- Francois Lafont <francois.lafont@ac-versailles.fr>  Fri, 01 Apr 2016 05:54:54 +0200
 
