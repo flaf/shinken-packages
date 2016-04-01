@@ -49,14 +49,15 @@ GET_SPECIFIC_OPTIONS () {
 period2second () {
     local period="$1"
     local sum=0
-    local n unit
+    local n n_tmp unit
 
     for i in $period
     do
-        if printf '%s\n' "$i" | grep -Eq '^[0-9]+(d|h|m)$'
+        if printf '%s\n' "$i" | grep -Eq '^[0-9]+(d|h|min)$'
         then
-            n="${i%[dhm]}"
-            unit="${i##*[0-9]}"
+            n_tmp="${i%in}" # if i = XXXmin, now n_tmp = XXXm
+            n="${n_tmp%[dhm]}"
+            unit="${n_tmp##*[0-9]}" # here unit is d, h or m (not min)
             case "$unit" in
                 d)
                     sum=$(( sum + (n * 86400 ) )) # 1 day    = 86400s
@@ -122,17 +123,17 @@ then
     exit "$CODE_UNKNOWN"
 fi
 
-if ! printf '%s\n' "$period" | grep -qE '^[ 0-9dhm]+$'
+if ! printf '%s\n' "$period" | grep -qE '^[ 0-9dhmin]+$'
 then
     printf 'Sorry, in the value of the --period option, only space,' >&2
-    printf ' 0-9, d, h, and m characters are allowed.\n'             >&2
+    printf ' 0-9, dhmin characters are allowed.\n'                   >&2
     exit "$CODE_UNKNOWN"
 fi
 
-if ! printf '%s\n' "$gap" | grep -qE '^[ 0-9dhm%]+$'
+if ! printf '%s\n' "$gap" | grep -qE '^[ 0-9dhmin%]+$'
 then
     printf 'Sorry, in the value of the --gap option, only space,' >&2
-    printf ' 0-9, d, h, m and %% characters are allowed.\n'       >&2
+    printf ' 0-9, dhmin and %% characters are allowed.\n'         >&2
     exit "$CODE_UNKNOWN"
 fi
 
