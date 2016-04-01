@@ -200,8 +200,12 @@ then
             exit "$CODE_CRITICAL"
         fi
 
+    elif [ "$n" = 0 ]
+    then
+        printf 'Cron %s UNKNOWN: not available status.\n' "$name"
+        exit "$CODE_UNKNOWN"
     else
-        printf 'The snmp request gives multiple crons with the same name %s\n' "$name"
+        printf 'The snmp request gives multiple crons with the same name %s.\n' "$name"
         exit "$CODE_UNKNOWN"
     fi
 
