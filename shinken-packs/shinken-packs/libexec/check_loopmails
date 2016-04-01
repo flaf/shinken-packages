@@ -44,7 +44,7 @@ CODE_UNKNOWN=3
 long_options='help,mailserver:,username:,password:,mailto:,warning:,critical:'
 if ! TEMP=$(getopt -o 'h' -l "$long_options" -n "$SCRIPT_NAME" -- "$@")
 then
-    printf "Syntax error with $SCRIPT_NAME command.\n" >&2
+    printf "Syntax error with $SCRIPT_NAME command.\n"
     exit "$CODE_UNKNOWN"
 fi
 

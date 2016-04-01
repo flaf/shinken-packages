@@ -42,7 +42,7 @@ if ! TEMP=$(getopt -o "$COMMON_SHORT_OPTIONS,$SPECIFIC_SHORT_OPTIONS" \
                    -l "$COMMON_LONG_OPTIONS,$SPECIFIC_LONG_OPTIONS"   \
                    -n "$SCRIPT_NAME" -- "$@")
 then
-    echo "Syntax error with $SCRIPT_NAME command." >&2
+    echo "Syntax error with $SCRIPT_NAME command."
     print_help
     exit "$CODE_UNKNOWN"
 fi

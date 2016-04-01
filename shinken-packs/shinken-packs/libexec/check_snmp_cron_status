@@ -105,7 +105,7 @@ htime() {
 
 if [ -z "$name" ] || [ -z "$period" ]
 then
-    printf 'Sorry, you have to set the --name and --period options.\n' >&2
+    printf 'Sorry, you have to set the --name and --period options.\n'
     exit "$CODE_UNKNOWN"
 fi
 
@@ -118,22 +118,22 @@ fi
 # First checks of the option values.
 if ! printf '%s\n' "$name" | grep -qE '^[-_0-9a-z]+$'
 then
-    printf 'Sorry, in the value of the --name option only minus,' >&2
-    printf ' underscore, 0-9 and a-z characters are allowed.\n'   >&2
+    printf 'Sorry, in the value of the --name option only minus,'
+    printf ' underscore, 0-9 and a-z characters are allowed.\n'
     exit "$CODE_UNKNOWN"
 fi
 
 if ! printf '%s\n' "$period" | grep -qE '^[ 0-9dhmin]+$'
 then
-    printf 'Sorry, in the value of the --period option, only space,' >&2
-    printf ' 0-9, dhmin characters are allowed.\n'                   >&2
+    printf 'Sorry, in the value of the --period option, only space,'
+    printf ' 0-9, dhmin characters are allowed.\n'
     exit "$CODE_UNKNOWN"
 fi
 
 if ! printf '%s\n' "$gap" | grep -qE '^[ 0-9dhmin%]+$'
 then
-    printf 'Sorry, in the value of the --gap option, only space,' >&2
-    printf ' 0-9, dhmin and %% characters are allowed.\n'         >&2
+    printf 'Sorry, in the value of the --gap option, only space,'
+    printf ' 0-9, dhmin and %% characters are allowed.\n'
     exit "$CODE_UNKNOWN"
 fi
 
@@ -141,8 +141,8 @@ fi
 period_ori="$period"
 if ! period=$(period2second "$period")
 then
-    printf 'Sorry, the value of the --period option has a bad' >&2
-    printf ' syntax.\n'                                        >&2
+    printf 'Sorry, the value of the --period option has a bad'
+    printf ' syntax.\n'
     exit "$CODE_UNKNOWN"
 fi
 
@@ -157,8 +157,8 @@ then
     # Nothing to do, gap is already set in seconds.
     true
 else
-    printf 'Sorry, the value of the --gap option has a bad' >&2
-    printf ' syntax.\n'                                     >&2
+    printf 'Sorry, the value of the --gap option has a bad'
+    printf ' syntax.\n'
     exit "$CODE_UNKNOWN"
 fi
 

@@ -23,7 +23,7 @@ OPTIONS_LIST="ssl,ip-address:,url:,regex:,warning:,critical:,timeout:,plugin-htt
 
 if ! TEMP=$(getopt -o "i,v" -l "$OPTIONS_LIST" -n "$SCRIPT_NAME" -- "$@")
 then
-    echo "Syntax error with $SCRIPT_NAME command." >&2
+    echo "Syntax error with $SCRIPT_NAME command."
     exit 3
 fi
 

@@ -39,7 +39,7 @@ OPTIONS_LIST="$OPTIONS_LIST,timeout:,host:"
 OPTIONS_LIST="$OPTIONS_LIST,perfdata:,warning:,critical:,hostname:,puppet-history:,seconds-behind-master:"
 
 if ! TEMP=$(getopt -o "$SHORT_OPTIONS_LIST" -l "$OPTIONS_LIST" -n "$SCRIPT_NAME" -- "$@"); then
-    echo "Syntax error with $SCRIPT_NAME command." >&2
+    echo "Syntax error with $SCRIPT_NAME command."
     exit $UNKNOWN
 fi
 
