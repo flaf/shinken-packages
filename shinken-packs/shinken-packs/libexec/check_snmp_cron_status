@@ -83,7 +83,7 @@ period2second () {
 
 if [ -z "$name" ] || [ -z "$period" ]
 then
-    printf 'Sorry, you have to set the --name and --period option.\n' >&2
+    printf 'Sorry, you have to set the --name and --period options.\n' >&2
     exit "$CODE_UNKNOWN"
 fi
 
