@@ -66,11 +66,11 @@ then
     exit 1
 fi
 
-if ! printf '%s\n' "$NAME_CRON" | grep -qEi '^[-_0-9a-z]+$'
+if ! printf '%s\n' "$NAME_CRON" | grep -qE '^[-_0-9a-z]+$'
 then
-    printf 'Sorry, the value of the --name option must match' >&2
-    printf ' this regex %s.\n' '/^[-_0-9a-z]+$/'              >&2
-    printf 'Script aborted.\n'                                >&2
+    printf 'Sorry, in the value of the --name option only minus,' >&2
+    printf ' underscore, 0-9 and a-z characters are allowed.\n'   >&2
+    printf 'Script aborted.\n'                                    >&2
     exit 1
 fi
 
