@@ -1,3 +1,9 @@
+shinken-packs (1.7) unstable; urgency=low
+
+  * Add libexec/check_snmp_cron_status.
+
+ -- Francois Lafont <francois.lafont@ac-versailles.fr>  Fri, 01 Apr 2016 05:54:54 +0200
+
 shinken-packs (1.6) unstable; urgency=low
 
   * Add the memcached template with just the memcached-memory service.
