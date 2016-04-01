@@ -170,12 +170,12 @@ then
 
     # The command substitution removes automatically all trailing
     # newline characters.
-    line=$(printf '%s' "$output" | grep "^$name;")
-    n=$(printf '%s\n' "$line" | wc -l)
+    n=$(printf '%s' "$output" | grep -c "^$name;")
 
     if [ "$n" = 1 ]
     then
 
+        line=$(printf '%s' "$output" | grep "^$name;")
         tmp="${line#*;}" # remains <exit-code>;<timestamp>
         timestamp="${tmp#*;}"
         exit_code="${tmp%;*}"
