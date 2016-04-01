@@ -131,6 +131,7 @@ then
     percent="${gap%?}" # normally ${gap%\%} is possible too.
     gap=$(( (period * percent) / 100 ))
 elif gap=$(period2second "$gap")
+then
     # Nothing to do, gap is already set in seconds.
     true
 else
