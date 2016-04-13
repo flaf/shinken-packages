@@ -63,7 +63,7 @@ else
     # (because with snmp the size is limited).
     # Field 2 => Name
     # Field 4 => State
-    printf "%s\n" "$output" | sed -nr '1p;/(power|temp)/Ip' | cut -d',' -f'2,4'
+    printf "%s\n" "$output" | sed -nr '1p;/(power|temp|chassis)/Ip' | cut -d',' -f'2,4'
 fi
 
 exit "$exit_code"
