@@ -144,7 +144,7 @@ then
 
     # We take all lines where "status" is present.
     output=$(hpssacli controller all show status 2>&1 | grep -i 'status')
-    n=$(printf '%s' "$output" | wc -l)
+    n=$(printf '%s\n' "$output" | grep -ic 'status')
     bad_lines_number=$(printf '%s' "$output" | grep -Evc ' Status: OK$')
 
     if [ "$n" = '0' ] || [ "$bad_lines_number" != '0' ]
