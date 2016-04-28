@@ -22,6 +22,8 @@ import sys
 import os
 from spnotify import *
 
+encoding = 'utf-8'
+os.environ['LC_ALL'] = 'en_US.UTF-8'
 os.environ['PATH'] = '/bin:/usr/bin'
 
 # Do not set this environment variable.
@@ -254,7 +256,6 @@ args = parser.parse_args()
 opt_dict = vars(args)
 
 # Decode argv in unicode.
-encoding = sys.getfilesystemencoding()
 for key in opt_dict:
     if isinstance(opt_dict[key], str):
         opt_dict[key] = opt_dict[key].decode(encoding)
