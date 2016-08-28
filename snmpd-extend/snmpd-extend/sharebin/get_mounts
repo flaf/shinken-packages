@@ -73,7 +73,18 @@ do
        # could be 0, even if the ls command fails.
        #timeout --signal=SIGKILL "$TIMEOUT" \ls -f "$dir" | head -n 5 >/dev/null 2>&1
     then
-        printf "%s:ok\n" "$dir"
+        if [ "$dir" = '/' ]
+        then
+            # For /, we check if the partition has the "rw" mount option.
+            if mount | grep -E 'on[[:space:]]+/[[:space:]]' | grep -Eq '[\(,]rw[\),]'
+            then
+                printf "%s:ok\n" "$dir"
+            else
+                printf "%s:problem\n" "$dir"
+            fi
+        else
+            printf "%s:ok\n" "$dir"
+        fi
     else
         printf "%s:problem\n" "$dir"
     fi
