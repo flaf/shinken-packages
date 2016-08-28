@@ -1,3 +1,10 @@
+snmpd-extend (1.5.1) unstable; urgency=medium
+
+  * Improve the snmp script "get_mounts" which checks
+    if the / partition has the "rw" mount option.
+
+ -- François Lafont <francois.lafont@ac-versailles.fr>  Sun, 28 Aug 2016 11:48:51 +0200
+
 snmpd-extend (1.5) unstable; urgency=low
 
   * Add save-cron-status in /usr/bin/.
