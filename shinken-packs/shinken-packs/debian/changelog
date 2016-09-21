@@ -1,3 +1,12 @@
+shinken-packs (1.8) unstable; urgency=medium
+
+  * Improvement of the check "check_snmp_hostname". Now the numeric OID
+    is used instead of the text OID (to improve performance).
+  * Now it's possible to check a different hostname than the value
+    of the shinken "host_name" attribute via the macro _REAL_HOSTNAME.
+
+ -- François Lafont <francois.lafont@ac-versailles.fr>  Wed, 21 Sep 2016 04:20:10 +0200
+
 shinken-packs (1.7) unstable; urgency=low
 
   * Add libexec/check_snmp_cron_status.
