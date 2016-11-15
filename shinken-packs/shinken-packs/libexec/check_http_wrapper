@@ -35,7 +35,7 @@ warning="3"
 critical="7"
 timeout="10"
 plugin_http="/usr/lib/nagios/plugins/check_http"
-onredirect="ok"
+onredirect="follow"
 case_insensitive=false
 invert_regex=false
 
