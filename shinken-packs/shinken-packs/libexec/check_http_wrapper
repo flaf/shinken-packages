@@ -211,7 +211,8 @@ if [ -z "$regex" ]
 then
     output=$("$plugin_http" "$ssl" -4 -I "$ip_address" -H "$host" -u "$path" \
              -p "$port" -w "$warning" -c "$critical" --timeout="$timeout"    \
-             --onredirect="$onredirect" --header 'Accept-Encoding: identity'); exit_code="$?"
+             --onredirect="$onredirect" --header 'Accept-Encoding: identity' \
+             -- "$@" 2>&1); exit_code="$?"
     printf "$OUTPUT_PATTERN" "$full_url" "$output"
     exit "$exit_code"
 else
@@ -238,9 +239,10 @@ else
     # If the exit code is not OK and if the pattern is not found,
     # there is a specific output.
     output=$("$plugin_http" "$ssl" -4 -I "$ip_address" -H "$host" -u "$path" \
-              "$opt_regex" "$regex" -p "$port" -w "$warning" -c "$critical"  \
-              --timeout="$timeout" --onredirect="$onredirect"                \
-              "$opt_invert_regex" --header 'Accept-Encoding: identity' 2>&1); exit_code="$?"
+             -p "$port" -w "$warning" -c "$critical" --timeout="$timeout"    \
+             --onredirect="$onredirect" --header 'Accept-Encoding: identity' \
+             "$opt_regex" "$regex" "$opt_invert_regex"                       \
+              -- "$@" 2>&1); exit_code="$?"
 
     if [ "$exit_code" = "0" ]
     then
