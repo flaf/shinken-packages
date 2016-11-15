@@ -212,7 +212,7 @@ then
     output=$("$plugin_http" "$ssl" -4 -I "$ip_address" -H "$host" -u "$path" \
              -p "$port" -w "$warning" -c "$critical" --timeout="$timeout"    \
              --onredirect="$onredirect" --header 'Accept-Encoding: identity' \
-             -- "$@" 2>&1); exit_code="$?"
+             "$@" 2>&1); exit_code="$?"
     printf "$OUTPUT_PATTERN" "$full_url" "$output"
     exit "$exit_code"
 else
@@ -242,7 +242,7 @@ else
              -p "$port" -w "$warning" -c "$critical" --timeout="$timeout"    \
              --onredirect="$onredirect" --header 'Accept-Encoding: identity' \
              "$opt_regex" "$regex" "$opt_invert_regex"                       \
-              -- "$@" 2>&1); exit_code="$?"
+             "$@" 2>&1); exit_code="$?"
 
     if [ "$exit_code" = "0" ]
     then
