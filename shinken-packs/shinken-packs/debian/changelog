@@ -1,3 +1,13 @@
+shinken-packs (1.9) unstable; urgency=medium
+
+  * The macros _HTTP_ONREDIRECT and _HTTPS_ONREDIRECT are removed.
+    Now, for the check http, onredirect=follow is the default and
+    is settable via the host shinken configuration.
+  * Now it's possible to add options from the nagios http check
+    via the shinken configuration.
+
+ -- François Lafont <francois.lafont@ac-versailles.fr>  Tue, 15 Nov 2016 23:28:34 +0100
+
 shinken-packs (1.8) unstable; urgency=medium
 
   * Improvement of the check "check_snmp_hostname". Now the numeric OID
