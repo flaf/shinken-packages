@@ -180,6 +180,13 @@ fi
 # of the `check_http` nagios plugin.
 OUTPUT_PATTERN='Url: %s . %s'
 
+# With this specific value, we use the patched version of check_http.
+if [ "$onredirect" = 'followcookie' ]
+then
+    plugin_http='/usr/share/shinken-packs/libexec/check_http_cookie'
+    onredirect='follow'
+fi
+
 # Case when we just want to check the certificate.
 if [ -n "$certificate" ]
 then
