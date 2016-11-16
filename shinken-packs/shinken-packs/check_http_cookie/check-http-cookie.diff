@@ -1,0 +1,164 @@
+--- a/plugins/check_http.c
++++ b/plugins/check_http.c
+@@ -48,7 +48,10 @@
+ #define STICKY_HOST 1
+ #define STICKY_PORT 2
+ 
++#define HDR_SETCOOKIE "%*[Ss]%*[Ee]%*[Tt]%*[-]%*[Cc]%*[Oo]%*[Kk]%*[Ii]%*[Ee]: "
++#define COOKIE_BODY "%[/a-zA-Z0-9._-=@,: ]"
+ #define HTTP_EXPECT "HTTP/1."
++
+ enum {
+   MAX_IPV4_HOSTLENGTH = 255,
+   HTTP_PORT = 80,
+@@ -99,6 +102,7 @@
+ char *user_agent;
+ int server_url_length;
+ int server_expect_yn = 0;
++char *cookies=NULL;
+ char server_expect[MAX_INPUT_BUFFER] = HTTP_EXPECT;
+ char string_expect[MAX_INPUT_BUFFER] = "";
+ char output_string_search[30] = "";
+@@ -113,6 +117,7 @@
+ int onredirect = STATE_OK;
+ int followsticky = STICKY_NONE;
+ int use_ssl = FALSE;
++int keepalive = FALSE;
+ int use_sni = FALSE;
+ int verbose = FALSE;
+ int sd;
+@@ -182,7 +187,8 @@
+ 
+   enum {
+     INVERT_REGEX = CHAR_MAX + 1,
+-    SNI_OPTION
++    SNI_OPTION,
++    KEEP_ALIVE
+   };
+ 
+   int option = 0;
+@@ -214,6 +220,7 @@
+     {"content-type", required_argument, 0, 'T'},
+     {"pagesize", required_argument, 0, 'm'},
+     {"invert-regex", no_argument, NULL, INVERT_REGEX},
++    {"keepalive", no_argument, 0, KEEP_ALIVE},
+     {"use-ipv4", no_argument, 0, '4'},
+     {"use-ipv6", no_argument, 0, '6'},
+     {0, 0, 0, 0}
+@@ -284,18 +291,18 @@
+     case 'C': /* Check SSL cert validity */
+ #ifdef HAVE_SSL
+       if ((temp=strchr(optarg,','))!=NULL) {
+-	*temp='\0';
+-	if (!is_intnonneg (temp))
+-	  usage2 (_("Invalid certificate expiration period"), optarg);
+-	days_till_exp_warn = atoi(optarg);
+-	*temp=',';
+-	temp++;
+-	if (!is_intnonneg (temp))
+-	  usage2 (_("Invalid certificate expiration period"), temp);
+-	days_till_exp_crit = atoi (temp);
++  *temp='\0';
++  if (!is_intnonneg (temp))
++    usage2 (_("Invalid certificate expiration period"), optarg);
++  days_till_exp_warn = atoi(optarg);
++  *temp=',';
++  temp++;
++  if (!is_intnonneg (temp))
++    usage2 (_("Invalid certificate expiration period"), temp);
++  days_till_exp_crit = atoi (temp);
+       }
+       else {
+-	days_till_exp_crit=0;
++  days_till_exp_crit=0;
+         if (!is_intnonneg (optarg))
+           usage2 (_("Invalid certificate expiration period"), optarg);
+         days_till_exp_warn = atoi (optarg);
+@@ -424,6 +431,9 @@
+       usage4 (_("IPv6 support not available"));
+ #endif
+       break;
++    case KEEP_ALIVE: /* Keep-Alive */
++      keepalive = TRUE;
++      break;
+     case 'v': /* verbose */
+       verbose = TRUE;
+       break;
+@@ -811,6 +821,8 @@
+   char *pos;
+   long microsec;
+   double elapsed_time;
++  char *cpos = "";
++  char cookie_body[255];
+   int page_len = 0;
+   int result = STATE_OK;
+ 
+@@ -833,8 +845,20 @@
+ 
+   asprintf (&buf, "%s %s %s\r\n%s\r\n", http_method, server_url, host_name ? "HTTP/1.1" : "HTTP/1.0", user_agent);
+ 
+-  /* tell HTTP/1.1 servers not to keep the connection alive */
+-  asprintf (&buf, "%sConnection: close\r\n", buf);
++  /* send Collected Cookies */
++  if(cookies)
++  {
++    asprintf (&buf, "%s%s\r\n", buf,cookies);
++  }
++
++  /* send "Connection: Keep-Alive" if need */
++  if(keepalive)
++  {
++    asprintf (&buf, "%sConnection: Keep-Alive\r\n", buf);
++  } else {
++    /* tell HTTP/1.1 servers not to keep the connection alive */
++    asprintf (&buf, "%sConnection: close\r\n", buf);
++  }
+ 
+   /* optionally send the host header info */
+   if (host_name) {
+@@ -1029,9 +1053,27 @@
+     else if (http_status >= 300) {
+ 
+       if (onredirect == STATE_DEPENDENT)
++      {
++        cpos = header;
++        cookies=NULL;
++        while (*cpos) {
++          if (sscanf(cpos, HDR_SETCOOKIE COOKIE_BODY, cookie_body)) {
++            if(verbose)
++              printf("Cookie parameters: body=%s\n", cookie_body);
++            if(cookies)
++              asprintf (&cookies, "%s;%s", cookies, cookie_body);
++            else
++              asprintf (&cookies, "Cookie: %s", cookie_body);
++          }
++          cpos += (size_t) strcspn (cpos, "\r\n");
++          cpos += (size_t) strspn (cpos, "\r\n");
++        } /* end while (cpos) */
+         redir (header, status_line);
++      }
+       else
++      {
+         result = max_state_alt(onredirect, result);
++      }
+       asprintf (&msg, _("%s - "), status_line);
+     } /* end if (http_status >= 300) */
+     else {
+@@ -1376,7 +1418,9 @@
+   printf ("    %s\n", _("Warn if document is more than SECONDS old. the number can also be of"));
+   printf ("    %s\n", _("the form \"10m\" for minutes, \"10h\" for hours, or \"10d\" for days."));
+   printf (" %s\n", "-T, --content-type=STRING");
+-  printf ("    %s\n", _("specify Content-Type header media type when POSTing\n"));
++  printf ("    %s\n", _("specify Content-Type header media type when POSTing"));
++  printf (" %s\n", "--keepalive");
++  printf ("    %s\n", _("Use Keep-Alive header in every request\n"));
+ 
+   printf (" %s\n", "-l, --linespan");
+   printf ("    %s\n", _("Allow regex to span newlines (must precede -r or -R)"));
+@@ -1465,5 +1509,5 @@
+   printf ("       [-e <expect>] [-s string] [-l] [-r <regex> | -R <case-insensitive regex>]\n");
+   printf ("       [-P string] [-m <min_pg_size>:<max_pg_size>] [-4|-6] [-N] [-M <age>]\n");
+   printf ("       [-A string] [-k string] [-S <version>] [--sni] [-C <warn_age>[,<crit_age>]]\n");
+-  printf ("       [-T <content-type>] [-j method]\n");
++  printf ("       [-T <content-type>] [-j method] [--keepalive]\n");
+ }
