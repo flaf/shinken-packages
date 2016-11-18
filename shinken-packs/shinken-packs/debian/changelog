@@ -1,4 +1,4 @@
-shinken-packs (1.9.2) unstable; urgency=medium
+shinken-packs (1.9.3) unstable; urgency=medium
 
   * The macros _HTTP_ONREDIRECT and _HTTPS_ONREDIRECT are removed.
     Now, for the check http, onredirect=follow is the default and
@@ -6,6 +6,9 @@ shinken-packs (1.9.2) unstable; urgency=medium
   * Now it's possible to add options from the nagios http check
     via the shinken configuration.
   * Add the support of cookies on redirection for check_http_wrapper.
+  * In the check_http_wrapper, check of DNS resolution (when it's relevant)
+    by default between the IP-address and the host in the url unless
+    the option --no-dns-check is set.
 
  -- François Lafont <francois.lafont@ac-versailles.fr>  Tue, 15 Nov 2016 23:28:34 +0100
 
