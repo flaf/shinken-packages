@@ -1,3 +1,14 @@
+snmpd-extend (1.5.2) unstable; urgency=medium
+
+  * Fix save-cron-status: now it has the same exit code as
+    the wrappered command.
+  * Fix get_mysql_repl_status: it had a bad grep command.
+  * Fix get_haproxy_status: backends are retrieved via
+    the "backend" stanza now, not "use_backend".
+  * Enhancement: get_raid_status has a --verbose option now.
+
+ -- François Lafont <francois.lafont@ac-versailles.fr>  Fri, 25 Nov 2016 18:06:03 +0100
+
 snmpd-extend (1.5.1) unstable; urgency=medium
 
   * Improve the snmp script "get_mounts" which checks

@@ -52,7 +52,6 @@ echo 'SHOW SLAVE STATUS\G;' | "$TIMEOUT_CMD" --signal="SIGKILL" "$TIMEOUT" mysql
 
 echo "SHOW GLOBAL STATUS LIKE 'slave_running';" | "$TIMEOUT_CMD" --signal="SIGKILL" "$TIMEOUT" mysql \
     | tr '[:upper:]' '[:lower:]' \
-    | sed -e 's/^[[:space:]]*//' -e 's/slave_running[[:space:]]*/:/' \
-    | grep -i 'slave_running'
+    | sed -e 's/^[[:space:]]*//' | awk '/^slave_running/ {print $1":"$2}'
 
 

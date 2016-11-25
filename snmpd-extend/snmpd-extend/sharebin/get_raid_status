@@ -23,30 +23,81 @@ export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
 # output ~ /^RAID" and !~ /^RAID OK/      <=> RAID has a problem.
 # output !~ /^RAID/                       <=> RAID state is unknown.
 
+SCRIPT_NAME="${0##*/}"
+
+print_help () {
+    cat <<EOF
+The syntax is:
+    $SCRIPT_NAME --help
+    $SCRIPT_NAME [--verbose]
+
+EOF
+}
+
 final_message () {
     printf '%s\n' "$1"
     exit 0
 }
+
+if ! TEMP=$(getopt -o "h,v" -l "help,verbose" -n "$SCRIPT_NAME" -- "$@")
+then
+    echo "Syntax error with $SCRIPT_NAME command." >&2
+    exit 1
+fi
+
+eval set -- "$TEMP"
+
+# Some default values.
+VERBOSE=false
+
+while true
+do
+    case "$1" in
+
+        -v|--verbose)
+            VERBOSE=true
+            shift 1
+        ;;
+
+        --help|-h)
+            print_help
+            exit 0
+        ;;
+
+        --)
+            shift 1
+            break
+        ;;
+
+    esac
+
+done
+
 
 # At first, there is no RAID found.
 # By default, this variable MUST BE EMPTY !
 RAID_FOUND=''
 
 
-
-
 if which 3ware-status >/dev/null
 then
     RAID_FOUND="$RAID_FOUND 3ware"
+
+    "$VERBOSE" && 3ware-status
+
     if 3ware-status 2>&1 | grep -iq 'NOT OPTIMAL'
     then
         final_message "RAID problem (for further information try the 3ware-status command)."
     fi
 fi
 
+
 if which aacraid-status >/dev/null
 then
     RAID_FOUND="$RAID_FOUND aacraid"
+
+    "$VERBOSE" && aacraid-status
+
     if aacraid-status 2>&1 | grep -iq 'NOT OPTIMAL'
     then
         final_message "RAID problem (for further information try the aacraid-status command)."
@@ -70,6 +121,9 @@ do
         else
             final_message "Problem: /etc/init.d/cciss-vol-statusd doesn't exist."
         fi
+
+        "$VERBOSE" && "$cciss_cmd"
+
         if "$cciss_cmd" "$device" >/dev/null 2>&1
         then
             true
@@ -79,9 +133,13 @@ do
     fi
 done
 
+
 if which mpt-status >/dev/null
 then
     RAID_FOUND="$RAID_FOUND mpt"
+
+    "$VERBOSE" && mpt-status
+
     if mpt-status 2>&1 | grep -qi 'state OPTIMAL'
     then
         true
@@ -90,10 +148,14 @@ then
     fi
 fi
 
+
 for megaraid_cmd in megaraid-status megaraidsas-status
 do
     if which "$megaraid_cmd" > /dev/null
     then
+
+        "$VERBOSE" && "$megaraid_cmd"
+
         RAID_FOUND="$RAID_FOUND megaraid"
         if "$megaraid_cmd" 2>&1 | grep -qi 'NOT OPTIMAL'
         then
@@ -115,15 +177,21 @@ then
     #        final_message 'RAID problem (for further information try the mdadm command).'
     #    fi
     #done
+
+    "$VERBOSE" && mdadm --detail --test /dev/md/*
+
     if ! mdadm --detail --test /dev/md/* >/dev/null 2>&1
     then
         final_message 'RAID problem (for further information try the mdadm command).'
     fi
 fi
 
+
 if which areca-cli > /dev/null
 then
     RAID_FOUND="$RAID_FOUND areca"
+
+    "$VERBOSE" && areca-cli vsf info
 
     output=$(areca-cli vsf info 2>&1 | sed -n '/^====/,/^====/p' | grep -v '^====')
     # "grep" instead of "wc -l" below because with printf the last \n
@@ -138,9 +206,12 @@ then
     fi
 fi
 
+
 if which hpssacli >/dev/null
 then
     RAID_FOUND="$RAID_FOUND hp-smart-array"
+
+    "$VERBOSE" && hpssacli controller all show status
 
     # We take all lines where "status" is present.
     output=$(hpssacli controller all show status 2>&1 | grep -i 'status')
@@ -151,8 +222,9 @@ then
     then
         final_message 'RAID problem (for further information try the command: hpssacli controller all show status).'
     fi
-
 fi
+
+
 
 
 if [ -n "$RAID_FOUND" ] # "$RAID_FOUND" non empty.

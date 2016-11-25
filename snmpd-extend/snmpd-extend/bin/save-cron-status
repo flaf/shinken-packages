@@ -98,6 +98,9 @@ me=$(id --user --name)
 if [ "$me" = 'root' ] || [ -w "$FILE_CRON_STATUS" ]
 then
     printf '%s;%s;%s\n' "$NAME_CRON" "$exit_code" "$epoch" >"$FILE_CRON_STATUS"
+    # We choose to have an exit code identical to the exit
+    # code of the wrapped command.
+    exit "$exit_code"
 else
     printf 'Sorry, the file %s does not exist or is' "$FILE_CRON_STATUS" >&2
     printf ' not writable by the current user (%s).\n' "$me"             >&2
