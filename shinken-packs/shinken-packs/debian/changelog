@@ -1,3 +1,9 @@
+shinken-packs (1.9.5) unstable; urgency=medium
+
+  * Add a service "_has_ip" in the linux template.
+
+ -- François Lafont <francois.lafont@ac-versailles.fr>  Wed, 04 Jan 2017 14:09:16 +0100
+
 shinken-packs (1.9.4) unstable; urgency=medium
 
   * The macros _HTTP_ONREDIRECT and _HTTPS_ONREDIRECT are removed.
