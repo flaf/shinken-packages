@@ -1,3 +1,9 @@
+snmpd-extend (1.5.3) unstable; urgency=medium
+
+  * Add the extend get_ip_addresses.
+
+ -- François Lafont <francois.lafont@ac-versailles.fr>  Wed, 04 Jan 2017 09:56:01 +0100
+
 snmpd-extend (1.5.2) unstable; urgency=medium
 
   * Fix save-cron-status: now it has the same exit code as
