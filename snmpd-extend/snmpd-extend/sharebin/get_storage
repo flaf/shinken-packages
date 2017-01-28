@@ -42,8 +42,13 @@ OPTIONS="--portability --local"
 #df $OPTIONS --human-readable | tail -n +2 | grep "^/" | sort | awk '{ print $1":"$2":"$3":"$5 }' | join -t ":" "$file_temp" -
 #rm "$file_temp"
 
-a=$(df $OPTIONS --block-size=1K  | tail -n +2 | grep "^/" | sort | awk '{ print $1":"$6":"$2":"$3 }')
-b=$(df $OPTIONS --human-readable | tail -n +2 | grep "^/" | sort | awk '{ print $1":"$2":"$3":"$5 }')
+# We want to check "devices" which match with:
+#
+#   * "^/" to catch /dev/xxx... etc.
+#   * or "pool" to catch ZFS filesystem.
+#
+a=$(df $OPTIONS --block-size=1K  | awk '$1 ~ /(^\/|pool)/ { print $1":"$6":"$2":"$3 }' | sort)
+b=$(df $OPTIONS --human-readable | awk '$1 ~ /(^\/|pool)/ { print $1":"$2":"$3":"$5 }' | sort)
 
 printf '%s\n' "$a" | while read la <&0 && read lb <&3
 do
