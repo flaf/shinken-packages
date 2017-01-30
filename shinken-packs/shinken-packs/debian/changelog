@@ -1,3 +1,9 @@
+shinken-packs (1.9.7) unstable; urgency=medium
+
+  * Add the "dns" template.
+
+ -- François Lafont <francois.lafont@ac-versailles.fr>  Mon, 30 Jan 2017 02:01:33 +0100
+
 shinken-packs (1.9.6) unstable; urgency=medium
 
   * Allow ZFS pools with check_snmp_storage.
