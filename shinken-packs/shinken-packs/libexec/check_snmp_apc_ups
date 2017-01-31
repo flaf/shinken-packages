@@ -1,0 +1,286 @@
+#!/bin/bash
+# check_snmp_apc_ups via snmp for shinken
+# 2015-03-25 Create script
+# -----------------------------------------------
+# check status of APC UPS
+#
+# Use SNMP V3
+# -----------------------------------------------
+
+SNMPVERSION="3"
+SNMPWALK=$(which snmpwalk)
+SNMPGET=$(which snmpget)
+SNMPTABLE=$(which snmptable) 
+
+HOSTNAME=""
+option_found=0
+healthStatus=0
+healthString=""
+ 
+#OID declarations
+OID_upsBasicIdentModel=".1.3.6.1.4.1.318.1.1.1.1.1.1.0"
+OID_upsBasicIdentName=".1.3.6.1.4.1.318.1.1.1.1.1.2.0"
+
+OID_upsBasicBatteryStatus=".1.3.6.1.4.1.318.1.1.1.2.1.1.0" # unknown (1) ; batteryNormal (2) ; batteryLow (3)
+OID_upsAdvBatteryCapacity=".1.3.6.1.4.1.318.1.1.1.2.2.1.0" # %
+OID_upsHighPrecBatteryTemperature=".1.3.6.1.4.1.318.1.1.1.2.3.2.0" # ex : 235 = 23.5°C
+OID_upsAdvBatteryRunTimeRemaining=".1.3.6.1.4.1.318.1.1.1.2.2.3.0" # d:h:m:s.00
+OID_upsAdvBatteryReplaceIndicator=".1.3.6.1.4.1.318.1.1.1.2.2.4.0" # noBatteryNeedsReplacing (1) ; batteryNeedsReplacing (2)
+
+OID_upsAdvInputLineVoltage=".1.3.6.1.4.1.318.1.1.1.3.2.1.0" # integer
+OID_upsAdvInputMaxLineVoltage=".1.3.6.1.4.1.318.1.1.1.3.2.2.0" # integer
+OID_upsAdvInputMinLineVoltage=".1.3.6.1.4.1.318.1.1.1.3.2.3.0" # integer
+OID_upsBasicOutputStatus=".1.3.6.1.4.1.318.1.1.1.4.1.1.0" # unknown (1) ; onLine (2) ; onBattery (3) ; onSmartBoost (4) ; timedSleeping (5) ; softwareBypass (6) ; off (7) ; rebooting (8) ; switchedBypass (9) ; hardwareFailureBypass (10) ; sleepingUntilPowerReturn (11) ; onSmartTrim (12) ; ecoMode (13) ; hotStandby (14) ; onBatteryTest (15)
+OID_upsAdvOutputVoltage=".1.3.6.1.4.1.318.1.1.1.4.2.1.0" # integer
+OID_upsAdvOutputLoad=".1.3.6.1.4.1.318.1.1.1.4.2.3.0" # %
+
+OID_upsAdvTestDiagnosticsResults=".1.3.6.1.4.1.318.1.1.1.7.2.3.0" # ok (1) ; failed (2) ; invalidTest (3) ; testInProgress (4)
+OID_upsAdvTestLastDiagnosticsDate=".1.3.6.1.4.1.318.1.1.1.7.2.4.0" # "mm/dd/yyyy"
+
+OID_iemStatusProbeCurrentTemp=".1.3.6.1.4.1.318.1.1.10.2.3.2.1.4.1" # integer
+
+usage()
+{
+    echo "usage: ./check_snmp_apc_ups -u [snmp username] -p [snmp password] -H [hostname] -s [battery|IO|diag|baie]"
+    echo ""
+    exit 3
+}
+
+    
+while getopts u:p:H:s:o OPTNAME; do
+    case "$OPTNAME" in
+    u)
+        SNMPUSERNAME="$OPTARG"
+        option_found=1
+        ;;
+    p)
+        SNMPPASSWORD="$OPTARG"
+        option_found=1
+        ;;
+    H)
+        HOSTNAME="$OPTARG"
+        option_found=1
+        ;;
+    s)
+        SCRIPT="$OPTARG"
+        option_found=1
+        ;;
+    *)
+        usage
+        ;;
+    esac
+done
+ 
+if [ "$option_found" = "0" ] || [ "$HOSTNAME" = "" ] || [ "$SCRIPT" = "" ] ; then
+    usage
+else
+# get common infos
+ups=`$SNMPGET -OQne -t 10 -v 3 -l authNoPriv -u $SNMPUSERNAME -a MD5 -A $SNMPPASSWORD $HOSTNAME $OID_upsBasicIdentName $OID_upsBasicIdentModel 2> /dev/null`
+model=$(echo "$ups" | grep $OID_upsBasicIdentModel | cut -d"=" -f2 | cut -d"\"" -f2)
+name=$(echo "$ups" | grep $OID_upsBasicIdentName | cut -d"=" -f2 | cut -d"\"" -f2)
+
+healthString="$model ($name) :"
+
+    case "$SCRIPT" in
+    battery)
+        battery=`$SNMPGET -OQne -t 10 -v 3 -l authNoPriv -u $SNMPUSERNAME -a MD5 -A $SNMPPASSWORD $HOSTNAME $OID_upsBasicBatteryStatus $OID_upsAdvBatteryCapacity $OID_upsHighPrecBatteryTemperature $OID_upsAdvBatteryRunTimeRemaining $OID_upsAdvBatteryReplaceIndicator 2> /dev/null`
+	batteryStatus=$(echo "$battery" | grep $OID_upsBasicBatteryStatus | cut -d"=" -f2 | cut -d" " -f2)
+	batteryCapacity=$(echo "$battery" | grep $OID_upsAdvBatteryCapacity | cut -d"=" -f2| cut -d" " -f2)
+	batteryTemperature=$(echo "$battery" | grep $OID_upsHighPrecBatteryTemperature | cut -d"=" -f2 | cut -d" " -f2)
+	batteryRunTimeRemaning=$(echo "$battery" | grep $OID_upsAdvBatteryRunTimeRemaining | cut -d"=" -f2 | cut -d" " -f2)
+	batteryReplaceIndicator=$(echo "$battery" | grep $OID_upsAdvBatteryReplaceIndicator | cut -d"=" -f2 | cut -d" " -f2)
+        if [ "$batteryStatus" != "2" ]; then
+		healthString="$healthString Check Battery Status."
+		healthStatus="3"
+	else
+		healthString="$healthString Battery Status OK."
+	fi
+
+	healthString="$healthString Battery Capacity : $batteryCapacity%."
+	if [ "$batteryCapacity" -lt "90" ]; then
+		healthstring="3"
+	fi
+
+	tLength=${#batteryTemperature}
+	peTemp=$(echo $batteryTemperature | cut -c 1-$(($tLength-1)))
+	pdTemp=$(echo $batteryTemperature | cut -c $tLength-$tLength)
+	healthString="$healthString Internal Temp : $peTemp,$pdTemp°C."
+	if [ "$peTemp" -gt "30" ]; then
+		if [ "$peTemp" -gt "35" ]; then
+			healthStatus="2"
+		else
+			healthStatus="3"
+		fi
+	fi
+
+	hRemaining=$(echo $batteryRunTimeRemaning | cut -d":" -f2)
+	mRemaining=$(echo $batteryRunTimeRemaning | cut -d":" -f3)
+	healthString="$healthString Run Time Remaining : $hRemaining:$mRemaining"
+
+	if [ "$batteryReplaceIndicator" = "2" ]; then
+		healthString="$healthString Battery needs replacing"
+		healthStatus="2"
+	fi
+
+	healthString="$healthString | batteryCapacity=$batteryCapacity; internalTemp=$peTemp.$pdTemp;30;35;"
+
+	if [ "$healthStatus" = "3" ]; then
+            echo "WARNING - $healthString"
+            exit 1
+        elif [ "$healthStatus" = "2" ]; then
+            echo "CRITICAL - $healthString"
+            exit 2
+        else
+            echo "$healthString"
+            exit 0
+        fi
+        ;;
+    IO)
+        IO=`$SNMPGET -OQne -t 10 -v 3 -l authNoPriv -u $SNMPUSERNAME -a MD5 -A $SNMPPASSWORD $HOSTNAME $OID_upsAdvInputLineVoltage $OID_upsAdvInputMaxLineVoltage $OID_upsAdvInputMinLineVoltage $OID_upsBasicOutputStatus $OID_upsAdvOutputVoltage $OID_upsAdvOutputLoad 2> /dev/null`
+	inputVoltage=$(echo "$IO" | grep $OID_upsAdvInputLineVoltage | cut -d"=" -f2 | cut -d" " -f2)
+	inputMaxVoltage=$(echo "$IO" | grep $OID_upsAdvInputMaxLineVoltage | cut -d"=" -f2 | cut -d" " -f2)
+	inputMinVoltage=$(echo "$IO" | grep $OID_upsAdvInputMinLineVoltage | cut -d"=" -f2 | cut -d" " -f2)
+	outputStatus=$(echo "$IO" | grep $OID_upsBasicOutputStatus | cut -d"=" -f2 | cut -d" " -f2)
+	outputVoltage=$(echo "$IO" | grep $OID_upsAdvOutputVoltage | cut -d"=" -f2 | cut -d" " -f2)
+	outputLoad=$(echo "$IO" | grep $OID_upsAdvOutputLoad | cut -d"=" -f2 | cut -d" " -f2)
+
+        if [ "$inputVoltage" -gt "$inputMaxVoltage" ] || [ "$inputVoltage" -lt "$inputMinVoltage" ]; then
+		healthString="$healthString Incorrect Input Voltage ($inputVoltage V)."
+		healthStatus="2"
+	else
+		healthString="$healthString Input Voltage ($inputVoltage V)."
+	fi
+
+	case "$outputStatus" in
+	1)
+		oStatus="unknown"
+		if [ "$healthStatus" != "2" ]; then healthStatus="3"; fi
+	;;
+	2)
+                oStatus="onLine"
+        ;;
+	3)
+                oStatus="onBattery"
+		if [ "$healthStatus" != "2" ]; then healthStatus="3"; fi
+        ;;
+        4)
+                oStatus="onSmartBoost"
+		if [ "$healthStatus" != "2" ]; then healthStatus="3"; fi
+        ;;
+        5)
+                oStatus="timedSleeping"
+		if [ "$healthStatus" != "2" ]; then healthStatus="3"; fi
+        ;;
+        6)
+                oStatus="softwareBypass"
+		if [ "$healthStatus" != "2" ]; then healthStatus="3"; fi
+        ;;
+        7)
+                oStatus="off"
+                healthStatus="2"
+        ;;
+        8)
+                oStatus="rebooting"
+                healthStatus="2"
+        ;;
+        9)
+                oStatus="switchedBypass"
+		if [ "$healthStatus" != "2" ]; then healthStatus="3"; fi
+        ;;
+        10)
+                oStatus="hardwareFailureBypass"
+                healthStatus="2"
+        ;;
+        11)
+                oStatus="sleepingUntilPowerReturn"
+                healthStatus="2"
+        ;;
+        12)
+                oStatus="onSmartTrim"
+		if [ "$healthStatus" != "2" ]; then healthStatus="3"; fi
+        ;;
+        13)
+                oStatus="ecoMode"
+		if [ "$healthStatus" != "2" ]; then healthStatus="3"; fi
+        ;;
+        14)
+                oStatus="hotStandby"
+                healthStatus="2"
+        ;;
+        15)
+                oStatus="onBatteryTest"
+		if [ "$healthStatus" != "2" ]; then healthStatus="3"; fi
+        ;;
+        esac
+	healthString="$healthString Output Status : $oStatus."
+
+	healthString="$healthString Output Voltage : $outputVoltage""V."
+
+	healthString="$healthString Output Load : $outputLoad%"
+	if [ "$outputLoad" -gt "70" ]; then
+		if [ "$outputLoad" -gt "80" ]; then
+			healthString="$healthString > 80%."
+			healthStatus="2"
+		else
+			healthString="$healthString > 70%."
+			if [ "$healthStatus" != "2" ]; then healthStatus="3"; fi
+		fi
+	fi
+
+	healthString="$healthString | outputVoltage=$outputVoltage; outputLoad=$outputLoad;70;80;"
+
+	if [ "$healthStatus" = "3" ]; then
+            echo "WARNING - $healthString"
+            exit 1
+        elif [ "$healthStatus" = "2" ]; then
+            echo "CRITICAL - $healthString"
+            exit 2
+        else
+            echo "$healthString"
+            exit 0
+        fi
+        ;;
+	diag)
+        diag=`$SNMPGET -OQne -t 10 -v 3 -l authNoPriv -u $SNMPUSERNAME -a MD5 -A $SNMPPASSWORD $HOSTNAME $OID_upsAdvTestDiagnosticsResults $OID_upsAdvTestLastDiagnosticsDate 2> /dev/null`
+        diagResult=$(echo "$diag" | grep $OID_upsAdvTestDiagnosticsResults | cut -d"=" -f2 | cut -d" " -f2)
+        diagDate=$(echo "$diag" | grep $OID_upsAdvTestLastDiagnosticsDate | cut -d"=" -f2| cut -d" " -f2 | cut -d"\"" -f2)
+
+        if [ "$diagResult" != "1" ]; then
+                healthString="$healthString Diagnostic failed"
+                healthStatus="2"
+        else
+                healthString="$healthString Diagnostic OK"
+        fi
+
+	dDiag=$(echo "$diagDate" | cut -d"/" -f2)
+	mDiag=$(echo "$diagDate" | cut -d"/" -f1)
+	yDiag=$(echo "$diagDate" | cut -d"/" -f3)
+	healthString="$healthString ($dDiag/$mDiag/$yDiag)"
+
+        if [ "$healthStatus" = "2" ]; then
+            echo "CRITICAL - $healthString"
+            exit 2
+        else
+            echo "$healthString"
+            exit 0
+        fi
+        ;;
+	baie)
+	temp=`$SNMPGET -OQne -t 10 -v 3 -l authNoPriv -u $SNMPUSERNAME -a MD5 -A $SNMPPASSWORD $HOSTNAME $OID_iemStatusProbeCurrentTemp | cut -d"=" -f2 | cut -d" " -f2 2> /dev/null`
+	if [ "$temp" -gt "30" ]; then
+                if [ "$temp" -gt "35" ]; then
+                        echo "CRITICAL - $healthString Environment Temp $temp° > 35°. | envTemp=$temp;30;35;"
+			exit 2
+                else
+                        echo "WARNING - $healthString Environment Temp $temp° > 30°. | envTemp=$temp;30;35;"
+			exit 1
+                fi
+	else
+		echo "$healthString Environment Temp $temp°. | envTemp=$temp;30;35;"
+		exit 0
+        fi
+	;;
+    esac
+fi
+
+
