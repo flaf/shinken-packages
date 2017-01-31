@@ -1,3 +1,10 @@
+shinken-packs (2.0.0) unstable; urgency=medium
+
+  * Add templates from Guillame Barré.
+  * Update the "ping" template.
+
+ -- François Lafont <francois.lafont@ac-versailles.fr>  Tue, 31 Jan 2017 18:55:49 +0100
+
 shinken-packs (1.9.7) unstable; urgency=medium
 
   * Add the "dns" template.
