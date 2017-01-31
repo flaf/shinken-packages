@@ -1,0 +1,329 @@
+#!/bin/bash
+# check_synology via snmp for shinken
+# 2015-01-08 Create script
+# -----------------------------------------------
+# check status of Synology NAS
+#
+# Use SNMP V3
+# Developped with DSM 5.1
+# -----------------------------------------------
+# Based on http://ukdl.synology.com/download/Document/MIBGuide/Synology_DiskStation_MIB_Guide.pdf
+# -----------------------------------------------
+
+SNMPVERSION="3"
+SNMPWALK=$(which snmpwalk)
+SNMPGET=$(which snmpget)
+SNMPTABLE=$(which snmptable) 
+
+HOSTNAME=""
+option_found=0
+healthStatus=0
+healthString=""
+verbose="no"
+ 
+#OID declarations
+OID_syno="1.3.6.1.4.1.6574"
+OID_model="1.3.6.1.4.1.6574.1.5.1.0"
+OID_serialNumber="1.3.6.1.4.1.6574.1.5.2.0"
+OID_DSMVersion="1.3.6.1.4.1.6574.1.5.3.0"
+OID_upgradeAvailable="1.3.6.1.4.1.6574.1.5.4.0"
+OID_systemStatus="1.3.6.1.4.1.6574.1.1.0"
+OID_powerStatus="1.3.6.1.4.1.6574.1.3.0"
+OID_systemFanStatus="1.3.6.1.4.1.6574.1.4.1.0"
+OID_CPUFanStatus="1.3.6.1.4.1.6574.1.4.2.0"
+OID_temp="1.3.6.1.4.1.6574.1.2.0"
+ 
+
+usage()
+{
+    echo "usage: ./check_synology -u [snmp username] -p [snmp password] -H [hostname] -s [cpu|ram|disk|volume|raid|upgrade]"
+    echo ""
+    exit 3
+}
+
+    
+while getopts u:p:H:s:o OPTNAME; do
+    case "$OPTNAME" in
+    u)
+        SNMPUSERNAME="$OPTARG"
+        option_found=1
+        ;;
+    p)
+        SNMPPASSWORD="$OPTARG"
+        option_found=1
+        ;;
+    H)
+        HOSTNAME="$OPTARG"
+        option_found=1
+        ;;
+    s)
+        SCRIPT="$OPTARG"
+        option_found=1
+        ;;
+    *)
+        usage
+        ;;
+    esac
+done
+ 
+if [ "$option_found" = "0" ] || [ "$HOSTNAME" = "" ] || [ "$SCRIPT" = "" ] ; then
+    usage
+else
+#    syno=`$SNMPGET -OQne -t 10 -v 3 -l authNoPriv -u $SNMPUSERNAME  -a MD5 -A $SNMPPASSWORD $HOSTNAME $OID_model $OID_serialNumber $OID_DSMVersion 2> /dev/null`
+#    if [ "$?" != "0" ] ; then
+#        echo "CRITICAL - Problem with SNMP request"
+#        exit 2
+#    fi
+#
+#    model=$(echo "$syno" | grep $OID_model | cut -d "=" -f2)
+#    serialNumber=$(echo "$syno" | grep $OID_serialNumber | cut -d "=" -f2)
+#    DSMVersion=$(echo "$syno" | grep $OID_DSMVersion | cut -d "=" -f2)
+#
+#    healthString="Synology $model (s/n:$serialNumber, $DSMVersion)"
+
+    case "$SCRIPT" in
+    cpu)
+        OID_ssCpuUser="1.3.6.1.4.1.2021.11.9.0"
+        OID_ssCpuSystem="1.3.6.1.4.1.2021.11.10.0"
+        cpu=`$SNMPGET -OQne -t 10 -v 3 -l authNoPriv -u $SNMPUSERNAME  -a MD5 -A $SNMPPASSWORD $HOSTNAME $OID_ssCpuUser $OID_ssCpuSystem 2> /dev/null`
+
+        cpuUser=$(echo "$cpu" | grep $OID_ssCpuUser | cut -d"=" -f2)
+        cpuSystem=$(echo "$cpu" | grep $OID_ssCpuSystem | cut -d"=" -f2 | cut -d" " -f2)
+
+        averageLoad=$(( $cpuUser + $cpuSystem ))
+        healthString="average load $averageLoad%"
+        if [ "$averageLoad" -gt "90" ] && [ "$averageLoad" -le "95" ]; then
+            echo "WARNING - 90% < $healthString < 95%"
+            exit 1
+        elif [ "$averageLoad" -gt "95" ]; then
+            echo "CRITICAL - $healthString > 95%"
+            exit 2
+        else
+            echo "$healthString < 90%"
+            exit 0
+        fi
+        ;;
+    ram)
+        OID_memTotalSwap="1.3.6.1.4.1.2021.4.3.0"
+        OID_memAvailSwap="1.3.6.1.4.1.2021.4.4.0"
+        OID_memTotalReal="1.3.6.1.4.1.2021.4.5.0"
+        OID_memAvailReal="1.3.6.1.4.1.2021.4.6.0"
+        OID_memTotalFree="1.3.6.1.4.1.2021.4.11.0"
+        OID_memBuffer="1.3.6.1.4.1.2021.4.14.0"
+        OID_memCached="1.3.6.1.4.1.2021.4.15.0"
+
+        memory=`$SNMPGET -OQne -t 10 -v 3 -l authNoPriv -u $SNMPUSERNAME  -a MD5 -A $SNMPPASSWORD $HOSTNAME $OID_memTotalSwap $OID_memAvailSwap $OID_memTotalReal $OID_memAvailReal $OID_memTotalFree $OID_memShared $OID_memBuffer $OID_memCached 2> /dev/null`
+        
+        memTotalSwap=$(echo "$memory" | grep $OID_memTotalSwap | cut -d "=" -f2 | cut -d" " -f2)
+        memAvailSwap=$(echo "$memory" | grep $OID_memAvailSwap | cut -d "=" -f2 | cut -d" " -f2)
+        memTotalReal=$(echo "$memory" | grep $OID_memTotalReal | cut -d "=" -f2 | cut -d" " -f2)
+        memAvailReal=$(echo "$memory" | grep $OID_memAvailReal | cut -d "=" -f2 | cut -d" " -f2)
+        memTotalFree=$(echo "$memory" | grep $OID_memTotalFree | cut -d "=" -f2 | cut -d" " -f2)
+        memBuffer=$(echo "$memory" | grep $OID_memBuffer | cut -d "=" -f2 | cut -d" " -f2)
+        memCached=$(echo "$memory" | grep $OID_memCached | cut -d "=" -f2 | cut -d" " -f2)
+
+        memUsedReal=$(($memTotalReal - $memAvailReal - $memBuffer - $memCached))
+        memReal=$(( 100 * $memUsedReal / $memTotalReal ))
+        memSwap=$(( 100 * ($memTotalSwap - $memAvailSwap) / $memTotalSwap ))
+
+        if [ "$memReal" -gt "80" ] && [ "$memReal" -le "90" ]; then healthStatus=3
+        elif [ "$memReal" -gt "90" ]; then healthStatus=2
+        else healthStatus=0
+        fi
+         
+        if [ "$memSwap" -gt "80" ] && [ "$memSwap" -le "90" ]; then
+            if [ "$healthStatus" != 2 ]; then healthStatus=3; fi
+        elif [ "$memSwap" -gt "90" ]; then
+            healthStatus=2
+        else
+            if [ "$healthStatus" -le 1 ]; then healthStatus=0; fi
+        fi
+
+        healthString="RAM : $memReal%, Swap : $memSwap%"
+
+        if [ "$healthStatus" = "3" ] ; then
+            echo "WARNING - $healthString"
+            exit 1
+        elif [ "$healthStatus" = "2" ] ; then
+            echo "CRITICAL - $healthString"
+            exit 2
+        else
+            echo $healthString
+            exit 0
+        fi
+        ;;
+    disk)
+        OID_disk=""
+        OID_diskID="1.3.6.1.4.1.6574.2.1.1.2"
+        OID_diskModel="1.3.6.1.4.1.6574.2.1.1.3"
+        OID_diskStatus="1.3.6.1.4.1.6574.2.1.1.5"
+        OID_diskTemp="1.3.6.1.4.1.6574.2.1.1.6"
+ 
+        nbDisk=`$SNMPWALK -OQne -t 10 -v 3 -l authNoPriv -u $SNMPUSERNAME  -a MD5 -A $SNMPPASSWORD $HOSTNAME 1.3.6.1.4.1.6574.2.1.1.2 2> /dev/null | wc -l `
+        for i in `seq 1 $nbDisk`;
+        do
+            OID_disk="$OID_disk $OID_diskID.$(($i-1)) $OID_diskModel.$(($i-1)) $OID_diskStatus.$(($i-1)) $OID_diskTemp.$(($i-1)) "
+        done
+
+        syno=`$SNMPGET -OQne -t 10 -v 3 -l authNoPriv -u $SNMPUSERNAME  -a MD5 -A $SNMPPASSWORD $HOSTNAME $OID_disk 2> /dev/null`
+        for i in `seq 1 $nbDisk`;
+        do
+            diskID[$i]=$(echo "$syno" | grep "$OID_diskID.$(($i-1)) " | cut -d "=" -f2)
+            diskModel[$i]=$(echo "$syno" | grep "$OID_diskModel.$(($i-1)) " | cut -d "=" -f2)
+            diskStatus[$i]=$(echo "$syno" | grep "$OID_diskStatus.$(($i-1)) " | cut -d "=" -f2 | sed 's/^[ \t]*//;s/[ \t]*$//')
+            diskTemp[$i]=$(echo "$syno" | grep "$OID_diskTemp.$(($i-1)) " | cut -d "=" -f2 | sed 's/^[ \t]*//;s/[ \t]*$//')
+ 
+            if [ "${diskStatus[$i]}" != "1" ] && [ "${diskStatus[$i]}" != "2" ] ; then  
+                if [ "${diskStatus[$i]}" = "3" ] ; then diskStatus[$i]="NotInitialized"; fi  
+                if [ "${diskStatus[$i]}" = "4" ] ; then diskStatus[$i]="SystemPartitionFailed"; fi  
+                if [ "${diskStatus[$i]}" = "5" ] ; then diskStatus[$i]="Crashed"; fi  
+                healthStatus=2  
+                healthString="$healthString ${diskID[$i]} (model:${diskModel[$i]}) status:${diskStatus[$i]} temperature:${diskTemp[$i]} C ;"  
+            elif [ "${diskStatus[$i]}" = "2" ] ; then diskStatus[$i]="Initialized";  
+            else  
+                diskStatus[$i]="Normal"  
+            fi
+        done  
+        if [ "$healthStatus" = "0" ] ; then
+            echo "Disks OK"
+            exit 0
+        else
+            echo "CRITICAL -"$heathString
+            exit 2
+        fi
+        ;;
+    volume)
+        OID_Storage="1.3.6.1.2.1.25.2.3"
+        nbStorages=`$SNMPTABLE -mALL -t 10 -v 3 -l authnopriv -u $SNMPUSERNAME -a MD5 -A $SNMPPASSWORD $HOSTNAME $OID_Storage | grep volume 2> /dev/null | wc -l`
+        storages=`$SNMPTABLE -mALL -t 10 -v 3 -l authnopriv -u $SNMPUSERNAME -a MD5 -A $SNMPPASSWORD $HOSTNAME $OID_Storage | grep volume 2> /dev/null`
+        
+        for i in `seq 1 $nbStorages`;
+        do
+            storage=$(echo $storages | cut -d"?" -f$i)
+            storageID[$i]=$(echo $storage | cut -d " " -f1)
+            storageName[$i]=$(echo $storage | cut -d " " -f3)
+            storageAU[$i]=$(echo $storage | cut -d " " -f4)
+            storageSize[$i]=$(echo $storage | cut -d " " -f6)
+            storageUsed[$i]=$(echo $storage | cut -d " " -f7)
+
+            storageStatus[$i]=$(( ${storageUsed[$i]} *100 / ${storageSize[$i]} ))
+            storageUnit[$i]=$(( ${storageAU[$i]} )) 
+            storageSize[$i]=$(( ${storageSize[$i]} * ${storageUnit[$i]} /1024/1024/1024 ))
+            storageSizeUnit[$i]="Go"
+#            if [ "${storageSize[$i]}" -ge 1024 ]; then
+#                storageSize[$i]=$(( ${storageSize[$i]} /1024 ))
+#                storageSizeUnit[$i]="To"
+#            fi
+            storageUsed[$i]=$(( ${storageUsed[$i]} * ${storageUnit[$i]} /1024/1024/1024))
+            storageUsedUnit[$i]="Go"
+#            if [ "${storageUsed[$i]}" -ge 1024 ]; then
+#                storageUsed[$i]=$(( ${storageUsed[$i]} /1024 ))
+#                storageUsedUnit[$i]="To"
+#            fi
+
+            if [ "${storageStatus[$i]}" -gt "80" ] && [ "${storageStatus[$i]}" -le "90" ]; then 
+                if [ "$healthStatus" != 2 ]; then healthStatus=3; fi
+            elif [ "${storageStatus[$i]}" -gt "90" ]; then
+                healthStatus=2
+            else
+                if [ "$healthStatus" -le 1 ]; then healthStatus=0; fi
+            fi
+            healthString="$healthString ${storageName[$i]} ${storageStatus[$i]}% (${storageUsed[$i]} ${storageUsedUnit[$i]} / ${storageSize[$i]} ${storageSizeUnit[$i]})"
+        done
+
+
+        if [ "$healthStatus" = "3" ] ; then 
+            echo "WARNING -"$healthString" (thresholds 80% | 90%)"
+            exit 1
+        elif [ "$healthStatus" = "2" ] ; then
+            echo "CRITICAL -"$healthString" (thresholds 80% | 90%)"
+            exit 2
+        else
+            echo "Disk space ok :"$healthString" (thresholds 80% | 90%)"
+            exit 0
+        fi
+
+        ;;
+    raid)
+        OID_RAID=""
+        OID_RAIDName="1.3.6.1.4.1.6574.3.1.1.2"
+        OID_RAIDStatus="1.3.6.1.4.1.6574.3.1.1.3"
+
+        nbRAID=`$SNMPWALK -OQne -t 10 -v 3 -l authNoPriv -u $SNMPUSERNAME  -a MD5 -A $SNMPPASSWORD $HOSTNAME 1.3.6.1.4.1.6574.3.1.1.2 2> /dev/null | wc -l `
+
+        for i in `seq 1 $nbRAID`;
+        do
+            OID_RAID="$OID_RAID $OID_RAIDName.$(($i-1)) $OID_RAIDStatus.$(($i-1))"
+        done
+
+        raid=`$SNMPGET -OQne -t 10 -v 3 -l authNoPriv -u $SNMPUSERNAME  -a MD5 -A $SNMPPASSWORD $HOSTNAME $OID_RAID 2> /dev/null`
+
+        healthString="$nbRAID volumes"
+        RAIDName=$(echo "$raid" | grep $OID_RAIDName | cut -d "=" -f2)
+        RAIDStatus=$(echo "$raid" | grep $OID_RAIDStatus | cut -d "=" -f2 | sed 's/^[ \t]*//;s/[ \t]*$//')
+        
+        for i in `seq 1 $nbRAID`;
+        do
+            RAIDName[$i]=$(echo "$raid" | grep $OID_RAIDName.$(($i-1)) | cut -d "=" -f2)
+            RAIDStatus[$i]=$(echo "$raid" | grep $OID_RAIDStatus.$(($i-1)) | cut -d "=" -f2 | sed 's/^[ \t]*//;s/[ \t]*$//')
+ 
+            if [ "${RAIDStatus[$i]}" != "1" ] ; then
+                if [ "${RAIDStatus[$i]}" = "2" ] ; then      RAIDStatus[$i]="Repairing";                     fi
+                if [ "${RAIDStatus[$i]}" = "3" ] ; then      RAIDStatus[$i]="Migrating";                     fi
+                if [ "${RAIDStatus[$i]}" = "4" ] ; then      RAIDStatus[$i]="Expanding";                     fi
+                if [ "${RAIDStatus[$i]}" = "5" ] ; then      RAIDStatus[$i]="Deleting";                      fi
+                if [ "${RAIDStatus[$i]}" = "6" ] ; then      RAIDStatus[$i]="Creating";                      fi
+                if [ "${RAIDStatus[$i]}" = "7" ] ; then      RAIDStatus[$i]="RaidSyncing";                   fi
+                if [ "${RAIDStatus[$i]}" = "8" ] ; then      RAIDStatus[$i]="RaidParityChecking";            fi
+                if [ "${RAIDStatus[$i]}" = "9" ] ; then      RAIDStatus[$i]="RaidAssembling";                fi
+                if [ "${RAIDStatus[$i]}" = "10" ] ; then     RAIDStatus[$i]="Canceling";                     fi
+                if [ "${RAIDStatus[$i]}" = "11" ] ; then     RAIDStatus[$i]="Degrade";                       fi
+                if [ "${RAIDStatus[$i]}" = "12" ] ; then     RAIDStatus[$i]="Crashed";                       fi
+   
+                healthStatus=2
+                healthString="$healthString, ${RAIDName[$i]} ($RAIDStatus)"
+            else
+                healthString="$healthString, ${RAIDName[$i]} (Normal)"
+            fi
+        done
+
+        if [ "$healthStatus" = "2" ] ; then
+            echo "CRITICAL -"$healthString
+            exit 2
+        else
+            echo $healthString
+            exit 0
+        fi
+        ;;
+    upgrade)
+        OID_upgradeAvailable="1.3.6.1.4.1.6574.1.5.4.0"
+        OID_DSMVersion="1.3.6.1.4.1.6574.1.5.3.0"
+        OID_model="1.3.6.1.4.1.6574.1.5.1.0"
+        OID_serialNumber="1.3.6.1.4.1.6574.1.5.2.0"
+        syno=`$SNMPGET -OQne -t 10 -v 3 -l authNoPriv -u $SNMPUSERNAME  -a MD5 -A $SNMPPASSWORD $HOSTNAME $OID_model $OID_serialNumber $OID_upgradeAvailable $OID_DSMVersion 2> /dev/null`
+
+        model=$(echo "$syno" | grep $OID_model | cut -d "=" -f2)
+        serialNumber=$(echo "$syno" | grep $OID_serialNumber | cut -d "=" -f2)
+        DSMVersion=$(echo "$syno" | grep $OID_DSMVersion | cut -d "=" -f2)
+        upgradeAvailable=$(echo "$syno" | grep $OID_upgradeAvailable | cut -d "=" -f2)
+
+        if [ "$upgradeAvailable" -eq "1" ] ; then OID_upgradeAvailable="Available"     healthStatus=3 ;   fi
+        if [ "$upgradeAvailable" -eq "2" ] ; then  OID_upgradeAvailable="Unavailable"  healthStatus=0 ;   fi
+        if [ "$upgradeAvailable" -eq "3" ] ; then OID_upgradeAvailable="Connecting"    healthStatus=0 ;   fi
+        if [ "$upgradeAvailable" -eq "4" ] ; then OID_upgradeAvailable="Disconnected"  healthStatus=3 ;   fi
+        if [ "$upgradeAvailable" -eq "5" ] ; then OID_upgradeAvailable="Others"        healthStatus=0 ;   fi
+
+        healthString="Synology $model (s/n:$serialNumber, $DSMVersion)"
+
+        if [ "$healthStatus" = "3" ] ; then
+            echo "WARNING - Upgrade $OID_upgradeAvailable for $healthString"
+            exit 1
+        else
+            echo "No upgrade available for $healthString"
+            exit 0
+        fi
+        ;;
+    esac
+fi
+
+
