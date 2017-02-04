@@ -19,6 +19,6 @@
 export LC_ALL=C
 export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
 
-df --portability --inodes --local | tail -n +2 | grep "^/" | sort | awk '{ print $1":"$5 }'
+df --portability --inodes --local | awk '$1 ~ /(^\/|pool)/ { print $1":"$5 }' | sort
 
 
