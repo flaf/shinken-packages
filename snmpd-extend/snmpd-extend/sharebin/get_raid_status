@@ -164,6 +164,32 @@ do
     fi
 done
 
+
+if which storcli > /dev/null
+then
+    "$VERBOSE" && storcli /call/vall show
+
+    RAID_FOUND="$RAID_FOUND storcli"
+    output=$(storcli /call/vall show | gawk '$1 ~ /^(Status|[[:digit:]]+\/[[:digit:]]+)$/ {print $3}' 2>&1)
+
+    # By default, the RAID is bad unless all is good.
+    bad_raid=true
+    status_cmd=$(printf '%s\n' "$output" | head -n1)
+    status_vd=$(printf '%s\n' "$output" | tail -n'+2' | sort | uniq)
+    [ "$status_cmd" = 'Success' ] && [ "$status_vd" = 'Optl' ] && bad_raid=false
+
+    if "$bad_raid"
+    then
+        final_message "RAID problem (for further information try the storcli command)."
+    fi
+
+    unset output
+    unset bad_raid
+    unset status_cmd
+    unset status_vd
+fi
+
+
 if which mdadm > /dev/null
 then
     RAID_FOUND="$RAID_FOUND software"
