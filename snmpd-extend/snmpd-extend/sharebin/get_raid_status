@@ -130,8 +130,10 @@ do
         else
             final_message "RAID problem (for further information try the $cciss_cmd command)."
         fi
+        unset device
     fi
 done
+unset cciss_cmd
 
 
 if which mpt-status >/dev/null
@@ -230,6 +232,10 @@ then
     then
         final_message 'RAID problem (for further information try the areca-cli command).'
     fi
+
+    unset output
+    unset l
+    unset n
 fi
 
 
@@ -248,6 +254,10 @@ then
     then
         final_message 'RAID problem (for further information try the command: hpssacli controller all show status).'
     fi
+
+    unset output
+    unset n
+    unset bad_lines_number
 fi
 
 
