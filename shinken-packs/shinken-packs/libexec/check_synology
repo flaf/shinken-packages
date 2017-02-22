@@ -85,7 +85,7 @@ else
     cpu)
         OID_ssCpuUser="1.3.6.1.4.1.2021.11.9.0"
         OID_ssCpuSystem="1.3.6.1.4.1.2021.11.10.0"
-        cpu=`$SNMPGET -OQne -t 10 -v 3 -l authNoPriv -u $SNMPUSERNAME  -a MD5 -A $SNMPPASSWORD $HOSTNAME $OID_ssCpuUser $OID_ssCpuSystem 2> /dev/null`
+        cpu=$($SNMPGET -OQne -t 10 -v 3 -l authNoPriv -u "$SNMPUSERNAME" -a MD5 -A "$SNMPPASSWORD" "$HOSTNAME" $OID_ssCpuUser $OID_ssCpuSystem 2> /dev/null)
 
         cpuUser=$(echo "$cpu" | grep $OID_ssCpuUser | cut -d"=" -f2)
         cpuSystem=$(echo "$cpu" | grep $OID_ssCpuSystem | cut -d"=" -f2 | cut -d" " -f2)
@@ -112,7 +112,7 @@ else
         OID_memBuffer="1.3.6.1.4.1.2021.4.14.0"
         OID_memCached="1.3.6.1.4.1.2021.4.15.0"
 
-        memory=`$SNMPGET -OQne -t 10 -v 3 -l authNoPriv -u $SNMPUSERNAME  -a MD5 -A $SNMPPASSWORD $HOSTNAME $OID_memTotalSwap $OID_memAvailSwap $OID_memTotalReal $OID_memAvailReal $OID_memTotalFree $OID_memShared $OID_memBuffer $OID_memCached 2> /dev/null`
+        memory=$($SNMPGET -OQne -t 10 -v 3 -l authNoPriv -u "$SNMPUSERNAME" -a MD5 -A "$SNMPPASSWORD" "$HOSTNAME" $OID_memTotalSwap $OID_memAvailSwap $OID_memTotalReal $OID_memAvailReal $OID_memTotalFree $OID_memShared $OID_memBuffer $OID_memCached 2> /dev/null)
         
         memTotalSwap=$(echo "$memory" | grep $OID_memTotalSwap | cut -d "=" -f2 | cut -d" " -f2)
         memAvailSwap=$(echo "$memory" | grep $OID_memAvailSwap | cut -d "=" -f2 | cut -d" " -f2)
@@ -159,14 +159,14 @@ else
         OID_diskStatus="1.3.6.1.4.1.6574.2.1.1.5"
         OID_diskTemp="1.3.6.1.4.1.6574.2.1.1.6"
  
-        nbDisk=`$SNMPWALK -OQne -t 10 -v 3 -l authNoPriv -u $SNMPUSERNAME  -a MD5 -A $SNMPPASSWORD $HOSTNAME 1.3.6.1.4.1.6574.2.1.1.2 2> /dev/null | wc -l `
-        for i in `seq 1 $nbDisk`;
+        nbDisk=$($SNMPWALK -OQne -t 10 -v 3 -l authNoPriv -u "$SNMPUSERNAME" -a MD5 -A "$SNMPPASSWORD" "$HOSTNAME" $OID_diskID 2> /dev/null | wc -l )
+        for i in $(seq 1 $nbDisk);
         do
             OID_disk="$OID_disk $OID_diskID.$(($i-1)) $OID_diskModel.$(($i-1)) $OID_diskStatus.$(($i-1)) $OID_diskTemp.$(($i-1)) "
         done
 
-        syno=`$SNMPGET -OQne -t 10 -v 3 -l authNoPriv -u $SNMPUSERNAME  -a MD5 -A $SNMPPASSWORD $HOSTNAME $OID_disk 2> /dev/null`
-        for i in `seq 1 $nbDisk`;
+        syno=$($SNMPGET -OQne -t 10 -v 3 -l authNoPriv -u "$SNMPUSERNAME" -a MD5 -A "$SNMPPASSWORD" "$HOSTNAME" $OID_disk 2> /dev/null)
+        for i in $(seq 1 $nbDisk$);
         do
             diskID[$i]=$(echo "$syno" | grep "$OID_diskID.$(($i-1)) " | cut -d "=" -f2)
             diskModel[$i]=$(echo "$syno" | grep "$OID_diskModel.$(($i-1)) " | cut -d "=" -f2)
@@ -194,10 +194,10 @@ else
         ;;
     volume)
         OID_Storage="1.3.6.1.2.1.25.2.3"
-        nbStorages=`$SNMPTABLE -mALL -t 10 -v 3 -l authnopriv -u $SNMPUSERNAME -a MD5 -A $SNMPPASSWORD $HOSTNAME $OID_Storage | grep volume 2> /dev/null | wc -l`
-        storages=`$SNMPTABLE -mALL -t 10 -v 3 -l authnopriv -u $SNMPUSERNAME -a MD5 -A $SNMPPASSWORD $HOSTNAME $OID_Storage | grep volume 2> /dev/null`
+        nbStorages=$($SNMPTABLE -mALL -t 10 -v 3 -l authnopriv -u "$SNMPUSERNAME" -a MD5 -A "$SNMPPASSWORD" "$HOSTNAME" $OID_Storage | grep volume 2> /dev/null | wc -l)
+        storages=$($SNMPTABLE -mALL -t 10 -v 3 -l authnopriv -u "$SNMPUSERNAME" -a MD5 -A "$SNMPPASSWORD" "$HOSTNAME" $OID_Storage | grep volume 2> /dev/null)
         
-        for i in `seq 1 $nbStorages`;
+        for i in $(seq 1 $nbStorages);
         do
             storage=$(echo $storages | cut -d"?" -f$i)
             storageID[$i]=$(echo $storage | cut -d " " -f1)
@@ -249,20 +249,20 @@ else
         OID_RAIDName="1.3.6.1.4.1.6574.3.1.1.2"
         OID_RAIDStatus="1.3.6.1.4.1.6574.3.1.1.3"
 
-        nbRAID=`$SNMPWALK -OQne -t 10 -v 3 -l authNoPriv -u $SNMPUSERNAME  -a MD5 -A $SNMPPASSWORD $HOSTNAME 1.3.6.1.4.1.6574.3.1.1.2 2> /dev/null | wc -l `
+        nbRAID=$($SNMPWALK -OQne -t 10 -v 3 -l authNoPriv -u "$SNMPUSERNAME" -a MD5 -A "$SNMPPASSWORD" "$HOSTNAME" $OID_RAIDName 2> /dev/null | wc -l )
 
-        for i in `seq 1 $nbRAID`;
+        for i in $(seq 1 $nbRAID);
         do
             OID_RAID="$OID_RAID $OID_RAIDName.$(($i-1)) $OID_RAIDStatus.$(($i-1))"
         done
 
-        raid=`$SNMPGET -OQne -t 10 -v 3 -l authNoPriv -u $SNMPUSERNAME  -a MD5 -A $SNMPPASSWORD $HOSTNAME $OID_RAID 2> /dev/null`
+        raid=$($SNMPGET -OQne -t 10 -v 3 -l authNoPriv -u "$SNMPUSERNAME" -a MD5 -A "$SNMPPASSWORD" "$HOSTNAME" $OID_RAID 2> /dev/null)
 
         healthString="$nbRAID volumes"
         RAIDName=$(echo "$raid" | grep $OID_RAIDName | cut -d "=" -f2)
         RAIDStatus=$(echo "$raid" | grep $OID_RAIDStatus | cut -d "=" -f2 | sed 's/^[ \t]*//;s/[ \t]*$//')
         
-        for i in `seq 1 $nbRAID`;
+        for i in $(seq 1 $nbRAID);
         do
             RAIDName[$i]=$(echo "$raid" | grep $OID_RAIDName.$(($i-1)) | cut -d "=" -f2)
             RAIDStatus[$i]=$(echo "$raid" | grep $OID_RAIDStatus.$(($i-1)) | cut -d "=" -f2 | sed 's/^[ \t]*//;s/[ \t]*$//')
@@ -300,7 +300,7 @@ else
         OID_DSMVersion="1.3.6.1.4.1.6574.1.5.3.0"
         OID_model="1.3.6.1.4.1.6574.1.5.1.0"
         OID_serialNumber="1.3.6.1.4.1.6574.1.5.2.0"
-        syno=`$SNMPGET -OQne -t 10 -v 3 -l authNoPriv -u $SNMPUSERNAME  -a MD5 -A $SNMPPASSWORD $HOSTNAME $OID_model $OID_serialNumber $OID_upgradeAvailable $OID_DSMVersion 2> /dev/null`
+        syno=$($SNMPGET -OQne -t 10 -v 3 -l authNoPriv -u "$SNMPUSERNAME" -a MD5 -A "$SNMPPASSWORD" "$HOSTNAME" $OID_model $OID_serialNumber $OID_upgradeAvailable $OID_DSMVersion 2> /dev/null)
 
         model=$(echo "$syno" | grep $OID_model | cut -d "=" -f2)
         serialNumber=$(echo "$syno" | grep $OID_serialNumber | cut -d "=" -f2)
