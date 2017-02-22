@@ -36,7 +36,7 @@ OID_temp="1.3.6.1.4.1.6574.1.2.0"
 
 usage()
 {
-    echo "usage: ./check_synology -u [snmp username] -p [snmp password] -H [hostname] -s [cpu|ram|disk|volume|raid|upgrade]"
+    echo "usage: ./check_synology -u [snmp username] -p [snmp password] -H [hostname] -s [disk|raid|upgrade]"
     echo ""
     exit 3
 }
@@ -69,89 +69,7 @@ done
 if [ "$option_found" = "0" ] || [ "$HOSTNAME" = "" ] || [ "$SCRIPT" = "" ] ; then
     usage
 else
-#    syno=`$SNMPGET -OQne -t 10 -v 3 -l authNoPriv -u $SNMPUSERNAME  -a MD5 -A $SNMPPASSWORD $HOSTNAME $OID_model $OID_serialNumber $OID_DSMVersion 2> /dev/null`
-#    if [ "$?" != "0" ] ; then
-#        echo "CRITICAL - Problem with SNMP request"
-#        exit 2
-#    fi
-#
-#    model=$(echo "$syno" | grep $OID_model | cut -d "=" -f2)
-#    serialNumber=$(echo "$syno" | grep $OID_serialNumber | cut -d "=" -f2)
-#    DSMVersion=$(echo "$syno" | grep $OID_DSMVersion | cut -d "=" -f2)
-#
-#    healthString="Synology $model (s/n:$serialNumber, $DSMVersion)"
-
     case "$SCRIPT" in
-    cpu)
-        OID_ssCpuUser="1.3.6.1.4.1.2021.11.9.0"
-        OID_ssCpuSystem="1.3.6.1.4.1.2021.11.10.0"
-        cpu=$($SNMPGET -OQne -t 10 -v 3 -l authNoPriv -u "$SNMPUSERNAME" -a MD5 -A "$SNMPPASSWORD" "$HOSTNAME" $OID_ssCpuUser $OID_ssCpuSystem 2> /dev/null)
-
-        cpuUser=$(echo "$cpu" | grep $OID_ssCpuUser | cut -d"=" -f2)
-        cpuSystem=$(echo "$cpu" | grep $OID_ssCpuSystem | cut -d"=" -f2 | cut -d" " -f2)
-
-        averageLoad=$(( $cpuUser + $cpuSystem ))
-        healthString="average load $averageLoad%"
-        if [ "$averageLoad" -gt "90" ] && [ "$averageLoad" -le "95" ]; then
-            echo "WARNING - 90% < $healthString < 95%"
-            exit 1
-        elif [ "$averageLoad" -gt "95" ]; then
-            echo "CRITICAL - $healthString > 95%"
-            exit 2
-        else
-            echo "$healthString < 90%"
-            exit 0
-        fi
-        ;;
-    ram)
-        OID_memTotalSwap="1.3.6.1.4.1.2021.4.3.0"
-        OID_memAvailSwap="1.3.6.1.4.1.2021.4.4.0"
-        OID_memTotalReal="1.3.6.1.4.1.2021.4.5.0"
-        OID_memAvailReal="1.3.6.1.4.1.2021.4.6.0"
-        OID_memTotalFree="1.3.6.1.4.1.2021.4.11.0"
-        OID_memBuffer="1.3.6.1.4.1.2021.4.14.0"
-        OID_memCached="1.3.6.1.4.1.2021.4.15.0"
-
-        memory=$($SNMPGET -OQne -t 10 -v 3 -l authNoPriv -u "$SNMPUSERNAME" -a MD5 -A "$SNMPPASSWORD" "$HOSTNAME" $OID_memTotalSwap $OID_memAvailSwap $OID_memTotalReal $OID_memAvailReal $OID_memTotalFree $OID_memShared $OID_memBuffer $OID_memCached 2> /dev/null)
-        
-        memTotalSwap=$(echo "$memory" | grep $OID_memTotalSwap | cut -d "=" -f2 | cut -d" " -f2)
-        memAvailSwap=$(echo "$memory" | grep $OID_memAvailSwap | cut -d "=" -f2 | cut -d" " -f2)
-        memTotalReal=$(echo "$memory" | grep $OID_memTotalReal | cut -d "=" -f2 | cut -d" " -f2)
-        memAvailReal=$(echo "$memory" | grep $OID_memAvailReal | cut -d "=" -f2 | cut -d" " -f2)
-        memTotalFree=$(echo "$memory" | grep $OID_memTotalFree | cut -d "=" -f2 | cut -d" " -f2)
-        memBuffer=$(echo "$memory" | grep $OID_memBuffer | cut -d "=" -f2 | cut -d" " -f2)
-        memCached=$(echo "$memory" | grep $OID_memCached | cut -d "=" -f2 | cut -d" " -f2)
-
-        memUsedReal=$(($memTotalReal - $memAvailReal - $memBuffer - $memCached))
-        memReal=$(( 100 * $memUsedReal / $memTotalReal ))
-        memSwap=$(( 100 * ($memTotalSwap - $memAvailSwap) / $memTotalSwap ))
-
-        if [ "$memReal" -gt "80" ] && [ "$memReal" -le "90" ]; then healthStatus=3
-        elif [ "$memReal" -gt "90" ]; then healthStatus=2
-        else healthStatus=0
-        fi
-         
-        if [ "$memSwap" -gt "80" ] && [ "$memSwap" -le "90" ]; then
-            if [ "$healthStatus" != 2 ]; then healthStatus=3; fi
-        elif [ "$memSwap" -gt "90" ]; then
-            healthStatus=2
-        else
-            if [ "$healthStatus" -le 1 ]; then healthStatus=0; fi
-        fi
-
-        healthString="RAM : $memReal%, Swap : $memSwap%"
-
-        if [ "$healthStatus" = "3" ] ; then
-            echo "WARNING - $healthString"
-            exit 1
-        elif [ "$healthStatus" = "2" ] ; then
-            echo "CRITICAL - $healthString"
-            exit 2
-        else
-            echo $healthString
-            exit 0
-        fi
-        ;;
     disk)
         OID_disk=""
         OID_diskID="1.3.6.1.4.1.6574.2.1.1.2"
@@ -166,7 +84,7 @@ else
         done
 
         syno=$($SNMPGET -OQne -t 10 -v 3 -l authNoPriv -u "$SNMPUSERNAME" -a MD5 -A "$SNMPPASSWORD" "$HOSTNAME" $OID_disk 2> /dev/null)
-        for i in $(seq 1 $nbDisk$);
+        for i in $(seq 1 $nbDisk);
         do
             diskID[$i]=$(echo "$syno" | grep "$OID_diskID.$(($i-1)) " | cut -d "=" -f2)
             diskModel[$i]=$(echo "$syno" | grep "$OID_diskModel.$(($i-1)) " | cut -d "=" -f2)
@@ -191,58 +109,6 @@ else
             echo "CRITICAL -"$heathString
             exit 2
         fi
-        ;;
-    volume)
-        OID_Storage="1.3.6.1.2.1.25.2.3"
-        nbStorages=$($SNMPTABLE -mALL -t 10 -v 3 -l authnopriv -u "$SNMPUSERNAME" -a MD5 -A "$SNMPPASSWORD" "$HOSTNAME" $OID_Storage | grep volume 2> /dev/null | wc -l)
-        storages=$($SNMPTABLE -mALL -t 10 -v 3 -l authnopriv -u "$SNMPUSERNAME" -a MD5 -A "$SNMPPASSWORD" "$HOSTNAME" $OID_Storage | grep volume 2> /dev/null)
-        
-        for i in $(seq 1 $nbStorages);
-        do
-            storage=$(echo $storages | cut -d"?" -f$i)
-            storageID[$i]=$(echo $storage | cut -d " " -f1)
-            storageName[$i]=$(echo $storage | cut -d " " -f3)
-            storageAU[$i]=$(echo $storage | cut -d " " -f4)
-            storageSize[$i]=$(echo $storage | cut -d " " -f6)
-            storageUsed[$i]=$(echo $storage | cut -d " " -f7)
-
-            storageStatus[$i]=$(( ${storageUsed[$i]} *100 / ${storageSize[$i]} ))
-            storageUnit[$i]=$(( ${storageAU[$i]} )) 
-            storageSize[$i]=$(( ${storageSize[$i]} * ${storageUnit[$i]} /1024/1024/1024 ))
-            storageSizeUnit[$i]="Go"
-#            if [ "${storageSize[$i]}" -ge 1024 ]; then
-#                storageSize[$i]=$(( ${storageSize[$i]} /1024 ))
-#                storageSizeUnit[$i]="To"
-#            fi
-            storageUsed[$i]=$(( ${storageUsed[$i]} * ${storageUnit[$i]} /1024/1024/1024))
-            storageUsedUnit[$i]="Go"
-#            if [ "${storageUsed[$i]}" -ge 1024 ]; then
-#                storageUsed[$i]=$(( ${storageUsed[$i]} /1024 ))
-#                storageUsedUnit[$i]="To"
-#            fi
-
-            if [ "${storageStatus[$i]}" -gt "80" ] && [ "${storageStatus[$i]}" -le "90" ]; then 
-                if [ "$healthStatus" != 2 ]; then healthStatus=3; fi
-            elif [ "${storageStatus[$i]}" -gt "90" ]; then
-                healthStatus=2
-            else
-                if [ "$healthStatus" -le 1 ]; then healthStatus=0; fi
-            fi
-            healthString="$healthString ${storageName[$i]} ${storageStatus[$i]}% (${storageUsed[$i]} ${storageUsedUnit[$i]} / ${storageSize[$i]} ${storageSizeUnit[$i]})"
-        done
-
-
-        if [ "$healthStatus" = "3" ] ; then 
-            echo "WARNING -"$healthString" (thresholds 80% | 90%)"
-            exit 1
-        elif [ "$healthStatus" = "2" ] ; then
-            echo "CRITICAL -"$healthString" (thresholds 80% | 90%)"
-            exit 2
-        else
-            echo "Disk space ok :"$healthString" (thresholds 80% | 90%)"
-            exit 0
-        fi
-
         ;;
     raid)
         OID_RAID=""
