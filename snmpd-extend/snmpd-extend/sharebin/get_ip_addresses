@@ -19,6 +19,6 @@
 export LC_ALL=C
 export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
 
-ip address show | awk '$1 ~ /inet6?/ {print $2}' | cut -d'/' -f1
+ip --oneline address show | awk '$3 ~ /^inet6?$/ {print $4}' | cut -d'/' -f1
 
 
