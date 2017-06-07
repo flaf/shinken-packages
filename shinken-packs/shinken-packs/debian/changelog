@@ -1,7 +1,8 @@
-shinken-packs (2.1.1) unstable; urgency=medium
+shinken-packs (2.1.2) unstable; urgency=medium
 
   * Add the "uri->" syntax to check_http_wrapper to check
     HTTP pages via a proxy.
+  * Fix typo in spnotify in the "addtional info" line.
 
  -- François Lafont <francois.lafont@ac-versailles.fr>  Tue, 23 May 2017 08:52:34 +0200
 
