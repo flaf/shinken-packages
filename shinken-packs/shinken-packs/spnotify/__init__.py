@@ -256,7 +256,7 @@ $additional_info
 
     short_message_pattern = '''
 $hostname ($address) $ntype: state is $state.
-Additionnal info: $additional_info
+Additional info: $additional_info
 '''
 
     mini_message_pattern = \
@@ -281,7 +281,7 @@ $additional_info
 
     short_message_pattern = '''
 $hostname ($address) $ntype: \"$service_desc\" in $state state.
-Additionnal info: $additional_info
+Additional info: $additional_info
 '''
 
     mini_message_pattern = \
