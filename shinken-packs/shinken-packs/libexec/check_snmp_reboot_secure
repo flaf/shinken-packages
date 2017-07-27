@@ -93,8 +93,9 @@ then
                 printf 'OK, uptime=%ss which is greater than %s minutes: no reboot.\n' "$uptime" "$warning"
                 exit "$CODE_OK"
             else
+                max_uptime_in_seconds=$((max_uptime * 60 ))
                 # We want to check if the uptime is to too high.
-                if [ "$uptime" -gt "$max_uptime" ]
+                if [ "$uptime" -gt "$max_uptime_in_seconds" ]
                 then
                     printf 'WARNING, uptime=%ss which is too high (greater than the threshold %s minutes).\n' "$uptime" "$max_uptime"
                     exit "$CODE_WARNING"
