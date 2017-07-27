@@ -84,7 +84,7 @@ then
 
         if [ "$uptime" -lt "$warning_in_seconds" ]
         then
-            printf 'WARNING, uptime=%ss which is less than %s minutes: the host has rebooted.\n' "$uptime" "$warning"
+            printf 'CRITICAL, uptime=%ss which is less than %s minutes: the host has rebooted.\n' "$uptime" "$warning"
             # If we sent the WARNING code when there is a
             # reboot _and_ when the uptime is too high, we
             # could have no alert when a reboot happens
