@@ -62,10 +62,10 @@ then
 
         if [ "$uptime" -lt "$warning_in_seconds" ]
         then
-            printf 'WARNING, uptime equal to %ss which is =< %s minutes: the host has rebooted.\n' "$uptime" "$warning"
+            printf 'WARNING, uptime equal to %ss which is less than %s minutes: the host has rebooted.\n' "$uptime" "$warning"
             exit "$CODE_WARNING"
         else
-            printf 'OK, uptime equal to %ss which is > %s minutes: no reboot.\n' "$uptime" "$warning"
+            printf 'OK, uptime equal to %ss which is greater than or equal to %s minutes: no reboot.\n' "$uptime" "$warning"
             exit "$CODE_OK"
         fi
    else
