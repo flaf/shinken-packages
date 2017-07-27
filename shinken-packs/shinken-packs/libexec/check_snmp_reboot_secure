@@ -24,13 +24,13 @@ SPECIFIC_LONG_OPTIONS='warning:'
 SPECIFIC_SYNOPSIS='[--warning <minutes>]'
 
 # Default thresholds etc.
-WARNING=30
+warning=30
 
 GET_SPECIFIC_OPTIONS () {
     case "$1" in
 
         --warning|-w)
-            WARNING="$2"
+            warning="$2"
             return 2
         ;;
 
