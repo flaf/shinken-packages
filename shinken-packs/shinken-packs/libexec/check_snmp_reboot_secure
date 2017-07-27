@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright: 2013 Francois Lafont <francois.lafont@crdp.ac-versailles.fr>
+# Copyright: 2013 Francois Lafont <francois.lafont@ac-versailles.fr>
 #
 # License: GPL-3.0+
 # This program is free software: you can redistribute it and/or modify
@@ -19,52 +19,64 @@
 #set -x
 SCRIPT_NAME=${0##*/}
 SCRIPT_DIRECTORY=${0%/*}
+SPECIFIC_SHORT_OPTIONS='w:,c:'
+SPECIFIC_LONG_OPTIONS='warning:'
+SPECIFIC_SYNOPSIS='[--warning <minutes>]'
 
-. "$SCRIPT_DIRECTORY/share/check_snmp_header"
+# Default thresholds etc.
+WARNING=30
+
+GET_SPECIFIC_OPTIONS () {
+    case "$1" in
+
+        --warning|-w)
+            WARNING="$2"
+            return 2
+        ;;
+
+    esac
+    return 0
+}
+
+. "$SCRIPT_DIRECTORY/share/snmp.sh"
 
 # The oid of the "uptime" object in digital format which corresponds to the
 # "HOST-RESOURCES-MIB::hrSystemUptime.0" in text format.
 OID='.1.3.6.1.2.1.25.1.1.0'
 
-if ! echo "$warning" | grep -qE '^[0-9]+$'
+if ! printf '%s\n' "$warning" | grep -qE '^[0-9]+$'
 then
-    echo 'Error, the --warning option must give an "integer" value.'
-    exit "$UNKNOWN"
+    printf 'Error, the value of the --warning option must be an integer.\n'
+    exit "$CODE_UNKNOWN"
 fi
 
 # Getting of the host uptime.
-if output=$(snmpget -Ovt -r "$retry" -t "$timeout" $AUTH_OPTIONS "$host" "$OID" 2>&1); then
-
+if output=$(snmpget -Ovt -r "$retry" -t "$timeout" $AUTH_OPTIONS "$host" "$OID" 2>&1)
+then
     # The "snmpget" command has succeeded.
-    if echo "$output" | grep -qE '^[0-9]+$'
+    if printf '%s\n' "$output" | grep -qE '^[0-9]+$'
     then
-
-        ## The output is correct, but in cs. Convert in seconds.
+        # The output is correct, but in cs. Convert in seconds.
         uptime=$((output / 100))
         warning_in_seconds=$((warning * 60 ))
 
         if [ "$uptime" -lt "$warning_in_seconds" ]
         then
-            echo "WARNING, uptime (${uptime}s) =< $warning min: the host has rebooted."
-            exit "$WARNING"
+            printf 'WARNING, uptime equal to %ss which is =< %s minutes: the host has rebooted.\n' "$uptime" "$warning"
+            exit "$CODE_WARNING"
         else
-            echo "OK, uptime (${uptime}s) > $warning min: no reboot."
-            exit "$OK"
+            printf 'OK, uptime equal to %ss which is > %s minutes: no reboot.\n' "$uptime" "$warning"
+            exit "$CODE_OK"
         fi
    else
-
-        ## The output is incorrect (unlikely when the "snmpget" command has succeeded).
-        echo "Unexpected output in the snmpget request: \"$output\""
-        exit "$UNKNOWN"
-
+        # The output is incorrect (unlikely when the "snmpget" command has succeeded).
+        printf 'Unexpected output via the snmpget request: "%s"\n' "$output"
+        exit "$CODE_UNKNOWN"
     fi
-
 else
-
     # The "snmpget" command hasn't succeeded.
-    echo "$output"
-    exit "$UNKNOWN"
-
+    printf '%s\n' "$output"
+    exit "$CODE_UNKNOWN"
 fi
 
 
