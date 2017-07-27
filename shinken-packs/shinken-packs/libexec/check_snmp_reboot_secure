@@ -70,12 +70,12 @@ then
         fi
    else
         # The output is incorrect (unlikely when the "snmpget" command has succeeded).
-        printf 'Unexpected output via the snmpget request: "%s"\n' "$output"
+        printf 'Unexpected output of the snmpget command: "%s"\n' "$output"
         exit "$CODE_UNKNOWN"
     fi
 else
     # The "snmpget" command hasn't succeeded.
-    printf '%s\n' "$output"
+    printf 'Problem during the snmpget command: %s\n' "$output"
     exit "$CODE_UNKNOWN"
 fi
 
