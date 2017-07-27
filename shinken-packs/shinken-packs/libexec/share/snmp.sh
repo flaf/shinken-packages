@@ -28,7 +28,7 @@ CODE_UNKNOWN=3
 
 COMMON_SYNOPSIS="(--v2c -C <community> | -l <login> -x <passwd> -X <privpass> -L <authproto>,<privproto>) [-t <timeout>] [-r <retries>] -H <hostname>"
 COMMON_SHORT_OPTIONS='h,C:,l:,x:,X:,L:,t:,r:,H:'
-COMMON_LONG_OPTIONS='help,community:,login:,passwd:,privpasswd:,protocols:,timeout:,retries:,hostname:'
+COMMON_LONG_OPTIONS='help,v2c,community:,login:,passwd:,privpasswd:,protocols:,timeout:,retries:,hostname:'
 
 print_help () {
     cat <<EOF
