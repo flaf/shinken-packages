@@ -19,18 +19,24 @@
 #set -x
 SCRIPT_NAME=${0##*/}
 SCRIPT_DIRECTORY=${0%/*}
-SPECIFIC_SHORT_OPTIONS='w:,c:'
-SPECIFIC_LONG_OPTIONS='warning:'
-SPECIFIC_SYNOPSIS='[--warning <minutes>]'
+SPECIFIC_SHORT_OPTIONS='w:,m:'
+SPECIFIC_LONG_OPTIONS='warning:,max-uptime:'
+SPECIFIC_SYNOPSIS='[--warning <minutes> --max-uptime <minutes>]'
 
 # Default thresholds etc.
 warning=30
+max_uptime='0'
 
 GET_SPECIFIC_OPTIONS () {
     case "$1" in
 
         --warning|-w)
             warning="$2"
+            return 2
+        ;;
+
+        --max-uptime|-m)
+            max_uptime="$2"
             return 2
         ;;
 
@@ -50,6 +56,22 @@ then
     exit "$CODE_UNKNOWN"
 fi
 
+if ! printf '%s\n' "$max_uptime" | grep -qE '^[0-9]+$'
+then
+    printf 'Error, the value of the --max-uptime option must be an integer.\n'
+    exit "$CODE_UNKNOWN"
+fi
+
+if [ "$max_uptime" != '0' ]
+then
+    diff=$((max_uptime - warning))
+    if [ "$diff" -le 60 ]
+    then
+        printf 'Error, this condition is required when max-uptime is not zero: max-uptime - warning > 60 minutes.\n'
+        exit "$CODE_UNKNOWN"
+    fi
+fi
+
 # Getting of the host uptime.
 if output=$(snmpget $SNMP_CMD_OPTIONS -Ovt "$HOSTNAME" "$OID" 2>&1)
 then
@@ -65,8 +87,22 @@ then
             printf 'WARNING, uptime=%ss which is less than %s minutes: the host has rebooted.\n' "$uptime" "$warning"
             exit "$CODE_WARNING"
         else
-            printf 'OK, uptime=%ss which is greater than %s minutes: no reboot.\n' "$uptime" "$warning"
-            exit "$CODE_OK"
+            if [ "$max_uptime" = 0 ]
+            then
+                # We don't check if the uptime is to too high.
+                printf 'OK, uptime=%ss which is greater than %s minutes: no reboot.\n' "$uptime" "$warning"
+                exit "$CODE_OK"
+            else
+                # We want to check if the uptime is to too high.
+                if [ "$uptime" -gt "$max_uptime" ]
+                then
+                    printf 'WARNING, uptime=%ss which is too high (greater than the threshold %s minutes).\n' "$uptime" "$max_uptime"
+                    exit "$CODE_WARNING"
+                else
+                    printf 'OK, uptime=%ss which is between %s and %s minutes : no reboot and the uptime is not too high.\n' "$uptime" "$warning" "$max_uptime"
+                    exit "$CODE_OK"
+                fi
+            fi
         fi
    else
         # The output is incorrect (unlikely when the "snmpget" command has succeeded).
