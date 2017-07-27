@@ -51,7 +51,7 @@ then
 fi
 
 # Getting of the host uptime.
-if output=$(snmpget -Ovt -r "$retry" -t "$timeout" $AUTH_OPTIONS "$host" "$OID" 2>&1)
+if output=$(snmpget $SNMP_CMD_OPTIONS -Ovt "$HOSTNAME" "$OID" 2>&1)
 then
     # The "snmpget" command has succeeded.
     if printf '%s\n' "$output" | grep -qE '^[0-9]+$'
