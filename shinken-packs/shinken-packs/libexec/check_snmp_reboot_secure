@@ -24,8 +24,8 @@ SPECIFIC_LONG_OPTIONS='warning:,max-uptime:'
 SPECIFIC_SYNOPSIS='[--warning <minutes> --max-uptime <minutes>]'
 
 # Default thresholds etc.
-warning=30
-max_uptime='0'
+warning=30     # if uptime < 30 then the host has rebooted.
+max_uptime='0' # with the special value 0, the max uptime is not checked.
 
 GET_SPECIFIC_OPTIONS () {
     case "$1" in
@@ -85,7 +85,12 @@ then
         if [ "$uptime" -lt "$warning_in_seconds" ]
         then
             printf 'WARNING, uptime=%ss which is less than %s minutes: the host has rebooted.\n' "$uptime" "$warning"
-            exit "$CODE_WARNING"
+            # If we sent the WARNING code when there is a
+            # reboot _and_ when the uptime is too high, we
+            # could have no alert when a reboot happens
+            # after a "too high" alert (because it will be
+            # the same code, ie WARNING).
+            exit "$CODE_CRITICAL"
         else
             if [ "$max_uptime" = 0 ]
             then
