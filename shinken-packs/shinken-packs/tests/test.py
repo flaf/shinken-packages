@@ -3,7 +3,7 @@
 
 from spnotify import *
 from nose.tools import *
-
+import datetime
 
 
 def test_Rule():
@@ -16,12 +16,14 @@ def test_Rule():
     service_desc = u'disk space'
     hostname = u'srv-2'
     now = datetime.time(23, 2)
+    weekdays = Weekdays(u'*')
 
     def test():
         rule = Rule(
             contact_names = Regexp(contact_pattern),
             hostnames = Regexp(u'^srv-'), timeslots = ts,
-            service_desc = Regexp(service_desc_regex))
+            weekdays=weekdays, service_desc = Regexp(service_desc_regex),
+        )
         contact = Contact(
             name = name, sms_threshold = 4, rarefaction_threshold = 15,
             sms_url = u'http://hostname/sendsms.pl',
@@ -33,6 +35,17 @@ def test_Rule():
             number = 7, service_desc = service_desc, time = now)
         return rule.is_matching_with(notif)
 
+    assert_true(test())
+
+    current_weekday = datetime.datetime.now().isoweekday()
+    days_without_current_day = [1, 2, 3, 4, 5, 6, 7]
+    days_without_current_day.remove(current_weekday)
+
+    weekdays = Weekdays(unicode(days_without_current_day)) # weekday doesn't match
+    assert_false(test())
+
+    days_with_current_day = unicode(list(set([current_weekday, 1, 2])))
+    weekdays = Weekdays(days_with_current_day) # weekday matches
     assert_true(test())
 
     now = datetime.time(0, 0) # time doesn't match
@@ -145,10 +158,10 @@ def test_Line():
     l = Line(u'')
     assert_equal(l.line, u'')
 
-    l = Line(u'^john:^srv-$:load cpu:[00h30;2h00][14h00;17h00]')
+    l = Line(u'^john:^srv-$:load cpu:[00h30;2h00][14h00;17h00]:*')
     rule = l.get_rule()
     assert_true(isinstance(rule, Rule))
-    l = Line(u'^john:^srv-$:load cpu:::[00h30;2h00][14h00;17h00]') # bad syntax
+    l = Line(u'^john:^srv-$:load cpu:::[00h30;2h00][14h00;17h00]:*') # bad syntax
     rule = l.get_rule()
     assert_true(rule is None)
 

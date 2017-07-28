@@ -26,6 +26,7 @@ import re
 import string
 import pycurl
 import cStringIO
+import ast
 from urllib import urlencode
 
 
@@ -33,17 +34,20 @@ from urllib import urlencode
 class Rule:
     """Represents a rule in a black list file."""
 
-    def __init__(self, contact_names, hostnames, timeslots, service_desc=None):
+    def __init__(self, contact_names, hostnames, timeslots, weekdays,
+                 service_desc=None):
         assert isinstance(contact_names, Regexp)
         assert isinstance(hostnames, Regexp)
         assert isinstance(timeslots, TimeSlots)
         assert isinstance(service_desc, Regexp) or (service_desc is None)
+        assert isinstance(weekdays, Weekdays)
         self.contact_names = contact_names
         self.hostnames = hostnames
         self.service_desc = service_desc
         if self.service_desc.is_empty():
             self.service_desc = None
         self.timeslots = timeslots
+        self.weekdays = weekdays
 
     def is_matching_with(self, notif):
         assert isinstance(notif, Notification)
@@ -52,21 +56,58 @@ class Rule:
             if self.contact_names.catch(notif.contact.name):
                 if self.hostnames.catch(notif.hostname):
                     if notif.time in self.timeslots:
-                        # The rule is matching.
-                        return True
+                        if datetime.datetime.now().isoweekday() in self.weekdays:
+                            # The rule is matching.
+                            return True
         elif self.service_desc != None and notif.service_desc != None:
             # This is a service rule and a service notification.
             if self.contact_names.catch(notif.contact.name):
                 if self.hostnames.catch(notif.hostname):
                     if self.service_desc.catch(notif.service_desc):
                         if notif.time in self.timeslots:
-                            # The rule is matching.
-                            return True
+                            if datetime.datetime.now().isoweekday() in self.weekdays:
+                                # The rule is matching.
+                                return True
         # If no matching.
         return False
 
     def __repr__(self):
         return repr(self.timeslots)
+
+
+class Weekdays:
+    """Represents a set of weekdays."""
+
+    def __init__(self, s):
+        assert isinstance(s, unicode)
+
+        try:
+            if s == u'*':
+                # * is special, it means all days.
+                self.days = [1, 2, 3, 4, 5, 6, 7]
+            else:
+                self.days = ast.literal_eval(s)
+        except:
+            # There is a problem with the string s which
+            # is not a list, so the instance contains nothing.
+            logger = Logger()
+            logger.write(u"Problem, the string %s is not a valid list." % s)
+            del(logger)
+            self.days = []
+
+        for day in self.days:
+            if day not in [1, 2, 3, 4, 5, 6, 7]:
+                # There is a day not valid in the string,
+                # so the instance contains nothing.
+                logger = Logger()
+                logger.write(u"Problem, the string %s is a list with invalid numbers." % s)
+                del(logger)
+                self.days = []
+                break
+
+    def __contains__(self, day):
+        assert day in [1, 2, 3, 4, 5, 6, 7]
+        return (day in self.days)
 
 
 class Regexp:
@@ -102,6 +143,9 @@ class Regexp:
                 else:
                     return bool(re.search(self.pattern, s_test))
             except:
+                logger = Logger()
+                logger.write(u"Problem the regex %s is not a valid" % s)
+                del(logger)
                 # If there is a problem, the Regexp doesn't catch.
                 return False
 
@@ -403,16 +447,22 @@ class Line:
         self.line = Line.comments_regex.sub('', s).strip()
 
     def get_rule(self):
-        if self.line.count(':') != 3:
+        if self.line.count(':') != 4:
             # The rule is not well written.
+            logger = Logger()
+            logger.write(u"The line `%s' is not valid." % self.line)
+            del(logger)
             return None
         l = self.line.split(':')
         ts = TimeSlots()
         ts.add(l[3])
+        weekdays = Weekdays(l[4])
         rule = Rule(
             contact_names = Regexp(l[0]),
-            hostnames = Regexp(l[1]), timeslots = ts,
-            service_desc = Regexp(l[2]))
+            hostnames = Regexp(l[1]), timeslots=ts,
+            weekdays=weekdays,
+            service_desc=Regexp(l[2]),
+        )
         return rule
 
 
