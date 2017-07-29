@@ -1,8 +1,9 @@
-shinken-packs (2.2.1) unstable; urgency=medium
+shinken-packs (2.3) unstable; urgency=medium
 
   * Improve the "reboot" check to test if an uptime is too high.
+  * Add the "weekdays" field in the blacklist file used by sp_notify.
 
- -- François Lafont <francois.lafont@ac-versailles.fr>  Thu, 27 Jul 2017 17:00:17 +0200
+ -- François Lafont <francois.lafont@ac-versailles.fr>  Sat, 29 Jul 2017 03:29:08 +0200
 
 shinken-packs (2.1.2) unstable; urgency=medium
 
