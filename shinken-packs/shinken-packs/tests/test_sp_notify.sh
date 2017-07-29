@@ -11,7 +11,7 @@ cat > "$blacklist" <<'EOF'
     # Another comment...
 bad line...
 
-!^lafont$:.*:^reboot$:[00h00;23h59]:[5]
+!^lafont$:.*:^reboot$:[00h00;23h59]:[3,4,5,6,7]
 
 
 EOF
