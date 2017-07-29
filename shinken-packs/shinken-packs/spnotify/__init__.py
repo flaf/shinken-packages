@@ -91,7 +91,7 @@ class Weekdays:
             # There is a problem with the string s which
             # is not a list, so the instance contains nothing.
             logger = Logger()
-            logger.write(u"Problem, the string %s is not a valid list." % s)
+            logger.write(u"Problem in the blacklist file, the string `%s' is not a valid weekdays list." % s)
             del(logger)
             self.days = []
 
@@ -444,15 +444,21 @@ class Line:
 
     def __init__(self, s):
         assert isinstance(s, unicode)
+        # The line is cleaned: comments and useless blanks are removed.
         self.line = Line.comments_regex.sub('', s).strip()
 
     def get_rule(self):
+
+        if len(self.line) == 0:
+            return None
+
         if self.line.count(':') != 4:
             # The rule is not well written.
             logger = Logger()
-            logger.write(u"The line `%s' is not valid." % self.line)
+            logger.write(u"The line `%s' is not valid in the blacklist file." % (self.line))
             del(logger)
             return None
+
         l = self.line.split(':')
         ts = TimeSlots()
         ts.add(l[3])
