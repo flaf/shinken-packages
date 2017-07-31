@@ -88,10 +88,11 @@ do
             if "$COMMAND" --signal="SIGKILL" "$TIMEOUT" touch "$CHECK_ROOT_FILE"
             then
                 printf "%s:ok\n" "$dir"
-                rm "$CHECK_ROOT_FILE"
             else
                 printf "%s:problem\n" "$dir"
             fi
+            # Cleaning.
+            [ -f "$CHECK_ROOT_FILE" ] && rm "$CHECK_ROOT_FILE"
         else
             printf "%s:ok\n" "$dir"
         fi
