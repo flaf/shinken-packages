@@ -21,6 +21,7 @@ export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
 TIMEOUT=2
 SCRIPT_DIRECTORY=${0%/*}
 CODENAME=$(lsb_release --codename --short)
+CHECK_ROOT_FILE='/.snmpd-extend-check-if-root-partition-is-rw'
 
 is_old_distribution () {
     if [ "$CODENAME" = "etch" ] || [ "$CODENAME" = "lenny" ]
@@ -75,10 +76,19 @@ do
     then
         if [ "$dir" = '/' ]
         then
-            # For /, we check if the partition has the "rw" mount option.
-            if mount | grep -E 'on[[:space:]]+/[[:space:]]' | grep -Eq '[\(,]rw[\),]'
+            # For /, we check if the root partition is RW.
+            # If have already seen a root partition
+            # Read-Only but with the output of the "mount"
+            # command which mentions rw. So this "mount"
+            # command:
+            #
+            #   mount | grep -E 'on[[:space:]]+/[[:space:]]' | grep -Eq '[\(,]rw[\),]'
+            #
+            # is not enough sometimes. A touch is more robust.
+            if "$COMMAND" --signal="SIGKILL" "$TIMEOUT" touch "$CHECK_ROOT_FILE"
             then
                 printf "%s:ok\n" "$dir"
+                rm "$CHECK_ROOT_FILE"
             else
                 printf "%s:problem\n" "$dir"
             fi
