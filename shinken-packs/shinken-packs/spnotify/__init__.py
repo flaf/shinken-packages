@@ -374,7 +374,8 @@ class TimeSlot:
         return self.t1 <= rounded_time <= self.t2
 
     def __repr__(self):
-        return '[' + str(self.t1) + '-->' + str(self.t2) + ']'
+        # Secondes are removed.
+        return '[%s-->%s]' % (str(self.t1)[0:5], str(self.t2)[0:5])
 
 
 class TimeSlots:
@@ -384,9 +385,9 @@ class TimeSlots:
     The .add method takes one argument which can be a TimeSlot
     objet or an unicode string which represents an of timeslots."""
 
-    timeslots_pattern = r'^(\[\d+h\d+;\d+h\d+\])+$'
+    timeslots_pattern = r'^(\[\d+h\d+;\+?\d+h\d+\])+$'
     timeslots_regex = re.compile(timeslots_pattern)
-    numbers_regex = re.compile(r'\d+')
+    numbers_regex = re.compile(r'\+?\d+')
 
     def __init__(self, timeslots=None):
         if timeslots is None:
@@ -410,9 +411,24 @@ class TimeSlots:
         numbers = TimeSlots.numbers_regex.findall(s)
         timeslots = []
         for i in xrange(0, len(numbers), 4):
-            t1 = datetime.time(int(numbers[i]), int(numbers[i+1]))
-            t2 = datetime.time(int(numbers[i+2]), int(numbers[i+3]))
-            timeslots.append(TimeSlot(t1,t2))
+            if u'+' in numbers[i+2]:
+                # datetime.time doesn't support __add__() so
+                # we have to use datetime.datetime and
+                # datetime.timedelta.
+                t1 = datetime.datetime(1978, 6, 12, int(numbers[i]), int(numbers[i+1]))
+                td = datetime.timedelta(hours=int(numbers[i+2]), minutes=int(numbers[i+3]))
+                t2 = t1 + td
+                t1 = t1.time()
+                t2 = t2.time()
+                if t1 < t2:
+                    timeslots.append(TimeSlot(t1,t2))
+                else:
+                    timeslots.append(TimeSlot(t1,datetime.time(23, 59)))
+                    timeslots.append(TimeSlot(datetime.time(0, 0), t2))
+            else:
+                t1 = datetime.time(int(numbers[i]), int(numbers[i+1]))
+                t2 = datetime.time(int(numbers[i+2]), int(numbers[i+3]))
+                timeslots.append(TimeSlot(t1,t2))
         for timeslot in timeslots:
             self.add(timeslot)
 

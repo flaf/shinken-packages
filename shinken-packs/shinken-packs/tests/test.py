@@ -146,6 +146,26 @@ def test_TimeSlots():
     assert_true(ta in timeslots)
     assert_true(tb in timeslots)
 
+    timeslots2 = TimeSlots()
+    timeslots2.add(u'[22h35;+1h07]')
+    assert_true(str(timeslots2) == '[[22:35-->23:42]]')
+
+    timeslots3 = TimeSlots()
+    timeslots3.add(u'[23h57;+02h07]')
+    assert_true(str(timeslots3) == '[[23:57-->23:59], [00:00-->02:04]]')
+    c1 = datetime.time(0, 59)
+    c2 = datetime.time(2, 6)
+    assert_true(c1 in timeslots3)
+    assert_false(c2 in timeslots3)
+
+    timeslots4 = TimeSlots()
+    timeslots4.add(u'[22h35;+23h59]')
+    assert_true(str(timeslots4) == '[[22:35-->23:59], [00:00-->22:34]]')
+
+    timeslots5 = TimeSlots()
+    timeslots5.add(u'[22h35;23h07]')
+    assert_true(str(timeslots5) == '[[22:35-->23:07]]')
+
 
 def test_Line():
 
