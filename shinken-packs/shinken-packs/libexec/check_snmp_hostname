@@ -45,7 +45,7 @@ then
     if [ "$hostname" = "$output" ]; then
         echo "Check of the hostname OK: hostname=$output."
         exit "$OK"
-    elif [ "${hostname%%.*}." = "${output}." ]
+    elif [ "${hostname%%.*}" = "${output}" ]
     then
         # Case where the host_name attribute is a fqdn but
         # its shortname part matches with the value
@@ -57,7 +57,7 @@ then
         echo "Check of the hostname OK: hostname=$output which matches with $hostname."
         exit "$OK"
     else
-        echo "Check of the hostname WARNING: hostname=$output but it does not match with $hostname."
+        echo "Check of the hostname WARNING: hostname=$output which does not match with $hostname."
         exit "$WARNING"
     fi
 
