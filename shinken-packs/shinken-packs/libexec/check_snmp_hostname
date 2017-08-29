@@ -26,7 +26,7 @@ SCRIPT_DIRECTORY=${0%/*}
 OID='.1.3.6.1.4.1.8072.1.3.2.3.1.2.12.103.101.116.95.104.111.115.116.110.97.109.101'
 
 # The regex for a hostname.
-REGEX_HOSTNAME="[-a-z0-9\.]+"
+REGEX_HOSTNAME="[a-z][-a-z0-9\.]+"
 
 if [ -z "$hostname" ]; then
     echo "Syntax error, you must set the --hostname option."
@@ -43,7 +43,7 @@ then
 
     # The "snmpget" command has succeeded and the output has the good format.
     if [ "$hostname" = "$output" ]; then
-        echo "Check of the hostname OK: hostname=\"$output\"."
+        echo "Check of the hostname OK: hostname=$output."
         exit "$OK"
     elif [ "${hostname%%.*}." = "${output}." ]
     then
@@ -54,10 +54,10 @@ then
         # For instance, the host_name attribute is
         # foo.domain.tld and the value retrieved via SNMP is
         # "foo". In this case it's OK.
-        echo "Check of the hostname OK: hostname=\"$output\" which matches with \"$hostname\"."
+        echo "Check of the hostname OK: hostname=$output which matches with $hostname."
         exit "$OK"
     else
-        echo "Check of the hostname WARNING: hostname=\"$output\" but it does not match with \"$hostname\"."
+        echo "Check of the hostname WARNING: hostname=$output but it does not match with $hostname."
         exit "$WARNING"
     fi
 
