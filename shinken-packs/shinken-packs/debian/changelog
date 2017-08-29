@@ -1,4 +1,4 @@
-shinken-packs (2.3.2) unstable; urgency=medium
+shinken-packs (2.3.3) unstable; urgency=medium
 
   * Improve the "reboot" check to test if an uptime is too high.
   * Add the "weekdays" field in the blacklist file used by sp_notify.
@@ -6,8 +6,11 @@ shinken-packs (2.3.2) unstable; urgency=medium
     any address of DNS server to request.
   * Add the syntax [22h09;+2h35] in timeslots (in blacklist).
     The '+' allows to mention a duration only.
+  * Improve the check "hostname" to have a succes when a host
+    has a host_name attribut like foo.dom.tld and the hostname
+    retrieved via SNMP is "foo".
 
- -- François Lafont <francois.lafont@ac-versailles.fr>  Tue, 22 Aug 2017 06:45:23 +0200
+ -- François Lafont <francois.lafont@ac-versailles.fr>  Tue, 29 Aug 2017 03:27:54 +0200
 
 shinken-packs (2.1.2) unstable; urgency=medium
 
