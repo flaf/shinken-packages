@@ -45,8 +45,19 @@ then
     if [ "$hostname" = "$output" ]; then
         echo "Check of the hostname OK: hostname=\"$output\"."
         exit "$OK"
+    elif [ "${hostname%%.*}." = "${output}." ]
+    then
+        # Case where the host_name attribute is a fqdn but
+        # its shortname part matches with the value
+        # retrieved via SNMP.
+        #
+        # For instance, the host_name attribute is
+        # foo.domain.tld and the value retrieved via SNMP is
+        # "foo". In this case it's OK.
+        echo "Check of the hostname OK: hostname=\"$output\" which matches with \"$hostname\"."
+        exit "$OK"
     else
-        echo "Check of the hostname WARNING: hostname=\"$output\" but should be \"$hostname\"."
+        echo "Check of the hostname WARNING: hostname=\"$output\" but it does not match with \"$hostname\"."
         exit "$WARNING"
     fi
 
