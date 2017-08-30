@@ -1,4 +1,4 @@
-shinken-packs (2.3.3) unstable; urgency=medium
+shinken-packs (2.3.4) unstable; urgency=medium
 
   * Improve the "reboot" check to test if an uptime is too high.
   * Add the "weekdays" field in the blacklist file used by sp_notify.
@@ -9,8 +9,9 @@ shinken-packs (2.3.3) unstable; urgency=medium
   * Improve the check "hostname" to have a succes when a host
     has a host_name attribut like foo.dom.tld and the hostname
     retrieved via SNMP is "foo".
+  * The template "pfsense" matches too the interfaces igb*.
 
- -- François Lafont <francois.lafont@ac-versailles.fr>  Tue, 29 Aug 2017 03:27:54 +0200
+ -- François Lafont <francois.lafont@ac-versailles.fr>  Wed, 30 Aug 2017 16:41:15 +0200
 
 shinken-packs (2.1.2) unstable; urgency=medium
 
