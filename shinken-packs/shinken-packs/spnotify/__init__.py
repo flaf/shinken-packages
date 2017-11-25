@@ -210,6 +210,12 @@ class Notification:
         return str(t)
 
     def send_email(self):
+        if self.contact.email is None:
+            msg = u"No e-mail sending to %s which is not a valid " \
+                  "address: " % (self.contact.email,) + str(self)
+            self.logger.write(msg)
+            return None
+
         try:
             p = subprocess.Popen(
                 ['mail', '-s', self.get_subject(), self.contact.email],
@@ -348,7 +354,10 @@ class Contact:
         self.sms_threshold = sms_threshold
         self.sms_url = sms_url
         self.rarefaction_threshold = rarefaction_threshold
-        self.email = email
+        if email is not None and u'@' in email:
+            self.email = email
+        else:
+            self.email = None
         if phone_number is not None and re.search(ur'^[0-9]+$', phone_number):
             self.phone_number = phone_number
         else:
