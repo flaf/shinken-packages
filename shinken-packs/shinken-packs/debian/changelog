@@ -1,3 +1,10 @@
+shinken-packs (2.3.5) unstable; urgency=medium
+
+  * with sp_notify, if the e-mail address doesn't contain "@",
+    no mail is sent.
+
+ -- François Lafont <francois.lafont@ac-versailles.fr>  Sat, 25 Nov 2017 15:09:46 +0100
+
 shinken-packs (2.3.4) unstable; urgency=medium
 
   * Improve the "reboot" check to test if an uptime is too high.
