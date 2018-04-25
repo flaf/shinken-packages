@@ -1,3 +1,11 @@
+snmpd-extend (1.6.0) unstable; urgency=medium
+
+  * Adapt package to work with Debian Stretch where the
+    daemon snmpd is run as "Debian-snmp", no longer as
+    "snmp" Unix account.
+
+ -- François Lafont <francois.lafont@ac-versailles.fr>  Thu, 26 Apr 2018 01:11:06 +0200
+
 snmpd-extend (1.5.7) unstable; urgency=medium
 
   * Improve get_ip_address.
