@@ -93,7 +93,8 @@ case "$1" in
             # daemon snmpd is run as "Debian-snmpd", no
             # longer "snmp".
             release_number=$(lsb_release -sr | cut -d'.' -f1)
-            if (printf '%s\n' "$release_number" | grep -qE '^[0-9]+$') && [ "$release_number" -ge 9 ]
+            family=$(lsb_release -si | tr '[:upper:]' '[:lower:]')
+            if [ "$family" = 'debian' ] && (printf '%s\n' "$release_number" | grep -qE '^[0-9]+$') && [ "$release_number" -ge 9 ]
             then
                 sed -i 's/^snmp /Debian-snmp /' "$SUDOERS_CONF"
             fi
