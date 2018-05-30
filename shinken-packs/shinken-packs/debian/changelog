@@ -1,10 +1,11 @@
-shinken-packs (2.3.6) unstable; urgency=medium
+shinken-packs (2.3.7) unstable; urgency=medium
 
   * with sp_notify, if the e-mail address doesn't contain "@",
     no mail is sent.
   * In linux template, add "en*" as checked interfaces by default.
+  * Fix macros forgotten in dummy-https_tpl.
 
- -- François Lafont <francois.lafont@ac-versailles.fr>  Thu, 26 Apr 2018 01:18:24 +0200
+ -- François Lafont <francois.lafont@ac-versailles.fr>  Thu, 31 May 2018 00:54:14 +0200
 
 shinken-packs (2.3.4) unstable; urgency=medium
 
