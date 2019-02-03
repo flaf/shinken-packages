@@ -1,3 +1,9 @@
+shinken-packs (2.7.4) bionic; urgency=medium
+
+  * [check_snmp_zfs_pools] Allow dash characters in ZFS pools.
+
+ -- François Lafont <francois.lafont@ac-versailles.fr>  Sun, 03 Feb 2019 18:32:30 +0100
+
 shinken-packs (2.3.7) unstable; urgency=medium
 
   * with sp_notify, if the e-mail address doesn't contain "@",
