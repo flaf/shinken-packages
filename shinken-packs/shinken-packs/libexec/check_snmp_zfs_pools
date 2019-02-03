@@ -27,7 +27,7 @@ then
     output="${output#\"}"
     output="${output%\"}"
 
-    if ! echo "$output" | head -n 1 | grep -Eq '^[a-zA-Z0-9]+='
+    if ! printf '%s\n' "$output" | head -n 1 | grep -Eq '^[-a-zA-Z0-9]+='
     then
         # The output is incorrect (unlikely when the "snmpget" command has succeeded).
         echo "Unexpected output in the snmpget request: \"$output\""
